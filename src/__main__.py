@@ -4,97 +4,31 @@ import asyncio
 import json
 import logging
 import signal
-from enum import IntEnum
 from struct import Struct
-from typing import Literal, NewType, TypedDict, Union, cast
+from typing import cast
 from websockets.server import serve, WebSocketServerProtocol
 from websockets.exceptions import ConnectionClosed
 from dataclasses import dataclass
+from websockets.typing import Data, Subprotocol
 import time
 
-from websockets.typing import Data, Subprotocol
+from .types import (
+    Channel,
+    ChannelId,
+    ChannelWithoutId,
+    ClientMessage,
+    ClientOpcode,
+    ClientSubscriptionId,
+    ServerMessage,
+    ServerOpcode,
+    StatusLevel,
+)
 
 logger = logging.getLogger("example")
 logger.setLevel(logging.DEBUG)
 handler = logging.StreamHandler()
 handler.setFormatter(logging.Formatter("%(asctime)s: [%(levelname)s] %(message)s"))
 logger.addHandler(handler)
-
-ChannelId = NewType("ChannelId", int)
-ClientSubscriptionId = NewType("ClientSubscriptionId", int)
-
-
-class ClientOpcode(IntEnum):
-    LIST_CHANNELS = 0x02
-    SUBSCRIBE = 0x03
-    UNSUBSCRIBE = 0x04
-
-
-class ListChannels(TypedDict):
-    op: Literal[ClientOpcode.LIST_CHANNELS]
-
-
-class Subscription(TypedDict):
-    channel: ChannelId
-    clientSubscriptionId: ClientSubscriptionId
-
-
-class Subscribe(TypedDict):
-    op: Literal[ClientOpcode.SUBSCRIBE]
-    subscriptions: list[Subscription]
-
-
-class Unsubscribe(TypedDict):
-    op: Literal[ClientOpcode.UNSUBSCRIBE]
-    unsubscriptions: list[ClientSubscriptionId]
-
-
-ClientMessage = Union[ListChannels, Subscribe, Unsubscribe]
-
-
-class ServerOpcode(IntEnum):
-    SERVER_INFO = 0x80
-    STATUS_MESSAGE = 0x81
-    CHANNEL_LIST = 0x82
-    # SUBSCRIPTION_ACK = 0x83
-    MESSAGE_DATA = 0x85
-
-
-class ServerInfo(TypedDict):
-    op: Literal[ServerOpcode.SERVER_INFO]
-    id: str
-    capabilities: list[str]
-
-
-class StatusLevel(IntEnum):
-    INFO = 0
-    WARNING = 1
-    ERROR = 2
-
-
-class StatusMessage(TypedDict):
-    op: Literal[ServerOpcode.STATUS_MESSAGE]
-    level: StatusLevel
-    message: str
-
-
-class ChannelWithoutId(TypedDict):
-    topic: str
-    encoding: str
-    schemaName: str
-    schema: str
-
-
-class Channel(ChannelWithoutId):
-    id: ChannelId
-
-
-class ChannelList(TypedDict):
-    op: Literal[ServerOpcode.CHANNEL_LIST]
-    channels: list[Channel]
-
-
-ServerMessage = Union[ServerInfo, StatusMessage, ChannelList]
 
 
 # async def send_loop(ws):
