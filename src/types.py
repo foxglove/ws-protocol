@@ -43,7 +43,7 @@ class ServerOpcode(IntEnum):
 
 class ServerInfo(TypedDict):
     op: Literal[ServerOpcode.SERVER_INFO]
-    id: str
+    name: str
     capabilities: list[str]
 
 
