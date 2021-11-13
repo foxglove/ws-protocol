@@ -6,13 +6,13 @@ import logging
 import signal
 from enum import IntEnum
 from struct import Struct
-from typing import Literal, NewType, TypedDict, Union
+from typing import Literal, NewType, TypedDict, Union, cast
 from websockets.server import serve, WebSocketServerProtocol
 from websockets.exceptions import ConnectionClosed
-from collections import defaultdict
+from dataclasses import dataclass
 import time
 
-from websockets.typing import Subprotocol
+from websockets.typing import Data, Subprotocol
 
 logger = logging.getLogger("example")
 logger.setLevel(logging.DEBUG)
@@ -78,12 +78,15 @@ class StatusMessage(TypedDict):
     message: str
 
 
-class Channel(TypedDict):
-    id: ChannelId
+class ChannelWithoutId(TypedDict):
     topic: str
     encoding: str
     schemaName: str
     schema: str
+
+
+class Channel(ChannelWithoutId):
+    id: ChannelId
 
 
 class ChannelList(TypedDict):
@@ -101,65 +104,147 @@ ServerMessage = Union[ServerInfo, StatusMessage, ChannelList]
 
 SERVER_ID = "example server"
 
-message_data_header = Struct("<BIQ")
+MessageDataHeader = Struct("<BIQ")
 
 
-async def handle_connection(connection: WebSocketServerProtocol, path: str) -> None:
-    logger.info("Connection made to %s: %s", connection.remote_address, path)
-    channels_by_id: dict[ChannelId, Channel] = {
-        ChannelId(1): {
-            "id": ChannelId(1),
-            "topic": "/foo",
-            "encoding": "protobuf",
-            "schemaName": "Foo",
-            "schema": "",
-        }
-    }
-    subscriptions: dict[ClientSubscriptionId, ChannelId] = {}
-    subscriptions_ids_by_channel: defaultdict[
-        ChannelId, set[ClientSubscriptionId]
-    ] = defaultdict(set)
+@dataclass
+class Client:
+    connection: WebSocketServerProtocol
+    subscriptions: dict[ClientSubscriptionId, ChannelId]
+    subscriptions_by_channel: dict[ChannelId, set[ClientSubscriptionId]]
 
-    async def send(msg: ServerMessage):
+
+class FoxgloveServer:
+    _clients: dict[WebSocketServerProtocol, Client]
+    _channels: dict[ChannelId, Channel]
+    _next_channel_id: ChannelId
+
+    def __init__(self, host: str, port: int):
+        self.host = host
+        self.port = port
+        self._clients = {}
+        self._channels = {}
+        self._next_channel_id = ChannelId(0)
+
+    def start(self):
+        self._task = asyncio.create_task(self._run())
+
+    async def wait_closed(self):
+        await self._task
+
+    async def _run(self):
+        # TODO: guard against multiple run calls?
+        logger.info("Starting server")
+        server = await serve(
+            self._handle_connection,
+            self.host,
+            self.port,
+            subprotocols=[Subprotocol("x-foxglove-1")],
+        )
+        for sock in server.sockets or []:
+            logger.info("Server listening on %s", sock.getsockname())
+
+        def sigint_handler():
+            logger.info("Closing server due to SIGINT")
+            server.close()
+
+        asyncio.get_event_loop().add_signal_handler(signal.SIGINT, sigint_handler)
+        await server.wait_closed()
+        logger.info("Server closed")
+
+    async def add_channel(self, channel: ChannelWithoutId):
+        new_id = self._next_channel_id
+        self._next_channel_id = ChannelId(new_id + 1)
+        self._channels[new_id] = Channel(id=new_id, **channel)
+        # TODO: notify clients of new channels
+        return new_id
+
+    async def remove_channel(self, chan_id: ChannelId):
+        # TODO: notify clients of removed channel
+        del self._channels[chan_id]
+        for client in self._clients.values():
+            subs = client.subscriptions_by_channel.get(chan_id)
+            if subs is not None:
+                # TODO: notify clients of expired subscriptions?
+                for sub_id in subs:
+                    del client.subscriptions[sub_id]
+                del client.subscriptions_by_channel[chan_id]
+
+    async def handle_message(self, chan_id: ChannelId, timestamp: int, payload: bytes):
+        for client in self._clients.values():
+            subs = client.subscriptions_by_channel.get(chan_id, set())
+            for sub_id in subs:
+                await self._send_message_data(
+                    client.connection,
+                    subscription=sub_id,
+                    timestamp=timestamp,
+                    payload=payload,
+                )
+
+    async def _send_json(self, connection: WebSocketServerProtocol, msg: ServerMessage):
         await connection.send(json.dumps(msg, separators=(",", ":")))
 
-    async def send_message_data(
-        *, subscription: ClientSubscriptionId, timestamp: int, payload: bytes
+    async def _send_message_data(
+        self,
+        connection: WebSocketServerProtocol,
+        *,
+        subscription: ClientSubscriptionId,
+        timestamp: int,
+        payload: bytes,
     ):
-        buf = bytearray(message_data_header.size + len(payload))
-        message_data_header.pack_into(
-            buf, 0, ServerOpcode.MESSAGE_DATA, subscription, timestamp
+        header = MessageDataHeader.pack(
+            ServerOpcode.MESSAGE_DATA, subscription, timestamp
         )
-        buf[message_data_header.size :] = payload
-        await connection.send(buf)
+        await connection.send([header, payload])
 
-    async def handle_message(message: ClientMessage):
-        op = message["op"]
-        if op == ClientOpcode.LIST_CHANNELS:
-            await send({"op": ServerOpcode.CHANNEL_LIST, "channels": []})
-        elif op == ClientOpcode.SUBSCRIBE:
-            for unsub in message["subscriptions"]:
-                chan = channels_by_id[unsub["channel"]]
-                subscriptions[unsub["clientSubscriptionId"]] = chan["id"]
-                subscriptions_ids_by_channel[chan["id"]].add(
-                    unsub["clientSubscriptionId"]
-                )
-        elif op == ClientOpcode.UNSUBSCRIBE:
-            for clientSubscriptionId in message["unsubscriptions"]:
-                chan = subscriptions[clientSubscriptionId]
-                del subscriptions[clientSubscriptionId]
-                subscriptions_ids_by_channel[chan].remove(clientSubscriptionId)
-            await send(
+    async def _handle_connection(
+        self, connection: WebSocketServerProtocol, path: str
+    ) -> None:
+        logger.info("Connection to %s opened via %s", connection.remote_address, path)
+
+        client = Client(
+            connection=connection, subscriptions={}, subscriptions_by_channel={}
+        )
+        self._clients[connection] = client
+
+        try:
+            await self._send_json(
+                connection,
                 {
-                    "op": ServerOpcode.STATUS_MESSAGE,
-                    "level": StatusLevel.ERROR,
-                    "message": "Not yet implemented",
-                }
+                    "op": ServerOpcode.SERVER_INFO,
+                    "id": SERVER_ID,
+                    "capabilities": [],
+                },
             )
-        else:
-            raise ValueError(f"Unrecognized client opcode: {op}")
+            await self._send_json(
+                connection,
+                {
+                    "op": ServerOpcode.CHANNEL_LIST,
+                    "channels": list(self._channels.values()),
+                },
+            )
+            async for raw_message in connection:
+                await self._handle_raw_client_message(client, raw_message)
 
-    async def handle_raw_message(raw_message):
+        except ConnectionClosed as closed:
+            logger.info(
+                "Connection to %s closed: %s %r",
+                connection.remote_address,
+                closed.code,
+                closed.reason,
+            )
+
+        except Exception:
+            logger.exception(
+                "Error handling client connection %s", connection.remote_address
+            )
+            await connection.close(1011)  # Internal Error
+
+        finally:
+            # TODO: invoke user unsubscribe callback
+            del self._clients[connection]
+
+    async def _handle_raw_client_message(self, client: Client, raw_message: Data):
         try:
             if not isinstance(raw_message, str):
                 raise TypeError(
@@ -169,77 +254,106 @@ async def handle_connection(connection: WebSocketServerProtocol, path: str) -> N
             logger.debug("Got message: %s", message)
             if not isinstance(message, dict):
                 raise TypeError(f"Expected JSON object, got {type(message)}")
-            await handle_message(message)
+            await self._handle_client_message(client, cast(ClientMessage, message))
+
         except Exception as exc:
             logger.exception("Error handling message %s", raw_message)
-            await send(
+            await self._send_json(
+                client.connection,
                 {
                     "op": ServerOpcode.STATUS_MESSAGE,
                     "level": StatusLevel.ERROR,
                     "message": f"{type(exc).__name__}: {exc}",
-                }
+                },
             )
 
-    channel_list: ChannelList = {
-        "op": ServerOpcode.CHANNEL_LIST,
-        "channels": [
-            {
-                "id": ChannelId(1),
-                "topic": "/foo",
-                "encoding": "protobuf",
-                "schemaName": "Foo",
-                "schema": "",
-            }
-        ],
-    }
+    async def _handle_client_message(self, client: Client, message: ClientMessage):
+        if message["op"] == ClientOpcode.LIST_CHANNELS:
+            await self._send_json(
+                client.connection, {"op": ServerOpcode.CHANNEL_LIST, "channels": []}
+            )
+        elif message["op"] == ClientOpcode.SUBSCRIBE:
+            for sub in message["subscriptions"]:
+                chan_id = sub["channel"]
+                sub_id = sub["clientSubscriptionId"]
+                if sub_id in client.subscriptions:
+                    await self._send_json(
+                        client.connection,
+                        {
+                            "op": ServerOpcode.STATUS_MESSAGE,
+                            "level": StatusLevel.ERROR,
+                            "message": f"Client subscription id {sub['clientSubscriptionId']} was already used; ignoring subscription",
+                        },
+                    )
+                    continue
+                chan = self._channels.get(chan_id)
+                if chan is None:
+                    await self._send_json(
+                        client.connection,
+                        {
+                            "op": ServerOpcode.STATUS_MESSAGE,
+                            "level": StatusLevel.WARNING,
+                            "message": f"Channel {sub['channel']} is not available; ignoring subscription",
+                        },
+                    )
+                    continue
+                logger.debug(
+                    "Client %s subscribed to channel %s",
+                    client.connection.remote_address,
+                    chan_id,
+                )
+                # TODO: invoke user subscribe callback
+                client.subscriptions[sub_id] = chan_id
+                client.subscriptions_by_channel.setdefault(chan_id, set()).add(sub_id)
 
-    await send({"op": ServerOpcode.SERVER_INFO, "id": SERVER_ID, "capabilities": []})
-    await send(channel_list)
-
-    async def send_msg():
-        await asyncio.sleep(1)
-        subscription = ClientSubscriptionId(1)
-        timestamp = time.time_ns()
-        await send_message_data(
-            subscription=subscription, timestamp=timestamp, payload=b"hello world"
-        )
-
-    asyncio.create_task(send_msg())
-
-    try:
-        async for raw_message in connection:
-            await handle_raw_message(raw_message)
-    except ConnectionClosed as closed:
-        logger.info(
-            "Connection to %s closed: %s %r",
-            connection.remote_address,
-            closed.code,
-            closed.reason,
-        )
-
-    # for t in asyncio.all_tasks():
-    #     await t
-    # send_fut = asyncio.create_task(send_loop(websocket))
-    # async for message in websocket:
-    #     pass
-    # await send_fut
+        elif message["op"] == ClientOpcode.UNSUBSCRIBE:
+            for sub_id in message["unsubscriptions"]:
+                chan_id = client.subscriptions.get(sub_id)
+                if chan_id is None:
+                    await self._send_json(
+                        client.connection,
+                        {
+                            "op": ServerOpcode.STATUS_MESSAGE,
+                            "level": StatusLevel.WARNING,
+                            "message": f"Client subscription id {sub_id} did not exist; ignoring unsubscription",
+                        },
+                    )
+                    continue
+                logger.debug(
+                    "Client %s unsubscribed from channel %s",
+                    client.connection.remote_address,
+                    chan_id,
+                )
+                # TODO: invoke user unsubscribe callback
+                del client.subscriptions[sub_id]
+                subs = client.subscriptions_by_channel.get(chan_id)
+                if subs is not None:
+                    subs.remove(sub_id)
+                    if len(subs) == 0:
+                        del client.subscriptions_by_channel[chan_id]
+        else:
+            raise ValueError(f"Unrecognized client opcode: {message['op']}")
 
 
 async def main():
-    logger.info("Starting server")
-    server = await serve(
-        handle_connection, "localhost", 8765, subprotocols=[Subprotocol("x-foxglove-1")]
+    server = FoxgloveServer("localhost", 8765)
+    server.start()
+    chan_id = await server.add_channel(
+        {
+            "topic": "/foo",
+            "encoding": "protobuf",
+            "schemaName": "Foo",
+            "schema": 'syntax = "proto3"; message Foo { }',
+        }
     )
-    for sock in server.sockets or []:
-        logger.info("Server listening on %s", sock.getsockname())
 
-    def sigint_handler():
-        logger.info("Closing server due to SIGINT")
-        server.close()
+    async def send_example_message():
+        await asyncio.sleep(5)
+        await server.handle_message(chan_id, time.time_ns(), b"hello world")
 
-    asyncio.get_event_loop().add_signal_handler(signal.SIGINT, sigint_handler)
+    await send_example_message()
     await server.wait_closed()
-    logger.info("Server closed")
 
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())
