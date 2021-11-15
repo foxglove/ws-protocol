@@ -48,9 +48,7 @@ async def main(infile: str):
         )
 
         while True:
-            print("Top of loop")
             for chan_id, entry in all_entries:
-                print("Sending message")
                 await asyncio.sleep(0.5)
                 await server.handle_message(
                     chan_id,
