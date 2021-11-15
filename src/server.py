@@ -1,9 +1,8 @@
 import asyncio
 import json
 import logging
-import signal
 from struct import Struct
-from typing import cast
+from typing import Any, cast
 from websockets.server import serve, WebSocketServerProtocol
 from websockets.exceptions import ConnectionClosed
 from dataclasses import dataclass
@@ -51,15 +50,27 @@ class FoxgloveServer:
         self._channels = {}
         self._next_channel_id = ChannelId(0)
 
+    async def __aenter__(self):
+        self.start()
+        return self
+
+    async def __aexit__(self, exc_type: Any, exc_val: Any, traceback: Any):
+        self.close()
+        await self.wait_closed()
+
     def start(self):
         self._task = asyncio.create_task(self._run())
+
+    def close(self):
+        logger.info("Shutting down...")
+        self._task.cancel()
 
     async def wait_closed(self):
         await self._task
 
     async def _run(self):
         # TODO: guard against multiple run calls?
-        logger.info("Starting server")
+        logger.info("Starting server...")
         server = await serve(
             self._handle_connection,
             self.host,
@@ -68,14 +79,12 @@ class FoxgloveServer:
         )
         for sock in server.sockets or []:
             logger.info("Server listening on %s", sock.getsockname())
-
-        def sigint_handler():
-            logger.info("Closing server due to SIGINT")
+        try:
+            await server.wait_closed()
+        except asyncio.CancelledError:
             server.close()
-
-        asyncio.get_event_loop().add_signal_handler(signal.SIGINT, sigint_handler)
-        await server.wait_closed()
-        logger.info("Server closed")
+            await server.wait_closed()
+            logger.info("Server closed")
 
     async def add_channel(self, channel: ChannelWithoutId):
         new_id = self._next_channel_id
