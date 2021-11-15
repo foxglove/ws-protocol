@@ -20,11 +20,14 @@ from .types import (
     StatusLevel,
 )
 
-logger = logging.getLogger("example")
-logger.setLevel(logging.DEBUG)
-handler = logging.StreamHandler()
-handler.setFormatter(logging.Formatter("%(asctime)s: [%(levelname)s] %(message)s"))
-logger.addHandler(handler)
+
+def _get_default_logger():
+    logger = logging.getLogger("FoxgloveServer")
+    logger.setLevel(logging.DEBUG)
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter("%(asctime)s: [%(levelname)s] %(message)s"))
+    logger.addHandler(handler)
+    return logger
 
 
 MessageDataHeader = Struct("<BIQ")
@@ -41,14 +44,23 @@ class FoxgloveServer:
     _clients: dict[WebSocketServerProtocol, Client]
     _channels: dict[ChannelId, Channel]
     _next_channel_id: ChannelId
+    _logger: logging.Logger
 
-    def __init__(self, host: str, port: int, name: str):
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        name: str,
+        *,
+        logger: logging.Logger = _get_default_logger(),
+    ):
         self.host = host
         self.port = port
         self.name = name
         self._clients = {}
         self._channels = {}
         self._next_channel_id = ChannelId(0)
+        self._logger = logger
 
     async def __aenter__(self):
         self.start()
@@ -62,7 +74,7 @@ class FoxgloveServer:
         self._task = asyncio.create_task(self._run())
 
     def close(self):
-        logger.info("Shutting down...")
+        self._logger.info("Shutting down...")
         self._task.cancel()
 
     async def wait_closed(self):
@@ -70,7 +82,7 @@ class FoxgloveServer:
 
     async def _run(self):
         # TODO: guard against multiple run calls?
-        logger.info("Starting server...")
+        self._logger.info("Starting server...")
         server = await serve(
             self._handle_connection,
             self.host,
@@ -78,13 +90,13 @@ class FoxgloveServer:
             subprotocols=[Subprotocol("x-foxglove-1")],
         )
         for sock in server.sockets or []:
-            logger.info("Server listening on %s", sock.getsockname())
+            self._logger.info("Server listening on %s", sock.getsockname())
         try:
             await server.wait_closed()
         except asyncio.CancelledError:
             server.close()
             await server.wait_closed()
-            logger.info("Server closed")
+            self._logger.info("Server closed")
 
     async def add_channel(self, channel: ChannelWithoutId):
         new_id = self._next_channel_id
@@ -134,7 +146,9 @@ class FoxgloveServer:
     async def _handle_connection(
         self, connection: WebSocketServerProtocol, path: str
     ) -> None:
-        logger.info("Connection to %s opened via %s", connection.remote_address, path)
+        self._logger.info(
+            "Connection to %s opened via %s", connection.remote_address, path
+        )
 
         client = Client(
             connection=connection, subscriptions={}, subscriptions_by_channel={}
@@ -161,7 +175,7 @@ class FoxgloveServer:
                 await self._handle_raw_client_message(client, raw_message)
 
         except ConnectionClosed as closed:
-            logger.info(
+            self._logger.info(
                 "Connection to %s closed: %s %r",
                 connection.remote_address,
                 closed.code,
@@ -169,7 +183,7 @@ class FoxgloveServer:
             )
 
         except Exception:
-            logger.exception(
+            self._logger.exception(
                 "Error handling client connection %s", connection.remote_address
             )
             await connection.close(1011)  # Internal Error
@@ -185,13 +199,13 @@ class FoxgloveServer:
                     f"Expected text message, got {type(raw_message)} (first byte: {next(iter(raw_message), None)})"
                 )
             message = json.loads(raw_message)
-            logger.debug("Got message: %s", message)
+            self._logger.debug("Got message: %s", message)
             if not isinstance(message, dict):
                 raise TypeError(f"Expected JSON object, got {type(message)}")
             await self._handle_client_message(client, cast(ClientMessage, message))
 
         except Exception as exc:
-            logger.exception("Error handling message %s", raw_message)
+            self._logger.exception("Error handling message %s", raw_message)
             await self._send_json(
                 client.connection,
                 {
@@ -231,7 +245,7 @@ class FoxgloveServer:
                         },
                     )
                     continue
-                logger.debug(
+                self._logger.debug(
                     "Client %s subscribed to channel %s",
                     client.connection.remote_address,
                     chan_id,
@@ -253,7 +267,7 @@ class FoxgloveServer:
                         },
                     )
                     continue
-                logger.debug(
+                self._logger.debug(
                     "Client %s unsubscribed from channel %s",
                     client.connection.remote_address,
                     chan_id,
