@@ -1,4 +1,4 @@
-from typing import Literal, NewType, TypedDict, Union
+from typing import List, Literal, NewType, TypedDict, Union
 from enum import IntEnum
 
 ChannelId = NewType("ChannelId", int)
@@ -22,12 +22,12 @@ class Subscription(TypedDict):
 
 class Subscribe(TypedDict):
     op: Literal[ClientOpcode.SUBSCRIBE]
-    subscriptions: list[Subscription]
+    subscriptions: List[Subscription]
 
 
 class Unsubscribe(TypedDict):
     op: Literal[ClientOpcode.UNSUBSCRIBE]
-    unsubscriptions: list[ClientSubscriptionId]
+    unsubscriptions: List[ClientSubscriptionId]
 
 
 ClientMessage = Union[ListChannels, Subscribe, Unsubscribe]
@@ -44,7 +44,7 @@ class ServerOpcode(IntEnum):
 class ServerInfo(TypedDict):
     op: Literal[ServerOpcode.SERVER_INFO]
     name: str
-    capabilities: list[str]
+    capabilities: List[str]
 
 
 class StatusLevel(IntEnum):
@@ -72,7 +72,7 @@ class Channel(ChannelWithoutId):
 
 class ChannelList(TypedDict):
     op: Literal[ServerOpcode.CHANNEL_LIST]
-    channels: list[Channel]
+    channels: List[Channel]
 
 
 ServerMessage = Union[ServerInfo, StatusMessage, ChannelList]

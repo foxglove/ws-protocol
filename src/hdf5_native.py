@@ -23,6 +23,7 @@
   You can use the eCALHDF5 API in a function style or OO manner.
 """
 
+from typing import List
 import h5py
 
 
@@ -49,7 +50,7 @@ class Meas:
     def set_max_size_per_file(self, size):
         raise NotImplementedError()
 
-    def get_channel_names(self) -> list[str]:
+    def get_channel_names(self) -> List[str]:
         return self.channels
 
     def get_channel_description(self, channel_name: str) -> bytes:

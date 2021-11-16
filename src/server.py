@@ -2,7 +2,7 @@ import asyncio
 import json
 import logging
 from struct import Struct
-from typing import Any, cast
+from typing import Any, Dict, Set, cast
 from websockets.server import serve, WebSocketServerProtocol
 from websockets.exceptions import ConnectionClosed
 from dataclasses import dataclass
@@ -36,13 +36,13 @@ MessageDataHeader = Struct("<BIQ")
 @dataclass
 class Client:
     connection: WebSocketServerProtocol
-    subscriptions: dict[ClientSubscriptionId, ChannelId]
-    subscriptions_by_channel: dict[ChannelId, set[ClientSubscriptionId]]
+    subscriptions: Dict[ClientSubscriptionId, ChannelId]
+    subscriptions_by_channel: Dict[ChannelId, Set[ClientSubscriptionId]]
 
 
 class FoxgloveServer:
-    _clients: dict[WebSocketServerProtocol, Client]
-    _channels: dict[ChannelId, Channel]
+    _clients: Dict[WebSocketServerProtocol, Client]
+    _channels: Dict[ChannelId, Channel]
     _next_channel_id: ChannelId
     _logger: logging.Logger
 

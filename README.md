@@ -1,7 +1,7 @@
 ## Virtualenv usage
 
 ```
-python3.9 -m venv venv
+python3.8 -m venv venv
 . venv/bin/activate
 pip install -r requirements.txt -r dev-requirements.txt
 ```
