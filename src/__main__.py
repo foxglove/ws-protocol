@@ -2,23 +2,26 @@ import asyncio
 import argparse
 import base64
 import signal
-from typing import Type
+from typing import TYPE_CHECKING, Any, Coroutine, Type
 
 from .server import FoxgloveServer
 from .types import ChannelId
-from . import hdf5_native
 
 try:
     from ecal.measurement.hdf5 import Meas
 except ImportError:
     from .hdf5_native import Meas
-Meas: Type[hdf5_native.Meas]
+
+if TYPE_CHECKING:
+    from . import hdf5_native
+
+    Meas: Type[hdf5_native.Meas]
 
 
 async def main(infile: str):
     measurement = Meas(infile)
 
-    async with FoxgloveServer("localhost", 8765, "example server") as server:
+    async with FoxgloveServer("0.0.0.0", 8765, "example server") as server:
         # server.start()
         channels_by_name: dict[str, ChannelId] = {}
 
@@ -57,6 +60,31 @@ async def main(infile: str):
                 )
 
 
+def run_cancellable(coro: Coroutine[None, None, Any]):
+    """
+    Run a coroutine such that a ctrl-C interrupt will gracefully cancel its
+    execution and give it a chance to clean up before returning.
+
+    See also: https://www.roguelynn.com/words/asyncio-graceful-shutdowns/
+    """
+    loop = asyncio.get_event_loop()
+    task = loop.create_task(coro)
+    try:
+        loop.add_signal_handler(signal.SIGINT, task.cancel)
+    except NotImplementedError:
+        # signal handlers are not available on Windows, KeyboardInterrupt will be raised instead
+        pass
+
+    try:
+        try:
+            loop.run_until_complete(task)
+        except KeyboardInterrupt:
+            task.cancel()
+            loop.run_until_complete(task)
+    except asyncio.CancelledError:
+        pass
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Foxglove server example")
     parser.add_argument(
@@ -66,11 +94,4 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    # https://www.roguelynn.com/words/asyncio-graceful-shutdowns/
-    loop = asyncio.get_event_loop()
-    task = loop.create_task(main(**vars(args)))
-    loop.add_signal_handler(signal.SIGINT, task.cancel)
-    try:
-        loop.run_until_complete(task)
-    except asyncio.CancelledError:
-        pass
+    run_cancellable(main(**vars(args)))
