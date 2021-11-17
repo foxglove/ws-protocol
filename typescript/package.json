@@ -1,11 +1,11 @@
 {
-  "name": "@foxglove/websocket",
+  "name": "@foxglove/ws-protocol",
   "version": "0.0.1",
   "description": "Foxglove Studio WebSocket protocol client",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/foxglove/websocket.git"
+    "url": "https://github.com/foxglove/ws-protocol.git"
   },
   "author": {
     "name": "Foxglove Technologies",

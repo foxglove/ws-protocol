@@ -18,5 +18,5 @@ jobs:
           cache: yarn
 
       - run: yarn install --frozen-lockfile
-      - run: yarn workspace @foxglove/websocket lint:ci
-      - run: yarn workspace @foxglove/websocket test
+      - run: yarn workspace @foxglove/ws-protocol lint:ci
+      - run: yarn workspace @foxglove/ws-protocol test
