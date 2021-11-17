@@ -15,7 +15,7 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: 16.x
-          registry-url: https://registry.npmjs.org
+          cache: yarn
 
       - run: yarn install --frozen-lockfile
       - run: yarn workspace @foxglove/websocket lint:ci
