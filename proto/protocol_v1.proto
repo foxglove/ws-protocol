@@ -15,7 +15,7 @@ message ServerMessage {
     StatusMessage status_message = 2;
     Advertise advertise = 3;
     Unadvertise unadvertise = 4;
-    MessageData message_data = 5;
+    MessageData messageData = 5;
   }
 }
 
