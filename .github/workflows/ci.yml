@@ -7,6 +7,21 @@ on:
     branches: ["*"]
 
 jobs:
+  protobuf:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      # Install yarn dependencies for ts-proto
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 16.x
+          cache: yarn
+      - run: yarn install --frozen-lockfile
+
+      - uses: bufbuild/buf-setup-action@v0.6.0
+      - uses: bufbuild/buf-lint-action@v1
+
   typescript:
     runs-on: ubuntu-latest
 

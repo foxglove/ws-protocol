@@ -4,5 +4,8 @@
     "packages": [
       "typescript"
     ]
+  },
+  "devDependencies": {
+    "ts-proto": "1.87.0"
   }
 }

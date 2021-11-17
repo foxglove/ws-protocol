@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package foxglove.websocket.v1;
+
+message ClientMessage {
+  oneof message {
+    Subscribe subscribe = 1;
+    Unsubscribe unsubscribe = 2;
+  }
+}
+
+message ServerMessage {
+  oneof message {
+    ServerInfo server_info = 1;
+    StatusMessage status_message = 2;
+    Advertise advertise = 3;
+    Unadvertise unadvertise = 4;
+    MessageData message_data = 5;
+  }
+}
+
+message ServerInfo {
+  string name = 1;
+  repeated string capabilities = 2;
+}
+
+message StatusMessage {
+  Level level = 1;
+  string message = 2;
+
+  enum Level {
+    LEVEL_INFO = 0;
+    LEVEL_WARNING = 1;
+    LEVEL_ERROR = 2;
+  }
+}
+
+message Advertise {
+  repeated Channel channels = 1;
+
+  message Channel {
+    uint32 id = 1;
+    string topic = 2;
+    string encoding = 3;
+    string schema_name = 4;
+    string schema = 5;
+  }
+}
+
+message Unadvertise {
+  repeated uint32 channels = 1;
+}
+
+message Subscribe {
+  repeated Subscription subscriptions = 1;
+
+  message Subscription {
+    uint32 id = 1;
+    uint32 channel_id = 2;
+  }
+}
+
+message Unsubscribe {
+  repeated uint32 subscription_ids = 1;
+}
+
+message MessageData {
+  uint32 subscription_id = 1;
+  fixed64 receive_timestamp = 2;
+  bytes payload = 3;
+}

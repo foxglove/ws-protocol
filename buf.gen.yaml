@@ -1,0 +1,10 @@
+version: v1
+plugins:
+  - name: python
+    out: gen/proto/python
+
+  - name: ts_proto
+    path: node_modules/.bin/protoc-gen-ts_proto
+    out: gen/proto/typescript
+    opt:
+      - forceLong=long
