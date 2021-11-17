@@ -216,11 +216,11 @@ class FoxgloveServer:
             )
 
     async def _handle_client_message(self, client: Client, message: ClientMessage):
-        if message["op"] == ClientOpcode.LIST_CHANNELS:
-            await self._send_json(
-                client.connection, {"op": ServerOpcode.CHANNEL_LIST, "channels": []}
-            )
-        elif message["op"] == ClientOpcode.SUBSCRIBE:
+        # if message["op"] == ClientOpcode.LIST_CHANNELS:
+        #     await self._send_json(
+        #         client.connection, {"op": ServerOpcode.CHANNEL_LIST, "channels": []}
+        #     )
+        if message["op"] == ClientOpcode.SUBSCRIBE:
             for sub in message["subscriptions"]:
                 chan_id = sub["channel"]
                 sub_id = sub["clientSubscriptionId"]

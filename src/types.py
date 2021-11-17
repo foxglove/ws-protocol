@@ -6,13 +6,13 @@ ClientSubscriptionId = NewType("ClientSubscriptionId", int)
 
 
 class ClientOpcode(IntEnum):
-    LIST_CHANNELS = 0x02
+    # LIST_CHANNELS = 0x02
     SUBSCRIBE = 0x03
     UNSUBSCRIBE = 0x04
 
 
-class ListChannels(TypedDict):
-    op: Literal[ClientOpcode.LIST_CHANNELS]
+# class ListChannels(TypedDict):
+#     op: Literal[ClientOpcode.LIST_CHANNELS]
 
 
 class Subscription(TypedDict):
@@ -30,7 +30,7 @@ class Unsubscribe(TypedDict):
     unsubscriptions: List[ClientSubscriptionId]
 
 
-ClientMessage = Union[ListChannels, Subscribe, Unsubscribe]
+ClientMessage = Union[Subscribe, Unsubscribe]
 
 
 class ServerOpcode(IntEnum):
