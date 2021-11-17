@@ -1,7 +1,11 @@
 {
-    "python.formatting.provider": "black",
-    "[python]": {
-        "editor.formatOnSave": true,
-    },
-    "python.analysis.typeCheckingMode": "strict"
+  "editor.formatOnSave": true,
+  "python.formatting.provider": "black",
+  "python.analysis.typeCheckingMode": "strict",
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "prettier.prettierPath": "./node_modules/prettier",
+  "eslint.packageManager": "yarn",
+  "eslint.options": {
+    "reportUnusedDisableDirectives": true
+  }
 }
