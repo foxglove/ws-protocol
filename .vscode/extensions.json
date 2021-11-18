@@ -1,5 +1,8 @@
 {
-    "recommendations": [
-        "ms-python.python"
-    ]
+  "recommendations": [
+    "ms-python.python",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "orta.vscode-jest"
+  ]
 }

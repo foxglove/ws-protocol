@@ -4,11 +4,10 @@ import { parseServerMessage } from "./parse";
 import {
   Channel,
   ClientMessage,
-  ClientOpcode,
-  ClientSubscriptionId,
+  SubscriptionId,
   ServerMessage,
-  ServerOpcode,
   Subscribe,
+  BinaryOpcode,
 } from "./types";
 
 const log = {
@@ -20,7 +19,7 @@ const log = {
 
 type Deserializer = (data: DataView) => unknown;
 type ResolvedSubscription = {
-  id: ClientSubscriptionId;
+  id: SubscriptionId;
   channel: Channel;
   deserializer: Deserializer;
 };
@@ -63,7 +62,7 @@ export default class FoxgloveClient {
 
   private unresolvedSubscriptions = new Set<string>();
   private resolvedSubscriptionsByTopic = new Map<string, ResolvedSubscription>();
-  private resolvedSubscriptionsById = new Map<ClientSubscriptionId, ResolvedSubscription>();
+  private resolvedSubscriptionsById = new Map<SubscriptionId, ResolvedSubscription>();
 
   constructor({
     ws,
@@ -110,15 +109,15 @@ export default class FoxgloveClient {
       log.debug("onmessage", message);
 
       switch (message.op) {
-        case ServerOpcode.SERVER_INFO:
+        case "serverInfo":
           log.info("Received server info:", message);
           return;
 
-        case ServerOpcode.STATUS_MESSAGE:
+        case "status":
           log.info("Received status message:", message);
           return;
 
-        case ServerOpcode.CHANNEL_LIST: {
+        case "advertise": {
           this.channelsByTopic.clear();
           for (const channel of message.channels) {
             if (this.channelsByTopic.has(channel.topic)) {
@@ -138,7 +137,11 @@ export default class FoxgloveClient {
           return;
         }
 
-        case ServerOpcode.MESSAGE_DATA: {
+        case "unadvertise": {
+          throw new Error("not yet implemented");
+        }
+
+        case BinaryOpcode.MESSAGE_DATA: {
           const sub = this.resolvedSubscriptionsById.get(message.clientSubscriptionId);
           if (!sub) {
             log.warn(`Received message for unknown subscription ${message.clientSubscriptionId}`);
@@ -177,12 +180,7 @@ export default class FoxgloveClient {
     this.unresolvedSubscriptions.delete(topic);
     const sub = this.resolvedSubscriptionsByTopic.get(topic);
     if (sub) {
-      this.ws.send(
-        this.serialize({
-          op: ClientOpcode.UNSUBSCRIBE,
-          unsubscriptions: [sub.id],
-        }),
-      );
+      this.ws.send(this.serialize({ op: "unsubscribe", subscriptionIds: [sub.id] }));
       this.resolvedSubscriptionsById.delete(sub.id);
       this.resolvedSubscriptionsByTopic.delete(topic);
     }
@@ -197,7 +195,7 @@ export default class FoxgloveClient {
         return;
       }
       const id = this.nextSubscriptionId++;
-      subscriptions.push({ clientSubscriptionId: id, channel: channel.id });
+      subscriptions.push({ id, channelId: channel.id });
       const resolved = {
         id,
         channel,
@@ -208,7 +206,7 @@ export default class FoxgloveClient {
       this.unresolvedSubscriptions.delete(topic);
     }
     if (subscriptions.length > 0) {
-      this.ws.send(this.serialize({ op: ClientOpcode.SUBSCRIBE, subscriptions }));
+      this.ws.send(this.serialize({ op: "subscribe", subscriptions }));
     }
   }
 

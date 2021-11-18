@@ -1,15 +1,5 @@
-export enum ClientOpcode {
-  // LIST_CHANNELS = 0x02,
-  SUBSCRIBE = 0x03,
-  UNSUBSCRIBE = 0x04,
-}
-
-export enum ServerOpcode {
-  SERVER_INFO = 0x80,
-  STATUS_MESSAGE = 0x81,
-  CHANNEL_LIST = 0x82,
-  // SUBSCRIPTION_ACK = 0x83,
-  MESSAGE_DATA = 0x85,
+export enum BinaryOpcode {
+  MESSAGE_DATA = 1,
 }
 
 export type ChannelId = number;
@@ -20,58 +10,45 @@ export type Channel = {
   schemaName: string;
   schema: string;
 };
-export type ClientSubscriptionId = number;
+export type SubscriptionId = number;
 
-// export type ListChannels = {
-//   op: ClientOpcode.LIST_CHANNELS;
-// };
 export type Subscribe = {
-  op: ClientOpcode.SUBSCRIBE;
+  op: "subscribe";
   subscriptions: Array<{
-    clientSubscriptionId: ClientSubscriptionId;
-    channel: ChannelId;
+    id: SubscriptionId;
+    channelId: ChannelId;
   }>;
 };
 export type Unsubscribe = {
-  op: ClientOpcode.UNSUBSCRIBE;
-  unsubscriptions: ClientSubscriptionId[];
+  op: "unsubscribe";
+  subscriptionIds: SubscriptionId[];
 };
 
 export type ClientMessage = Subscribe | Unsubscribe;
 
 export type ServerInfo = {
-  op: ServerOpcode.SERVER_INFO;
+  op: "serverInfo";
   name: string;
   capabilities: string[];
 };
 export type StatusMessage = {
-  op: ServerOpcode.STATUS_MESSAGE;
+  op: "status";
   level: 0 | 1 | 2;
   message: string;
 };
-export type ChannelList = {
-  op: ServerOpcode.CHANNEL_LIST;
+export type Advertise = {
+  op: "advertise";
   channels: Channel[];
 };
-// export type SubscriptionAck = {
-//   op: ServerOpcode.SUBSCRIPTION_ACK;
-//   subscriptions: Array<{
-//     clientSubscriptionId: number;
-//     encoding: string;
-//     schemaName: string;
-//     schema: string;
-//   }>;
-// };
+export type Unadvertise = {
+  op: "unadvertise";
+  channelIds: ChannelId[];
+};
 export type MessageData = {
-  op: ServerOpcode.MESSAGE_DATA;
-  clientSubscriptionId: number;
+  op: BinaryOpcode.MESSAGE_DATA;
+  clientSubscriptionId: SubscriptionId;
   timestamp: bigint;
   data: DataView;
 };
 
-export type ServerMessage =
-  | ServerInfo
-  | StatusMessage
-  | ChannelList
-  // | SubscriptionAck
-  | MessageData;
+export type ServerMessage = ServerInfo | StatusMessage | Advertise | Unadvertise | MessageData;

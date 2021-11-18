@@ -12,7 +12,9 @@
     "email": "support@foxglove.dev"
   },
   "homepage": "https://foxglove.dev/",
-  "main": "./src/index.ts",
+  "module": "dist/esm/src/index.js",
+  "main": "dist/cjs/src/index.js",
+  "typings": "dist/esm/src/index.d.ts",
   "files": [
     "dist",
     "src"
@@ -40,7 +42,6 @@
     "eslint-plugin-import": "2.25.3",
     "eslint-plugin-jest": "25.2.4",
     "eslint-plugin-prettier": "4.0.0",
-    "eventemitter3": "4.0.7",
     "jest": "27.3.1",
     "lodash": "4.17.21",
     "prettier": "2.4.1",
@@ -51,6 +52,7 @@
     "ws": "8.2.3"
   },
   "dependencies": {
+    "eventemitter3": "^4.0.7",
     "tslib": "^2"
   }
 }

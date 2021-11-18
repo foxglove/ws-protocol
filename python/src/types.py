@@ -2,47 +2,33 @@ from typing import List, Literal, NewType, TypedDict, Union
 from enum import IntEnum
 
 ChannelId = NewType("ChannelId", int)
-ClientSubscriptionId = NewType("ClientSubscriptionId", int)
-
-
-class ClientOpcode(IntEnum):
-    # LIST_CHANNELS = 0x02
-    SUBSCRIBE = 0x03
-    UNSUBSCRIBE = 0x04
-
-
-# class ListChannels(TypedDict):
-#     op: Literal[ClientOpcode.LIST_CHANNELS]
+SubscriptionId = NewType("SubscriptionId", int)
 
 
 class Subscription(TypedDict):
-    channel: ChannelId
-    clientSubscriptionId: ClientSubscriptionId
+    id: SubscriptionId
+    channelId: ChannelId
 
 
 class Subscribe(TypedDict):
-    op: Literal[ClientOpcode.SUBSCRIBE]
+    op: Literal["subscribe"]
     subscriptions: List[Subscription]
 
 
 class Unsubscribe(TypedDict):
-    op: Literal[ClientOpcode.UNSUBSCRIBE]
-    unsubscriptions: List[ClientSubscriptionId]
+    op: Literal["unsubscribe"]
+    subscriptionIds: List[SubscriptionId]
 
 
 ClientMessage = Union[Subscribe, Unsubscribe]
 
 
-class ServerOpcode(IntEnum):
-    SERVER_INFO = 0x80
-    STATUS_MESSAGE = 0x81
-    CHANNEL_LIST = 0x82
-    # SUBSCRIPTION_ACK = 0x83
-    MESSAGE_DATA = 0x85
+class BinaryOpcode(IntEnum):
+    MESSAGE_DATA = 1
 
 
 class ServerInfo(TypedDict):
-    op: Literal[ServerOpcode.SERVER_INFO]
+    op: Literal["serverInfo"]
     name: str
     capabilities: List[str]
 
@@ -54,7 +40,7 @@ class StatusLevel(IntEnum):
 
 
 class StatusMessage(TypedDict):
-    op: Literal[ServerOpcode.STATUS_MESSAGE]
+    op: Literal["status"]
     level: StatusLevel
     message: str
 
@@ -70,9 +56,14 @@ class Channel(ChannelWithoutId):
     id: ChannelId
 
 
-class ChannelList(TypedDict):
-    op: Literal[ServerOpcode.CHANNEL_LIST]
+class Advertise(TypedDict):
+    op: Literal["advertise"]
     channels: List[Channel]
 
 
-ServerMessage = Union[ServerInfo, StatusMessage, ChannelList]
+class Unadvertise(TypedDict):
+    op: Literal["unadvertise"]
+    channelsIds: List[ChannelId]
+
+
+ServerMessage = Union[ServerInfo, StatusMessage, Advertise, Unadvertise]

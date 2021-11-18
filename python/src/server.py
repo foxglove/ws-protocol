@@ -9,14 +9,13 @@ from dataclasses import dataclass
 from websockets.typing import Data, Subprotocol
 
 from .types import (
+    BinaryOpcode,
     Channel,
     ChannelId,
     ChannelWithoutId,
     ClientMessage,
-    ClientOpcode,
-    ClientSubscriptionId,
+    SubscriptionId,
     ServerMessage,
-    ServerOpcode,
     StatusLevel,
 )
 
@@ -36,8 +35,8 @@ MessageDataHeader = Struct("<BIQ")
 @dataclass
 class Client:
     connection: WebSocketServerProtocol
-    subscriptions: Dict[ClientSubscriptionId, ChannelId]
-    subscriptions_by_channel: Dict[ChannelId, Set[ClientSubscriptionId]]
+    subscriptions: Dict[SubscriptionId, ChannelId]
+    subscriptions_by_channel: Dict[ChannelId, Set[SubscriptionId]]
 
 
 class FoxgloveServer:
@@ -134,12 +133,12 @@ class FoxgloveServer:
         self,
         connection: WebSocketServerProtocol,
         *,
-        subscription: ClientSubscriptionId,
+        subscription: SubscriptionId,
         timestamp: int,
         payload: bytes,
     ):
         header = MessageDataHeader.pack(
-            ServerOpcode.MESSAGE_DATA, subscription, timestamp
+            BinaryOpcode.MESSAGE_DATA, subscription, timestamp
         )
         await connection.send([header, payload])
 
@@ -159,7 +158,7 @@ class FoxgloveServer:
             await self._send_json(
                 connection,
                 {
-                    "op": ServerOpcode.SERVER_INFO,
+                    "op": "serverInfo",
                     "name": self.name,
                     "capabilities": [],
                 },
@@ -167,7 +166,7 @@ class FoxgloveServer:
             await self._send_json(
                 connection,
                 {
-                    "op": ServerOpcode.CHANNEL_LIST,
+                    "op": "advertise",
                     "channels": list(self._channels.values()),
                 },
             )
@@ -209,7 +208,7 @@ class FoxgloveServer:
             await self._send_json(
                 client.connection,
                 {
-                    "op": ServerOpcode.STATUS_MESSAGE,
+                    "op": "status",
                     "level": StatusLevel.ERROR,
                     "message": f"{type(exc).__name__}: {exc}",
                 },
@@ -220,17 +219,17 @@ class FoxgloveServer:
         #     await self._send_json(
         #         client.connection, {"op": ServerOpcode.CHANNEL_LIST, "channels": []}
         #     )
-        if message["op"] == ClientOpcode.SUBSCRIBE:
+        if message["op"] == "subscribe":
             for sub in message["subscriptions"]:
-                chan_id = sub["channel"]
-                sub_id = sub["clientSubscriptionId"]
+                chan_id = sub["channelId"]
+                sub_id = sub["id"]
                 if sub_id in client.subscriptions:
                     await self._send_json(
                         client.connection,
                         {
-                            "op": ServerOpcode.STATUS_MESSAGE,
+                            "op": "status",
                             "level": StatusLevel.ERROR,
-                            "message": f"Client subscription id {sub['clientSubscriptionId']} was already used; ignoring subscription",
+                            "message": f"Client subscription id {sub_id} was already used; ignoring subscription",
                         },
                     )
                     continue
@@ -239,9 +238,9 @@ class FoxgloveServer:
                     await self._send_json(
                         client.connection,
                         {
-                            "op": ServerOpcode.STATUS_MESSAGE,
+                            "op": "status",
                             "level": StatusLevel.WARNING,
-                            "message": f"Channel {sub['channel']} is not available; ignoring subscription",
+                            "message": f"Channel {chan_id} is not available; ignoring subscription",
                         },
                     )
                     continue
@@ -254,14 +253,14 @@ class FoxgloveServer:
                 client.subscriptions[sub_id] = chan_id
                 client.subscriptions_by_channel.setdefault(chan_id, set()).add(sub_id)
 
-        elif message["op"] == ClientOpcode.UNSUBSCRIBE:
-            for sub_id in message["unsubscriptions"]:
+        elif message["op"] == "unsubscribe":
+            for sub_id in message["subscriptionIds"]:
                 chan_id = client.subscriptions.get(sub_id)
                 if chan_id is None:
                     await self._send_json(
                         client.connection,
                         {
-                            "op": ServerOpcode.STATUS_MESSAGE,
+                            "op": "status",
                             "level": StatusLevel.WARNING,
                             "message": f"Client subscription id {sub_id} did not exist; ignoring unsubscription",
                         },
