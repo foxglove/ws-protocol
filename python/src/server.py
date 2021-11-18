@@ -221,7 +221,7 @@ class FoxgloveServer:
         #     )
         if message["op"] == "subscribe":
             for sub in message["subscriptions"]:
-                chan_id = sub["channel"]
+                chan_id = sub["channelId"]
                 sub_id = sub["id"]
                 if sub_id in client.subscriptions:
                     await self._send_json(

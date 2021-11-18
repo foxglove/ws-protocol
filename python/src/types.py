@@ -7,7 +7,7 @@ SubscriptionId = NewType("SubscriptionId", int)
 
 class Subscription(TypedDict):
     id: SubscriptionId
-    channel: ChannelId
+    channelId: ChannelId
 
 
 class Subscribe(TypedDict):
