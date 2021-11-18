@@ -32,6 +32,8 @@ jobs:
           node-version: 16.x
           cache: yarn
 
+      - uses: bufbuild/buf-setup-action@v0.6.0
       - run: yarn install --frozen-lockfile
+      - run: yarn build:protobuf:ts
       - run: yarn workspace @foxglove/ws-protocol lint:ci
       - run: yarn workspace @foxglove/ws-protocol test
