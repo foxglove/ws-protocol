@@ -12,8 +12,9 @@
     "email": "support@foxglove.dev"
   },
   "homepage": "https://foxglove.dev/",
-  "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
+  "module": "dist/esm/src/index.js",
+  "main": "dist/cjs/src/index.js",
+  "typings": "dist/esm/src/index.d.ts",
   "files": [
     "dist",
     "src"
