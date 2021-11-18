@@ -7,5 +7,9 @@
   "eslint.packageManager": "yarn",
   "eslint.options": {
     "reportUnusedDisableDirectives": true
+  },
+  "python.analysis.diagnosticSeverityOverrides": {
+    // produces spurious errors when importing local packages from tests
+    "reportMissingTypeStubs": "none"
   }
 }
