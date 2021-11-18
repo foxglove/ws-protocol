@@ -1,23 +1,18 @@
 import asyncio
-import json
 import logging
 from struct import Struct
-from typing import Any, Dict, Set, cast
+from typing import Any, Dict, Set
 from websockets.server import serve, WebSocketServerProtocol
 from websockets.exceptions import ConnectionClosed
 from dataclasses import dataclass
 from websockets.typing import Data, Subprotocol
 
+from .gen.proto import protocol_v1_pb2 as protocol_v1
+
 from .types import (
-    Channel,
     ChannelId,
     ChannelWithoutId,
-    ClientMessage,
-    ClientOpcode,
     ClientSubscriptionId,
-    ServerMessage,
-    ServerOpcode,
-    StatusLevel,
 )
 
 
@@ -42,7 +37,7 @@ class Client:
 
 class FoxgloveServer:
     _clients: Dict[WebSocketServerProtocol, Client]
-    _channels: Dict[ChannelId, Channel]
+    _channels: Dict[ChannelId, protocol_v1.Advertise.Channel]
     _next_channel_id: ChannelId
     _logger: logging.Logger
 
@@ -87,7 +82,7 @@ class FoxgloveServer:
             self._handle_connection,
             self.host,
             self.port,
-            subprotocols=[Subprotocol("x-foxglove-1")],
+            subprotocols=[Subprotocol("foxglove.websocket.v1")],
         )
         for sock in server.sockets or []:
             self._logger.info("Server listening on %s", sock.getsockname())
@@ -101,7 +96,13 @@ class FoxgloveServer:
     async def add_channel(self, channel: ChannelWithoutId):
         new_id = self._next_channel_id
         self._next_channel_id = ChannelId(new_id + 1)
-        self._channels[new_id] = Channel(id=new_id, **channel)
+        self._channels[new_id] = protocol_v1.Advertise.Channel(
+            id=new_id,
+            topic=channel["topic"],
+            schema_name=channel["schemaName"],
+            schema=channel["schema"],
+        )
+        #  Channel(id=new_id, **channel)
         # TODO: notify clients of new channels
         return new_id
 
@@ -127,8 +128,8 @@ class FoxgloveServer:
                     payload=payload,
                 )
 
-    async def _send_json(self, connection: WebSocketServerProtocol, msg: ServerMessage):
-        await connection.send(json.dumps(msg, separators=(",", ":")))
+    # async def _send_json(self, connection: WebSocketServerProtocol, msg: ServerMessage):
+    #     await connection.send(json.dumps(msg, separators=(",", ":")))
 
     async def _send_message_data(
         self,
@@ -138,10 +139,16 @@ class FoxgloveServer:
         timestamp: int,
         payload: bytes,
     ):
-        header = MessageDataHeader.pack(
-            ServerOpcode.MESSAGE_DATA, subscription, timestamp
+        # TODO: avoid double copy of payload bytes
+        await connection.send(
+            protocol_v1.ServerMessage(
+                message_data=protocol_v1.MessageData(
+                    subscription_id=subscription,
+                    receive_timestamp=timestamp,
+                    payload=payload,
+                )
+            ).SerializeToString()
         )
-        await connection.send([header, payload])
 
     async def _handle_connection(
         self, connection: WebSocketServerProtocol, path: str
@@ -156,20 +163,17 @@ class FoxgloveServer:
         self._clients[connection] = client
 
         try:
-            await self._send_json(
-                connection,
-                {
-                    "op": ServerOpcode.SERVER_INFO,
-                    "name": self.name,
-                    "capabilities": [],
-                },
+            await connection.send(
+                protocol_v1.ServerMessage(
+                    server_info=protocol_v1.ServerInfo(name=self.name, capabilities=[])
+                ).SerializeToString(),
             )
-            await self._send_json(
-                connection,
-                {
-                    "op": ServerOpcode.CHANNEL_LIST,
-                    "channels": list(self._channels.values()),
-                },
+            await connection.send(
+                protocol_v1.ServerMessage(
+                    advertise=protocol_v1.Advertise(
+                        channels=list(self._channels.values())
+                    )
+                ).SerializeToString()
             )
             async for raw_message in connection:
                 await self._handle_raw_client_message(client, raw_message)
@@ -194,55 +198,58 @@ class FoxgloveServer:
 
     async def _handle_raw_client_message(self, client: Client, raw_message: Data):
         try:
-            if not isinstance(raw_message, str):
-                raise TypeError(
-                    f"Expected text message, got {type(raw_message)} (first byte: {next(iter(raw_message), None)})"
+            if not isinstance(raw_message, bytes):
+                raise TypeError(f"Expected binary message, got {raw_message}")
+            message = protocol_v1.ClientMessage()
+            used = message.ParseFromString(raw_message)
+            if used != len(raw_message):
+                raise ValueError(
+                    f"Extraneous bytes in raw message (used {used} of {len(raw_message)}"
                 )
-            message = json.loads(raw_message)
-            self._logger.debug("Got message: %s", message)
-            if not isinstance(message, dict):
-                raise TypeError(f"Expected JSON object, got {type(message)}")
-            await self._handle_client_message(client, cast(ClientMessage, message))
+            await self._handle_client_message(client, message)
 
         except Exception as exc:
             self._logger.exception("Error handling message %s", raw_message)
-            await self._send_json(
-                client.connection,
-                {
-                    "op": ServerOpcode.STATUS_MESSAGE,
-                    "level": StatusLevel.ERROR,
-                    "message": f"{type(exc).__name__}: {exc}",
-                },
+            await client.connection.send(
+                protocol_v1.ServerMessage(
+                    status_message=protocol_v1.StatusMessage(
+                        level=protocol_v1.StatusMessage.LEVEL_ERROR,
+                        message=f"{type(exc).__name__}: {exc}",
+                    )
+                ).SerializeToString()
             )
 
-    async def _handle_client_message(self, client: Client, message: ClientMessage):
+    async def _handle_client_message(
+        self, client: Client, message: protocol_v1.ClientMessage
+    ):
         # if message["op"] == ClientOpcode.LIST_CHANNELS:
         #     await self._send_json(
         #         client.connection, {"op": ServerOpcode.CHANNEL_LIST, "channels": []}
         #     )
-        if message["op"] == ClientOpcode.SUBSCRIBE:
-            for sub in message["subscriptions"]:
-                chan_id = sub["channel"]
-                sub_id = sub["clientSubscriptionId"]
+        which = message.WhichOneof("message")
+        if which == "subscribe":
+            for sub in message.subscribe.subscriptions:
+                chan_id = ChannelId(sub.channel_id)
+                sub_id = ClientSubscriptionId(sub.id)
                 if sub_id in client.subscriptions:
-                    await self._send_json(
-                        client.connection,
-                        {
-                            "op": ServerOpcode.STATUS_MESSAGE,
-                            "level": StatusLevel.ERROR,
-                            "message": f"Client subscription id {sub['clientSubscriptionId']} was already used; ignoring subscription",
-                        },
+                    await client.connection.send(
+                        protocol_v1.ServerMessage(
+                            status_message=protocol_v1.StatusMessage(
+                                level=protocol_v1.StatusMessage.LEVEL_ERROR,
+                                message=f"Client subscription id {sub_id} was already used; ignoring subscription",
+                            )
+                        ).SerializeToString()
                     )
                     continue
                 chan = self._channels.get(chan_id)
                 if chan is None:
-                    await self._send_json(
-                        client.connection,
-                        {
-                            "op": ServerOpcode.STATUS_MESSAGE,
-                            "level": StatusLevel.WARNING,
-                            "message": f"Channel {sub['channel']} is not available; ignoring subscription",
-                        },
+                    await client.connection.send(
+                        protocol_v1.ServerMessage(
+                            status_message=protocol_v1.StatusMessage(
+                                level=protocol_v1.StatusMessage.LEVEL_WARNING,
+                                message=f"Channel {chan_id} is not available; ignoring subscription",
+                            )
+                        ).SerializeToString()
                     )
                     continue
                 self._logger.debug(
@@ -254,17 +261,18 @@ class FoxgloveServer:
                 client.subscriptions[sub_id] = chan_id
                 client.subscriptions_by_channel.setdefault(chan_id, set()).add(sub_id)
 
-        elif message["op"] == ClientOpcode.UNSUBSCRIBE:
-            for sub_id in message["unsubscriptions"]:
+        elif which == "unsubscribe":
+            for sub_id in message.unsubscribe.subscription_ids:
+                sub_id = ClientSubscriptionId(sub_id)
                 chan_id = client.subscriptions.get(sub_id)
                 if chan_id is None:
-                    await self._send_json(
-                        client.connection,
-                        {
-                            "op": ServerOpcode.STATUS_MESSAGE,
-                            "level": StatusLevel.WARNING,
-                            "message": f"Client subscription id {sub_id} did not exist; ignoring unsubscription",
-                        },
+                    await client.connection.send(
+                        protocol_v1.ServerMessage(
+                            status_message=protocol_v1.StatusMessage(
+                                level=protocol_v1.StatusMessage.LEVEL_WARNING,
+                                message=f"Client subscription id {sub_id} did not exist; ignoring unsubscription",
+                            )
+                        ).SerializeToString()
                     )
                     continue
                 self._logger.debug(
@@ -280,4 +288,4 @@ class FoxgloveServer:
                     if len(subs) == 0:
                         del client.subscriptions_by_channel[chan_id]
         else:
-            raise ValueError(f"Unrecognized client opcode: {message['op']}")
+            raise ValueError(f"Unrecognized client message: {message}")

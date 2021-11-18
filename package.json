@@ -5,6 +5,9 @@
       "typescript"
     ]
   },
+  "scripts": {
+    "build:protobuf": "buf generate && cp -R gen/typescript/ typescript/src/gen && cp -R gen/python/ python/src/gen"
+  },
   "devDependencies": {
     "ts-proto": "1.87.0"
   }

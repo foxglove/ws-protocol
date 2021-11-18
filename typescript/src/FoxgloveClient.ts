@@ -1,15 +1,14 @@
 import { EventEmitter, EventNames, EventListener } from "eventemitter3";
 
-import { parseServerMessage } from "./parse";
-import {
-  Channel,
-  ClientMessage,
-  ClientOpcode,
-  ClientSubscriptionId,
-  ServerMessage,
-  ServerOpcode,
-  Subscribe,
-} from "./types";
+import * as protocol_v1 from "./gen/proto/protocol_v1";
+import { Channel, ClientSubscriptionId } from "./types";
+
+// https://github.com/stephenh/ts-proto/issues/296
+function longToBigInt(value: Long): bigint {
+  const unsigned =
+    (BigInt(value.getHighBitsUnsigned()) << 32n) | BigInt(value.getLowBitsUnsigned());
+  return value.unsigned ? unsigned : BigInt.asIntN(64, unsigned);
+}
 
 const log = {
   debug: console.debug.bind(console),
@@ -18,7 +17,7 @@ const log = {
   error: console.error.bind(console),
 };
 
-type Deserializer = (data: DataView) => unknown;
+type Deserializer = (data: ArrayBufferView) => unknown;
 type ResolvedSubscription = {
   id: ClientSubscriptionId;
   channel: Channel;
@@ -52,7 +51,7 @@ interface IWebSocket {
 }
 
 export default class FoxgloveClient {
-  static SUPPORTED_SUBPROTOCOL = "x-foxglove-1";
+  static SUPPORTED_SUBPROTOCOL = "foxglove.websocket.v1";
 
   private emitter = new EventEmitter<EventTypes>();
   private ws!: IWebSocket;
@@ -100,27 +99,32 @@ export default class FoxgloveClient {
       }
       this.emitter.emit("open");
     };
-    this.ws.onmessage = (event: MessageEvent<ArrayBuffer | string>) => {
-      let message: ServerMessage;
-      if (event.data instanceof ArrayBuffer) {
-        message = parseServerMessage(event.data);
-      } else {
-        message = JSON.parse(event.data) as ServerMessage;
+    this.ws.onmessage = (event: MessageEvent<string | ArrayBuffer>) => {
+      if (typeof event.data === "string") {
+        throw new Error(`Unexpected text message: ${event.data}`);
       }
-      log.debug("onmessage", message);
-
-      switch (message.op) {
-        case ServerOpcode.SERVER_INFO:
-          log.info("Received server info:", message);
+      const serverMessage = protocol_v1.ServerMessage.decode(new Uint8Array(event.data));
+      log.debug("onmessage", serverMessage);
+      if (!serverMessage.message) {
+        log.error(`Unable to parse ServerMessage`, event.data);
+        throw new Error(`Unable to parse ServerMessage`);
+      }
+      switch (serverMessage.message.$case) {
+        case "serverInfo": {
+          const { serverInfo } = serverMessage.message;
+          log.info("Received server info:", serverInfo);
           return;
+        }
 
-        case ServerOpcode.STATUS_MESSAGE:
-          log.info("Received status message:", message);
+        case "statusMessage": {
+          const { statusMessage } = serverMessage.message;
+          log.info("Received status message:", statusMessage);
           return;
+        }
 
-        case ServerOpcode.CHANNEL_LIST: {
-          this.channelsByTopic.clear();
-          for (const channel of message.channels) {
+        case "advertise": {
+          const { advertise } = serverMessage.message;
+          for (const channel of advertise.channels) {
             if (this.channelsByTopic.has(channel.topic)) {
               log.error(
                 `Duplicate channel for topic '${channel.topic}':`,
@@ -138,22 +142,25 @@ export default class FoxgloveClient {
           return;
         }
 
-        case ServerOpcode.MESSAGE_DATA: {
-          const sub = this.resolvedSubscriptionsById.get(message.clientSubscriptionId);
+        case "unadvertise":
+          throw new Error("not yet implemented");
+
+        case "messageData": {
+          const { messageData } = serverMessage.message;
+          const sub = this.resolvedSubscriptionsById.get(messageData.subscriptionId);
           if (!sub) {
-            log.warn(`Received message for unknown subscription ${message.clientSubscriptionId}`);
+            log.warn(`Received message for unknown subscription ${messageData.subscriptionId}`);
             return;
           }
           this.emitter.emit("message", {
             topic: sub.channel.topic,
-            timestamp: message.timestamp,
-            message: sub.deserializer(message.data),
-            sizeInBytes: message.data.byteLength,
+            timestamp: longToBigInt(messageData.receiveTimestamp),
+            message: sub.deserializer(messageData.payload),
+            sizeInBytes: messageData.payload.byteLength,
           });
           return;
         }
       }
-      throw new Error(`Unrecognized server opcode: ${(message as { op: number }).op}`);
     };
     this.ws.onclose = (event: CloseEvent) => {
       log.error("onclose", {
@@ -178,10 +185,9 @@ export default class FoxgloveClient {
     const sub = this.resolvedSubscriptionsByTopic.get(topic);
     if (sub) {
       this.ws.send(
-        this.serialize({
-          op: ClientOpcode.UNSUBSCRIBE,
-          unsubscriptions: [sub.id],
-        }),
+        protocol_v1.ClientMessage.encode({
+          message: { $case: "unsubscribe", unsubscribe: { subscriptionIds: [sub.id] } },
+        }).finish(),
       );
       this.resolvedSubscriptionsById.delete(sub.id);
       this.resolvedSubscriptionsByTopic.delete(topic);
@@ -190,14 +196,14 @@ export default class FoxgloveClient {
 
   /** Resolve subscriptions for which channels are known to be available */
   private processUnresolvedSubscriptions() {
-    const subscriptions: Subscribe["subscriptions"] = [];
+    const subscriptions: protocol_v1.Subscribe_Subscription[] = [];
     for (const topic of [...this.unresolvedSubscriptions]) {
       const channel = this.channelsByTopic.get(topic);
       if (!channel) {
         return;
       }
       const id = this.nextSubscriptionId++;
-      subscriptions.push({ clientSubscriptionId: id, channel: channel.id });
+      subscriptions.push({ id, channelId: channel.id });
       const resolved = {
         id,
         channel,
@@ -208,11 +214,11 @@ export default class FoxgloveClient {
       this.unresolvedSubscriptions.delete(topic);
     }
     if (subscriptions.length > 0) {
-      this.ws.send(this.serialize({ op: ClientOpcode.SUBSCRIBE, subscriptions }));
+      this.ws.send(
+        protocol_v1.ClientMessage.encode({
+          message: { $case: "subscribe", subscribe: { subscriptions } },
+        }).finish(),
+      );
     }
-  }
-
-  private serialize(message: ClientMessage): string {
-    return JSON.stringify(message);
   }
 }
