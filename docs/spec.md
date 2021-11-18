@@ -174,6 +174,8 @@ Informs the client that channels are no longer available.
 
 All binary messages must start with a 1-byte opcode identifying the type of message. The interpretation of the remaining bytes depends on the opcode.
 
+All integer types explicitly specified (uint32, uint64, etc.) in this section are encoded with **little-endian** byte order.
+
 ### Message Data
 
 - Provides a raw message payload, encoded as specified in the Advertise corresponding to the channel.
