@@ -6,7 +6,9 @@
     ]
   },
   "scripts": {
-    "build:protobuf": "buf generate && cp -R gen/typescript/ typescript/src/gen && cp -R gen/python/ python/src/gen"
+    "build:protobuf:ts": "buf generate --template buf.gen.typescript.yaml && cp -R gen/typescript/ typescript/src/gen",
+    "build:protobuf:py": "buf generate --template buf.gen.python.yaml && cp -R gen/python/ python/src/gen",
+    "build:protobuf": "yarn build:protobuf:ts && yarn build:protobuf:py"
   },
   "devDependencies": {
     "ts-proto": "1.87.0"

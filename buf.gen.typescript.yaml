@@ -1,10 +1,5 @@
 version: v1
 plugins:
-  - name: python
-    out: gen/python
-  - name: mypy
-    out: gen/python
-
   - name: ts_proto
     path: node_modules/ts-proto/protoc-gen-ts_proto
     out: gen/typescript

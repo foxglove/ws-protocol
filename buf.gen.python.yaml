@@ -1,0 +1,6 @@
+version: v1
+plugins:
+  - name: python
+    out: gen/python
+  - name: mypy
+    out: gen/python

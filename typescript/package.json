@@ -18,7 +18,7 @@
     "src"
   ],
   "scripts": {
-    "prepack": "(cd .. && yarn build:protobuf) && tsc -b",
+    "prepack": "(cd .. && yarn build:protobuf:ts) && tsc -b",
     "lint": "eslint --report-unused-disable-directives --fix .",
     "lint:ci": "eslint --report-unused-disable-directives .",
     "test": "jest",
