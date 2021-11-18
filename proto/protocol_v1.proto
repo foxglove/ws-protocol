@@ -43,7 +43,7 @@ message Advertise {
     string topic = 2;
     string encoding = 3;
     string schema_name = 4;
-    string schema = 5;
+    bytes schema = 5;
   }
 }
 

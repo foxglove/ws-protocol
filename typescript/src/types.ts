@@ -18,7 +18,7 @@ export type Channel = {
   topic: string;
   encoding: string;
   schemaName: string;
-  schema: string;
+  schema: Uint8Array;
 };
 export type ClientSubscriptionId = number;
 

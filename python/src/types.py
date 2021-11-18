@@ -63,7 +63,7 @@ class ChannelWithoutId(TypedDict):
     topic: str
     encoding: str
     schemaName: str
-    schema: str
+    schema: bytes
 
 
 class Channel(ChannelWithoutId):

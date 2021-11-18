@@ -1,6 +1,5 @@
 import asyncio
 import argparse
-import base64
 import signal
 from typing import TYPE_CHECKING, Any, Coroutine, Type
 
@@ -36,7 +35,7 @@ async def main(infile: str):
                 {
                     "topic": chan_name,
                     "encoding": "protobuf",
-                    "schema": base64.b64encode(descriptor).decode("ascii"),
+                    "schema": descriptor,
                     "schemaName": type,
                 }
             )

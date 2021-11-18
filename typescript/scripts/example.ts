@@ -16,9 +16,7 @@ async function main() {
       if (channel.encoding !== "protobuf") {
         throw new Error(`Unsupported encoding ${channel.encoding}`);
       }
-      const root = protobufjs.Root.fromDescriptor(
-        FileDescriptorSet.decode(Buffer.from(channel.schema, "base64")),
-      );
+      const root = protobufjs.Root.fromDescriptor(FileDescriptorSet.decode(channel.schema));
       const type = root.lookupType(channel.schemaName);
       return (data) => type.decode(new Uint8Array(data.buffer, data.byteOffset, data.byteLength));
     },
