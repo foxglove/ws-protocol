@@ -86,7 +86,7 @@ class FoxgloveServer:
             self._handle_connection,
             self.host,
             self.port,
-            subprotocols=[Subprotocol("x-foxglove-1")],
+            subprotocols=[Subprotocol("foxglove.websocket.v1")],
         )
         for sock in server.sockets or []:
             self._logger.info("Server listening on %s", sock.getsockname())

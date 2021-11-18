@@ -51,7 +51,7 @@ interface IWebSocket {
 }
 
 export default class FoxgloveClient {
-  static SUPPORTED_SUBPROTOCOL = "x-foxglove-1";
+  static SUPPORTED_SUBPROTOCOL = "foxglove.websocket.v1";
 
   private emitter = new EventEmitter<EventTypes>();
   private ws!: IWebSocket;
