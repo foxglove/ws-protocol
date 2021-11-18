@@ -12,7 +12,8 @@
     "email": "support@foxglove.dev"
   },
   "homepage": "https://foxglove.dev/",
-  "main": "./src/index.ts",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
   "files": [
     "dist",
     "src"
