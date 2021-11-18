@@ -1,15 +1,14 @@
 import asyncio
 import argparse
 import base64
-import signal
-from typing import TYPE_CHECKING, Any, Coroutine, Type
-
-from .server import FoxgloveServer
-from .types import ChannelId
+from typing import TYPE_CHECKING, Type
+from foxglove_websocket import run_cancellable
+from foxglove_websocket.server import FoxgloveServer
+from foxglove_websocket.types import ChannelId
 
 try:
     from ecal.measurement.hdf5 import Meas
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     from .hdf5_native import Meas
 
 if TYPE_CHECKING:
@@ -22,7 +21,6 @@ async def main(infile: str):
     measurement = Meas(infile)
 
     async with FoxgloveServer("0.0.0.0", 8765, "example server") as server:
-        # server.start()
         channels_by_name: dict[str, ChannelId] = {}
 
         for chan_name in measurement.get_channel_names():
@@ -58,31 +56,6 @@ async def main(infile: str):
                     entry["rcv_timestamp"] * 1000,
                     measurement.get_entry_data(entry["id"]),
                 )
-
-
-def run_cancellable(coro: Coroutine[None, None, Any]):
-    """
-    Run a coroutine such that a ctrl-C interrupt will gracefully cancel its
-    execution and give it a chance to clean up before returning.
-
-    See also: https://www.roguelynn.com/words/asyncio-graceful-shutdowns/
-    """
-    loop = asyncio.get_event_loop()
-    task = loop.create_task(coro)
-    try:
-        loop.add_signal_handler(signal.SIGINT, task.cancel)
-    except NotImplementedError:
-        # signal handlers are not available on Windows, KeyboardInterrupt will be raised instead
-        pass
-
-    try:
-        try:
-            loop.run_until_complete(task)
-        except KeyboardInterrupt:
-            task.cancel()
-            loop.run_until_complete(task)
-    except asyncio.CancelledError:
-        pass
 
 
 if __name__ == "__main__":

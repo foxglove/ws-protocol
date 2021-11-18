@@ -82,12 +82,17 @@ class FoxgloveServer:
     async def _run(self):
         # TODO: guard against multiple run calls?
         self._logger.info("Starting server...")
-        server = await serve(
-            self._handle_connection,
-            self.host,
-            self.port,
-            subprotocols=[Subprotocol("foxglove.websocket.v1")],
-        )
+        try:
+            server = await serve(
+                self._handle_connection,
+                self.host,
+                self.port,
+                subprotocols=[Subprotocol("foxglove.websocket.v1")],
+            )
+        except asyncio.CancelledError:
+            self._logger.info("Canceled during server startup")
+            return
+
         for sock in server.sockets or []:
             self._logger.info("Server listening on %s", sock.getsockname())
         try:
