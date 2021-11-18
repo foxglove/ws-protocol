@@ -99,6 +99,7 @@ class FoxgloveServer:
         self._channels[new_id] = protocol_v1.Advertise.Channel(
             id=new_id,
             topic=channel["topic"],
+            encoding=channel["encoding"],
             schema_name=channel["schemaName"],
             schema=channel["schema"],
         )
