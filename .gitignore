@@ -1,3 +1,7 @@
-venv
-__pycache__
+build
 node_modules
+
+# Python
+__pycache__
+.pytest_cache
+*.egg-info

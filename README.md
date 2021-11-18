@@ -13,9 +13,8 @@ The protocol is encoding-agnostic, i.e. it can support Protobuf messages, ROS 1 
 ### Virtualenv usage
 
 ```
-python3.8 -m venv venv
-. venv/bin/activate
-pip install -r python/requirements.txt -r python/dev-requirements.txt
+pipenv install --dev
+pipenv shell
 ```
 
 #### h5py installation on M1 Macs
@@ -28,7 +27,7 @@ HDF5_DIR=/opt/homebrew/opt/hdf5 pip install -v --no-build-isolation h5py
 ### Run example server
 
 ```
-python -m python.src [hdf5 file]
+python -m python.scripts.example [hdf5 file]
 ```
 
 ### Run example client
