@@ -1,0 +1,17 @@
+---
+Language: Cpp
+Standard: Cpp11
+BasedOnStyle: Google
+
+AccessModifierOffset: -2
+TabWidth: 2
+UseTab: Never
+BreakConstructorInitializers: BeforeComma
+ColumnLimit: 100
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
+DerivePointerAlignment: false
+FixNamespaceComments: true
+PointerAlignment: Left
+ReflowComments: true
+SortIncludes: true
+...
