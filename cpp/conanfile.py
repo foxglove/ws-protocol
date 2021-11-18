@@ -6,10 +6,10 @@ PROJECT = "foxsocketpp"
 class FoxSocketPpConan(ConanFile):
     name = PROJECT
     version = "1.0.0"
-    url = f"https://github.com/jhurliman/{PROJECT}"
-    homepage = f"https://github.com/jhurliman/{PROJECT}"
+    url = f"https://github.com/foxglove/ws-protocol"
+    homepage = f"https://github.com/foxglove/ws-protocol"
     description = "A C++ server implementation of the Foxglove WebSocket Protocol"
-    license = ("MIT")
+    license = "MIT"
     topics = ("foxglove", "websocket")
     settings = "os", "compiler", "build_type", "arch"
     build_requires = "catch2/2.13.4"
@@ -17,10 +17,10 @@ class FoxSocketPpConan(ConanFile):
     generators = "cmake"
 
     def configure(self):
-        self.options['websocketpp'].asio = "standalone"
+        self.options["websocketpp"].asio = "standalone"
 
     def source(self):
-        self.run(f"git clone https://github.com/jhurliman/{PROJECT}.git")
+        self.run(f"git clone https://github.com/foxglove/ws-protocol.git")
 
     def build(self):
         cmake = CMake(self)
