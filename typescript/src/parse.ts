@@ -1,4 +1,4 @@
-import { ServerMessage, ServerOpcode } from "./types";
+import { BinaryOpcode, ServerMessage } from "./types";
 
 export function parseServerMessage(buffer: ArrayBuffer): ServerMessage {
   const view = new DataView(buffer);
@@ -7,14 +7,8 @@ export function parseServerMessage(buffer: ArrayBuffer): ServerMessage {
   const op = view.getUint8(offset);
   offset += 1;
 
-  switch (op as ServerOpcode) {
-    case ServerOpcode.SERVER_INFO:
-    case ServerOpcode.STATUS_MESSAGE:
-    case ServerOpcode.CHANNEL_LIST:
-      // case ServerOpcode.SUBSCRIPTION_ACK:
-      throw new Error(`Opcode ${op} should be sent as JSON rather than binary`);
-
-    case ServerOpcode.MESSAGE_DATA: {
+  switch (op as BinaryOpcode) {
+    case BinaryOpcode.MESSAGE_DATA: {
       const clientSubscriptionId = view.getUint32(offset, true);
       offset += 4;
       const timestamp = view.getBigUint64(offset, true);
