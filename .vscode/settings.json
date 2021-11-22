@@ -1,15 +1,20 @@
 {
   "editor.formatOnSave": true,
-  "python.formatting.provider": "black",
-  "python.analysis.typeCheckingMode": "strict",
+
   "typescript.tsdk": "node_modules/typescript/lib",
   "prettier.prettierPath": "./node_modules/prettier",
   "eslint.packageManager": "yarn",
   "eslint.options": {
     "reportUnusedDisableDirectives": true
   },
+
   "python.analysis.diagnosticSeverityOverrides": {
     // produces spurious errors when importing local packages from tests
     "reportMissingTypeStubs": "none"
-  }
+  },
+  "python.testing.pytestArgs": ["python"],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true,
+  "python.formatting.provider": "black",
+  "python.analysis.typeCheckingMode": "strict"
 }
