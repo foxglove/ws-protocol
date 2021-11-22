@@ -18,8 +18,8 @@ rm -f *gcov
 rm -f *profdata
 LLVM_PROFILE_FILE="code-%p.profraw" make test
 CXX_MODULE="./build/bin/unit-tests"
-llvm-profdata merge -output=code.profdata code-*.profraw
-llvm-cov report ${CXX_MODULE} -instr-profile=code.profdata -use-color
-llvm-cov show ${CXX_MODULE} -instr-profile=code.profdata src/*.cpp -path-equivalence -use-color
-llvm-cov show ${CXX_MODULE} -instr-profile=code.profdata src/*.cpp -path-equivalence -use-color --format html > /tmp/coverage.html
+llvm-profdata-10 merge -output=code.profdata code-*.profraw
+llvm-cov-10 report ${CXX_MODULE} -instr-profile=code.profdata -use-color
+llvm-cov-10 show ${CXX_MODULE} -instr-profile=code.profdata src/*.cpp -path-equivalence -use-color
+llvm-cov-10 show ${CXX_MODULE} -instr-profile=code.profdata src/*.cpp -path-equivalence -use-color --format html > /tmp/coverage.html
 echo "open /tmp/coverage.html for HTML version of this report"
