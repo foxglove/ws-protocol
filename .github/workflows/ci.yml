@@ -51,4 +51,4 @@ jobs:
       - run: pip install conan
       - run: make format
       - run: make coverage
-      - run: make release
+      - run: make debug
