@@ -44,10 +44,16 @@ class Client:
 class FoxgloveServerListener(ABC):
     @abstractmethod
     def on_subscribe(self, server: "FoxgloveServer", channel_id: ChannelId):
+        """
+        Called when the first client subscribes to `channel_id`.
+        """
         ...
 
     @abstractmethod
     def on_unsubscribe(self, server: "FoxgloveServer", channel_id: ChannelId):
+        """
+        Called when the last subscribed client unsubscribes from `channel_id`.
+        """
         ...
 
 
