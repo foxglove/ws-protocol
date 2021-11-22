@@ -44,7 +44,7 @@ jobs:
         working-directory: cpp
     steps:
       - uses: actions/checkout@v2
-      - run: apt-get install clang-format
+      - run: sudo apt-get install clang-format
       - uses: actions/setup-python@v2
         with:
           python-version: 3.8
