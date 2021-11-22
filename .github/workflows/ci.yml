@@ -44,10 +44,10 @@ jobs:
         working-directory: cpp
     steps:
       - uses: actions/checkout@v2
-      - run: sudo apt-get install clang-format
+      - run: sudo apt-get install clang-10 clang-format
       - uses: actions/setup-python@v2
         with:
           python-version: 3.8
-      - run: pip install conan
+      - run: pip install wheel conan
       - run: make format
       - run: make release
