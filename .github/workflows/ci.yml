@@ -43,7 +43,7 @@ jobs:
       run:
         working-directory: cpp
     steps:
-      - run: sudo apt-get install clang-format
+      - run: apt-get install clang-format
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
