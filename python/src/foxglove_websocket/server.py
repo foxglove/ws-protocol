@@ -1,8 +1,10 @@
+from abc import ABC, abstractmethod
 import asyncio
 import json
 import logging
 from struct import Struct
-from typing import Any, Dict, Set, cast
+from typing import Any, Dict, Optional, Set, cast
+from websockets.legacy.server import WebSocketServer
 from websockets.server import serve, WebSocketServerProtocol
 from websockets.exceptions import ConnectionClosed
 from dataclasses import dataclass
@@ -39,16 +41,34 @@ class Client:
     subscriptions_by_channel: Dict[ChannelId, Set[SubscriptionId]]
 
 
+class FoxgloveServerListener(ABC):
+    @abstractmethod
+    def on_subscribe(self, server: "FoxgloveServer", channel_id: ChannelId):
+        """
+        Called when the first client subscribes to `channel_id`.
+        """
+        ...
+
+    @abstractmethod
+    def on_unsubscribe(self, server: "FoxgloveServer", channel_id: ChannelId):
+        """
+        Called when the last subscribed client unsubscribes from `channel_id`.
+        """
+        ...
+
+
 class FoxgloveServer:
     _clients: Dict[WebSocketServerProtocol, Client]
     _channels: Dict[ChannelId, Channel]
     _next_channel_id: ChannelId
     _logger: logging.Logger
+    _listener: Optional[FoxgloveServerListener]
+    _opened: "asyncio.Future[WebSocketServer]"
 
     def __init__(
         self,
         host: str,
-        port: int,
+        port: Optional[int],
         name: str,
         *,
         logger: logging.Logger = _get_default_logger(),
@@ -60,6 +80,17 @@ class FoxgloveServer:
         self._channels = {}
         self._next_channel_id = ChannelId(0)
         self._logger = logger
+        self._listener = None
+        self._opened = asyncio.get_running_loop().create_future()
+
+    def set_listener(self, listener: FoxgloveServerListener):
+        self._listener = listener
+
+    def _any_subscribed(self, chan_id: ChannelId):
+        return any(
+            chan_id in client.subscriptions_by_channel
+            for client in self._clients.values()
+        )
 
     async def __aenter__(self):
         self.start()
@@ -69,6 +100,9 @@ class FoxgloveServer:
         self.close()
         await self.wait_closed()
 
+    async def wait_opened(self):
+        return await self._opened
+
     def start(self):
         self._task = asyncio.create_task(self._run())
 
@@ -77,7 +111,10 @@ class FoxgloveServer:
         self._task.cancel()
 
     async def wait_closed(self):
-        await self._task
+        try:
+            await self._task
+        except asyncio.CancelledError:
+            pass
 
     async def _run(self):
         # TODO: guard against multiple run calls?
@@ -89,6 +126,7 @@ class FoxgloveServer:
                 self.port,
                 subprotocols=[Subprotocol("foxglove.websocket.v1")],
             )
+            self._opened.set_result(server)
         except asyncio.CancelledError:
             self._logger.info("Canceled during server startup")
             return
@@ -193,8 +231,12 @@ class FoxgloveServer:
             await connection.close(1011)  # Internal Error
 
         finally:
-            # TODO: invoke user unsubscribe callback
+            potential_unsubscribes = client.subscriptions_by_channel.keys()
             del self._clients[connection]
+            if self._listener:
+                for chan_id in potential_unsubscribes:
+                    if not self._any_subscribed(chan_id):
+                        self._listener.on_unsubscribe(self, chan_id)
 
     async def _handle_raw_client_message(self, client: Client, raw_message: Data):
         try:
@@ -207,7 +249,10 @@ class FoxgloveServer:
             if not isinstance(message, dict):
                 raise TypeError(f"Expected JSON object, got {type(message)}")
             await self._handle_client_message(client, cast(ClientMessage, message))
-
+        except ConnectionClosed:
+            self._logger.debug(
+                "Client connection closed while handling message %s", raw_message
+            )
         except Exception as exc:
             self._logger.exception("Error handling message %s", raw_message)
             await self._send_json(
@@ -220,10 +265,6 @@ class FoxgloveServer:
             )
 
     async def _handle_client_message(self, client: Client, message: ClientMessage):
-        # if message["op"] == ClientOpcode.LIST_CHANNELS:
-        #     await self._send_json(
-        #         client.connection, {"op": ServerOpcode.CHANNEL_LIST, "channels": []}
-        #     )
         if message["op"] == "subscribe":
             for sub in message["subscriptions"]:
                 chan_id = sub["channelId"]
@@ -254,9 +295,11 @@ class FoxgloveServer:
                     client.connection.remote_address,
                     chan_id,
                 )
-                # TODO: invoke user subscribe callback
+                first_subscription = not self._any_subscribed(chan_id)
                 client.subscriptions[sub_id] = chan_id
                 client.subscriptions_by_channel.setdefault(chan_id, set()).add(sub_id)
+                if self._listener and first_subscription:
+                    self._listener.on_subscribe(self, chan_id)
 
         elif message["op"] == "unsubscribe":
             for sub_id in message["subscriptionIds"]:
@@ -276,12 +319,13 @@ class FoxgloveServer:
                     client.connection.remote_address,
                     chan_id,
                 )
-                # TODO: invoke user unsubscribe callback
                 del client.subscriptions[sub_id]
                 subs = client.subscriptions_by_channel.get(chan_id)
                 if subs is not None:
                     subs.remove(sub_id)
                     if len(subs) == 0:
                         del client.subscriptions_by_channel[chan_id]
+                if self._listener and not self._any_subscribed(chan_id):
+                    self._listener.on_unsubscribe(self, chan_id)
         else:
             raise ValueError(f"Unrecognized client opcode: {message['op']}")
