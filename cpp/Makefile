@@ -2,6 +2,9 @@
 export WERROR ?= true
 export BUILD_DIR ?= build
 
+export CC=clang
+export CXX=clang++
+
 default: release
 
 .PHONY: release
