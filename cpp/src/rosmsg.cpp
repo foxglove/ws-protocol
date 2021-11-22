@@ -14,42 +14,42 @@ static void WriteBool(Buffer& buffer, size_t& index, bool value) {
 }
 
 // static void WriteInt16(Buffer& buffer, size_t& index, int16_t value) {
-//   buffer[index + 0] = ((value >> 0) & 0xFF);
-//   buffer[index + 1] = ((value >> 8) & 0xFF);
+//   buffer[index + 0] = uint8_t((value >> 0) & 0xFF);
+//   buffer[index + 1] = uint8_t((value >> 8) & 0xFF);
 //   index += 2;
 // }
 
 // static void WriteUInt16(Buffer& buffer, size_t& index, uint16_t value) {
-//   buffer[index + 0] = ((value >> 0) & 0xFF);
-//   buffer[index + 1] = ((value >> 8) & 0xFF);
+//   buffer[index + 0] = uint8_t((value >> 0) & 0xFF);
+//   buffer[index + 1] = uint8_t((value >> 8) & 0xFF);
 //   index += 2;
 // }
 
 static void WriteInt32(Buffer& buffer, size_t& index, int32_t value) {
-  buffer[index + 0] = ((value >> 0) & 0xFF);
-  buffer[index + 1] = ((value >> 8) & 0xFF);
-  buffer[index + 2] = ((value >> 16) & 0xFF);
-  buffer[index + 3] = ((value >> 24) & 0xFF);
+  buffer[index + 0] = uint8_t((value >> 0) & 0xFF);
+  buffer[index + 1] = uint8_t((value >> 8) & 0xFF);
+  buffer[index + 2] = uint8_t((value >> 16) & 0xFF);
+  buffer[index + 3] = uint8_t((value >> 24) & 0xFF);
   index += 4;
 }
 
 static void WriteUInt32(Buffer& buffer, size_t& index, uint32_t value) {
-  buffer[index + 0] = ((value >> 0) & 0xFF);
-  buffer[index + 1] = ((value >> 8) & 0xFF);
-  buffer[index + 2] = ((value >> 16) & 0xFF);
-  buffer[index + 3] = ((value >> 24) & 0xFF);
+  buffer[index + 0] = uint8_t((value >> 0) & 0xFF);
+  buffer[index + 1] = uint8_t((value >> 8) & 0xFF);
+  buffer[index + 2] = uint8_t((value >> 16) & 0xFF);
+  buffer[index + 3] = uint8_t((value >> 24) & 0xFF);
   index += 4;
 }
 
 // static void WriteUInt64(Buffer& buffer, size_t& index, uint64_t value) {
-//   buffer[index + 0] = ((value >> 0) & 0xFF);
-//   buffer[index + 1] = ((value >> 8) & 0xFF);
-//   buffer[index + 2] = ((value >> 16) & 0xFF);
-//   buffer[index + 3] = ((value >> 24) & 0xFF);
-//   buffer[index + 4] = ((value >> 32) & 0xFF);
-//   buffer[index + 5] = ((value >> 40) & 0xFF);
-//   buffer[index + 6] = ((value >> 48) & 0xFF);
-//   buffer[index + 7] = ((value >> 56) & 0xFF);
+//   buffer[index + 0] = uint8_t((value >> 0) & 0xFF);
+//   buffer[index + 1] = uint8_t((value >> 8) & 0xFF);
+//   buffer[index + 2] = uint8_t((value >> 16) & 0xFF);
+//   buffer[index + 3] = uint8_t((value >> 24) & 0xFF);
+//   buffer[index + 4] = uint8_t((value >> 32) & 0xFF);
+//   buffer[index + 5] = uint8_t((value >> 40) & 0xFF);
+//   buffer[index + 6] = uint8_t((value >> 48) & 0xFF);
+//   buffer[index + 7] = uint8_t((value >> 56) & 0xFF);
 //   index += 8;
 // }
 
