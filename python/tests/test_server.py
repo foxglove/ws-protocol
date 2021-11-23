@@ -7,7 +7,7 @@ from typing import List, Tuple
 from websockets.client import connect
 from foxglove_websocket.server import FoxgloveServer, FoxgloveServerListener
 from foxglove_websocket.types import ChannelId
-from websockets.legacy.server import WebSocketServer
+from websockets.server import WebSocketServer
 
 
 def get_server_url(server: WebSocketServer):

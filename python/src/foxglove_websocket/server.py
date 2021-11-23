@@ -4,8 +4,7 @@ import json
 import logging
 from struct import Struct
 from typing import Any, Dict, Optional, Set, cast
-from websockets.legacy.server import WebSocketServer
-from websockets.server import serve, WebSocketServerProtocol
+from websockets.server import serve, WebSocketServer, WebSocketServerProtocol
 from websockets.exceptions import ConnectionClosed
 from dataclasses import dataclass
 from websockets.typing import Data, Subprotocol
