@@ -1,14 +1,8 @@
 import { EventEmitter, EventNames, EventListener } from "eventemitter3";
 
+import { ChannelId } from ".";
 import { parseServerMessage } from "./parse";
-import {
-  Channel,
-  ClientMessage,
-  SubscriptionId,
-  ServerMessage,
-  Subscribe,
-  BinaryOpcode,
-} from "./types";
+import { Channel, ClientMessage, SubscriptionId, ServerMessage, BinaryOpcode } from "./types";
 
 const log = {
   debug: console.debug.bind(console),
@@ -17,23 +11,12 @@ const log = {
   error: console.error.bind(console),
 };
 
-type Deserializer = (data: DataView) => unknown;
-type ResolvedSubscription = {
-  id: SubscriptionId;
-  channel: Channel;
-  deserializer: Deserializer;
-};
-
 type EventTypes = {
   open: () => void;
-  message: (event: {
-    topic: string;
-    timestamp: bigint;
-    message: unknown;
-    sizeInBytes: number;
-  }) => void;
+  message: (event: { subscriptionId: SubscriptionId; timestamp: bigint; data: DataView }) => void;
   error: (error: Error) => void;
-  channelListUpdate: (channels: ReadonlyMap<string, Channel>) => void;
+  advertise: (newChannels: Channel[]) => void;
+  unadvertise: (removedChannels: ChannelId[]) => void;
 };
 
 /**
@@ -54,25 +37,11 @@ export default class FoxgloveClient {
   static SUPPORTED_SUBPROTOCOL = "foxglove.websocket.v1";
 
   private emitter = new EventEmitter<EventTypes>();
-  private ws!: IWebSocket;
-  // private url: string;
-  private createDeserializer: (channel: Channel) => Deserializer;
+  private ws: IWebSocket;
   private nextSubscriptionId = 0;
-  private channelsByTopic = new Map<string, Channel>();
 
-  private unresolvedSubscriptions = new Set<string>();
-  private resolvedSubscriptionsByTopic = new Map<string, ResolvedSubscription>();
-  private resolvedSubscriptionsById = new Map<SubscriptionId, ResolvedSubscription>();
-
-  constructor({
-    ws,
-    createDeserializer,
-  }: {
-    ws: IWebSocket;
-    createDeserializer: (channel: Channel) => Deserializer;
-  }) {
+  constructor({ ws }: { ws: IWebSocket }) {
     this.ws = ws;
-    this.createDeserializer = createDeserializer;
     this.reconnect();
   }
 
@@ -84,7 +53,6 @@ export default class FoxgloveClient {
   }
 
   private reconnect() {
-    // this.ws = new WebSocket(this.url, [FoxgloveClient.SUPPORTED_SUBPROTOCOL]);
     this.ws.binaryType = "arraybuffer";
     this.ws.onerror = (event) => {
       log.debug("onerror", (event as unknown as { error: Error }).error);
@@ -118,41 +86,17 @@ export default class FoxgloveClient {
           return;
 
         case "advertise": {
-          this.channelsByTopic.clear();
-          for (const channel of message.channels) {
-            if (this.channelsByTopic.has(channel.topic)) {
-              log.error(
-                `Duplicate channel for topic '${channel.topic}':`,
-                this.channelsByTopic.get(channel.topic),
-                channel,
-              );
-              throw new Error(`Duplicate channel for topic '${channel.topic}'`);
-            }
-            this.channelsByTopic.set(channel.topic, channel);
-          }
-          this.processUnresolvedSubscriptions();
-          // TODO: what to do if a subscribed topic disappears and reappears with a different
-          // schema?
-          this.emitter.emit("channelListUpdate", this.channelsByTopic);
+          this.emitter.emit("advertise", message.channels);
           return;
         }
 
         case "unadvertise": {
-          throw new Error("not yet implemented");
+          this.emitter.emit("unadvertise", message.channelIds);
+          return;
         }
 
         case BinaryOpcode.MESSAGE_DATA: {
-          const sub = this.resolvedSubscriptionsById.get(message.clientSubscriptionId);
-          if (!sub) {
-            log.warn(`Received message for unknown subscription ${message.clientSubscriptionId}`);
-            return;
-          }
-          this.emitter.emit("message", {
-            topic: sub.channel.topic,
-            timestamp: message.timestamp,
-            message: sub.deserializer(message.data),
-            sizeInBytes: message.data.byteLength,
-          });
+          this.emitter.emit("message", message);
           return;
         }
       }
@@ -171,46 +115,18 @@ export default class FoxgloveClient {
     this.ws.close();
   }
 
-  subscribe(topic: string): void {
-    this.unresolvedSubscriptions.add(topic);
-    this.processUnresolvedSubscriptions();
+  subscribe(channelId: ChannelId): SubscriptionId {
+    const id = this.nextSubscriptionId++;
+    const subscriptions = [{ id, channelId }];
+    this.send({ op: "subscribe", subscriptions });
+    return id;
   }
 
-  unsubscribe(topic: string): void {
-    this.unresolvedSubscriptions.delete(topic);
-    const sub = this.resolvedSubscriptionsByTopic.get(topic);
-    if (sub) {
-      this.ws.send(this.serialize({ op: "unsubscribe", subscriptionIds: [sub.id] }));
-      this.resolvedSubscriptionsById.delete(sub.id);
-      this.resolvedSubscriptionsByTopic.delete(topic);
-    }
+  unsubscribe(subscriptionId: SubscriptionId): void {
+    this.send({ op: "unsubscribe", subscriptionIds: [subscriptionId] });
   }
 
-  /** Resolve subscriptions for which channels are known to be available */
-  private processUnresolvedSubscriptions() {
-    const subscriptions: Subscribe["subscriptions"] = [];
-    for (const topic of [...this.unresolvedSubscriptions]) {
-      const channel = this.channelsByTopic.get(topic);
-      if (!channel) {
-        return;
-      }
-      const id = this.nextSubscriptionId++;
-      subscriptions.push({ id, channelId: channel.id });
-      const resolved = {
-        id,
-        channel,
-        deserializer: this.createDeserializer(channel),
-      };
-      this.resolvedSubscriptionsByTopic.set(topic, resolved);
-      this.resolvedSubscriptionsById.set(id, resolved);
-      this.unresolvedSubscriptions.delete(topic);
-    }
-    if (subscriptions.length > 0) {
-      this.ws.send(this.serialize({ op: "subscribe", subscriptions }));
-    }
-  }
-
-  private serialize(message: ClientMessage): string {
-    return JSON.stringify(message);
+  private send(message: ClientMessage) {
+    this.ws.send(JSON.stringify(message));
   }
 }

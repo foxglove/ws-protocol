@@ -9,12 +9,12 @@ export function parseServerMessage(buffer: ArrayBuffer): ServerMessage {
 
   switch (op as BinaryOpcode) {
     case BinaryOpcode.MESSAGE_DATA: {
-      const clientSubscriptionId = view.getUint32(offset, true);
+      const subscriptionId = view.getUint32(offset, true);
       offset += 4;
       const timestamp = view.getBigUint64(offset, true);
       offset += 8;
       const data = new DataView(buffer, offset);
-      return { op, clientSubscriptionId, timestamp, data };
+      return { op, subscriptionId, timestamp, data };
     }
   }
   throw new Error(`Unrecognized server opcode in binary message: ${op.toString(16)}`);

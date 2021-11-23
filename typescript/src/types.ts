@@ -46,7 +46,7 @@ export type Unadvertise = {
 };
 export type MessageData = {
   op: BinaryOpcode.MESSAGE_DATA;
-  clientSubscriptionId: SubscriptionId;
+  subscriptionId: SubscriptionId;
   timestamp: bigint;
   data: DataView;
 };
