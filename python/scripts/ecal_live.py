@@ -38,12 +38,15 @@ class TopicSubscriber(object):
       self.server = server
     
     def callback(self, topic_name, msg, time):
-        pass
-        #await server.handle_message(
-        #    self.id,
-        #    time * 1000,
-        #    msg
-        #)
+        print("callback")
+        loop = asyncio.get_running_loop()
+        loop.call_soon_threadsafe(
+             server.handle_message(
+                 self.id,
+                 time * 1000,
+                 msg
+             )
+        )
     
     def subscribe(self):
         self.subscriber = ecal_core.subscriber(self.info["topic"])
@@ -71,7 +74,7 @@ async def main():
     
     # sleep 1 second so monitoring info will be available
     await asyncio.sleep(1)
-
+    
     async with FoxgloveServer("0.0.0.0", 8765, "example server") as server:
         topic_subscriptions: dict[ChannelId, TopicSubscriber] = {}
 
