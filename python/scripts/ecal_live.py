@@ -31,21 +31,19 @@ class TopicSubscriber(object):
     subscriber : ecal_core.subscriber
     server : FoxgloveServer
     
-    def __init__(self, id : ChannelId, info : ChannelWithoutId, server : FoxgloveServer):
+    def __init__(self, id : ChannelId, info : ChannelWithoutId, server : FoxgloveServer, loop):
       self.id = id
       self.info = info
       self.subscriber = None
       self.server = server
+      self.loop = loop
     
     def callback(self, topic_name, msg, time):
-        print("callback")
-        loop = asyncio.get_running_loop()
-        loop.call_soon_threadsafe(
-             server.handle_message(
+        self.loop.call_soon_threadsafe(lambda: asyncio.create_task(self.server.handle_message(
                  self.id,
                  time * 1000,
                  msg
-             )
+             ))
         )
     
     def subscribe(self):
@@ -83,7 +81,8 @@ async def main():
             id = await server.add_channel(
                 channel
             )
-            topic_subscriptions[id] = TopicSubscriber(id, channel, server)
+            loop = asyncio.get_running_loop()
+            topic_subscriptions[id] = TopicSubscriber(id, channel, server, loop)
         
         server.set_listener(Listener(topic_subscriptions))
         
