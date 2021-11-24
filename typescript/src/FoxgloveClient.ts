@@ -1,20 +1,17 @@
 import { EventEmitter, EventNames, EventListener } from "eventemitter3";
 
-import { ChannelId } from ".";
+import { ChannelId, MessageData, ServerInfo, StatusMessage } from ".";
 import { parseServerMessage } from "./parse";
 import { Channel, ClientMessage, SubscriptionId, ServerMessage, BinaryOpcode } from "./types";
 
-const log = {
-  debug: console.debug.bind(console),
-  info: console.info.bind(console),
-  warn: console.warn.bind(console),
-  error: console.error.bind(console),
-};
-
 type EventTypes = {
   open: () => void;
-  message: (event: { subscriptionId: SubscriptionId; timestamp: bigint; data: DataView }) => void;
   error: (error: Error) => void;
+  close: (event: CloseEvent) => void;
+
+  serverInfo: (event: ServerInfo) => void;
+  status: (event: StatusMessage) => void;
+  message: (event: MessageData) => void;
   advertise: (newChannels: Channel[]) => void;
   unadvertise: (removedChannels: ChannelId[]) => void;
 };
@@ -55,11 +52,9 @@ export default class FoxgloveClient {
   private reconnect() {
     this.ws.binaryType = "arraybuffer";
     this.ws.onerror = (event) => {
-      log.debug("onerror", (event as unknown as { error: Error }).error);
       this.emitter.emit("error", (event as unknown as { error: Error }).error);
     };
     this.ws.onopen = (_event) => {
-      log.debug("onopen");
       if (this.ws.protocol !== FoxgloveClient.SUPPORTED_SUBPROTOCOL) {
         throw new Error(
           `Expected subprotocol ${FoxgloveClient.SUPPORTED_SUBPROTOCOL}, got '${this.ws.protocol}'`,
@@ -77,36 +72,29 @@ export default class FoxgloveClient {
 
       switch (message.op) {
         case "serverInfo":
-          log.info("Received server info:", message);
+          this.emitter.emit("serverInfo", message);
           return;
 
         case "status":
-          log.info("Received status message:", message);
+          this.emitter.emit("status", message);
           return;
 
-        case "advertise": {
+        case "advertise":
           this.emitter.emit("advertise", message.channels);
           return;
-        }
 
-        case "unadvertise": {
+        case "unadvertise":
           this.emitter.emit("unadvertise", message.channelIds);
           return;
-        }
 
-        case BinaryOpcode.MESSAGE_DATA: {
+        case BinaryOpcode.MESSAGE_DATA:
           this.emitter.emit("message", message);
           return;
-        }
       }
       throw new Error(`Unrecognized server opcode: ${(message as { op: number }).op}`);
     };
     this.ws.onclose = (event: CloseEvent) => {
-      log.error("onclose", {
-        code: event.code,
-        reason: event.reason,
-        wasClean: event.wasClean,
-      });
+      this.emitter.emit("close", event);
     };
   }
 
