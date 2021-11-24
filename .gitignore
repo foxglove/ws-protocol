@@ -1,5 +1,6 @@
 build
 node_modules
+*.hdf5
 
 # Python
 __pycache__
