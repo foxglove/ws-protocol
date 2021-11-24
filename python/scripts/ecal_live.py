@@ -37,18 +37,19 @@ class TopicSubscriber(object):
       self.subscriber = None
       self.server = server
     
-    async def callback(self, topic_name, msg, time):
-        await server.handle_message(
-            self.id,
-            time * 1000,
-            msg
-        )
+    def callback(self, topic_name, msg, time):
+        pass
+        #await server.handle_message(
+        #    self.id,
+        #    time * 1000,
+        #    msg
+        #)
     
-    async def subscribe():
-        self.subscriber = ecal_core.subscriber(self.info.topic)
+    def subscribe(self):
+        self.subscriber = ecal_core.subscriber(self.info["topic"])
         self.subscriber.set_callback(self.callback)
         
-    async def unsubscribe():
+    def unsubscribe(self):
         self.subscriber.destroy()
         self.subscriber = None
         
@@ -79,7 +80,7 @@ async def main():
             id = await server.add_channel(
                 channel
             )
-            topic_subscriptions[id] = TopicSubscriber
+            topic_subscriptions[id] = TopicSubscriber(id, channel, server)
         
         server.set_listener(Listener(topic_subscriptions))
         
