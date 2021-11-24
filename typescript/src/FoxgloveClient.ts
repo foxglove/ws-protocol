@@ -74,7 +74,6 @@ export default class FoxgloveClient {
       } else {
         message = JSON.parse(event.data) as ServerMessage;
       }
-      log.debug("onmessage", message);
 
       switch (message.op) {
         case "serverInfo":
