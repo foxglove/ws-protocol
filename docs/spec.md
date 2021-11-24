@@ -102,7 +102,7 @@ Each JSON message must be an object containing a field called `op` which identif
     {
       "id": 1,
       "topic": "foo",
-      "encoding": "protobuf.binary",
+      "encoding": "protobuf",
       "schemaName": "ExampleMsg",
       "schema": "ZXhhbXBsZSBkYXRh"
     }

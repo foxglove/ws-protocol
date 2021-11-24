@@ -33,7 +33,7 @@ async def main(infile: str):
             channels_by_name[chan_name] = await server.add_channel(
                 {
                     "topic": chan_name,
-                    "encoding": "protobuf.binary",
+                    "encoding": "protobuf",
                     "schema": base64.b64encode(descriptor).decode("ascii"),
                     "schemaName": type,
                 }

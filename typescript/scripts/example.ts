@@ -17,7 +17,7 @@ async function main() {
   const deserializers = new Map<SubscriptionId, (data: DataView) => unknown>();
   client.on("advertise", (channels) => {
     for (const channel of channels) {
-      if (channel.encoding !== "protobuf.binary") {
+      if (channel.encoding !== "protobuf") {
         console.warn(`Unsupported encoding ${channel.encoding}`);
       }
       const root = protobufjs.Root.fromDescriptor(
