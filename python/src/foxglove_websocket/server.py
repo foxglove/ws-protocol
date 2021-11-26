@@ -143,11 +143,18 @@ class FoxgloveServer:
         new_id = self._next_channel_id
         self._next_channel_id = ChannelId(new_id + 1)
         self._channels[new_id] = Channel(id=new_id, **channel)
+        self._logger.info(
+            "Server adding channel for topic {} with id {}".format(channel["topic"], new_id)
+        )
+
         # TODO: notify clients of new channels
         return new_id
 
     async def remove_channel(self, chan_id: ChannelId):
         # TODO: notify clients of removed channel
+        self._logger.info(
+            "Server removing channel with id {}".format(chan_id)
+        )
         del self._channels[chan_id]
         for client in self._clients.values():
             subs = client.subscriptions_by_channel.get(chan_id)
