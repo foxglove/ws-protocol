@@ -63,7 +63,7 @@ class Advertise(TypedDict):
 
 class Unadvertise(TypedDict):
     op: Literal["unadvertise"]
-    channelsIds: List[ChannelId]
+    channelIds: List[ChannelId]
 
 
 ServerMessage = Union[ServerInfo, StatusMessage, Advertise, Unadvertise]

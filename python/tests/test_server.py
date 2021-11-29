@@ -119,7 +119,7 @@ async def test_listener_callbacks():
                 "channels": [
                     {
                         "encoding": "e",
-                        "id": 0,
+                        "id": chan_id,
                         "schema": "s",
                         "schemaName": "S",
                         "topic": "t",
@@ -137,3 +137,45 @@ async def test_listener_callbacks():
             )
 
     assert listener_calls == [("subscribe", chan_id), ("unsubscribe", chan_id)]
+
+
+@pytest.mark.asyncio
+async def test_update_channels():
+    async with FoxgloveServer("localhost", None, "test server") as server:
+        ws_server = await server.wait_opened()
+        async with connect(get_server_url(ws_server)) as ws:
+            assert json.loads(await ws.recv()) == {
+                "op": "serverInfo",
+                "name": "test server",
+                "capabilities": [],
+            }
+            assert json.loads(await ws.recv()) == {
+                "channels": [],
+                "op": "advertise",
+            }
+
+            chan_id = await server.add_channel(
+                {
+                    "topic": "t",
+                    "encoding": "e",
+                    "schemaName": "S",
+                    "schema": "s",
+                }
+            )
+            assert json.loads(await ws.recv()) == {
+                "channels": [
+                    {
+                        "encoding": "e",
+                        "id": chan_id,
+                        "schema": "s",
+                        "schemaName": "S",
+                        "topic": "t",
+                    }
+                ],
+                "op": "advertise",
+            }
+            await server.remove_channel(chan_id)
+            assert json.loads(await ws.recv()) == {
+                "channelIds": [chan_id],
+                "op": "unadvertise",
+            }
