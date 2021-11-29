@@ -142,20 +142,34 @@ class FoxgloveServer:
     async def add_channel(self, channel: ChannelWithoutId):
         new_id = self._next_channel_id
         self._next_channel_id = ChannelId(new_id + 1)
-        self._channels[new_id] = Channel(id=new_id, **channel)
-        # TODO: notify clients of new channels
+        new_channel = Channel(id=new_id, **channel)
+        self._channels[new_id] = new_channel
+        for client in self._clients.values():
+            await self._send_json(
+                client.connection,
+                {
+                    "op": "advertise",
+                    "channels": [new_channel],
+                },
+            )
         return new_id
 
     async def remove_channel(self, chan_id: ChannelId):
-        # TODO: notify clients of removed channel
         del self._channels[chan_id]
         for client in self._clients.values():
             subs = client.subscriptions_by_channel.get(chan_id)
             if subs is not None:
-                # TODO: notify clients of expired subscriptions?
                 for sub_id in subs:
                     del client.subscriptions[sub_id]
                 del client.subscriptions_by_channel[chan_id]
+
+            await self._send_json(
+                client.connection,
+                {
+                    "op": "unadvertise",
+                    "channelIds": [chan_id],
+                },
+            )
 
     async def handle_message(self, chan_id: ChannelId, timestamp: int, payload: bytes):
         for client in self._clients.values():
