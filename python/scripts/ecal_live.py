@@ -5,11 +5,9 @@ import base64
 import logging
 import sys
 from typing import TYPE_CHECKING, Type, NamedTuple
-
 from foxglove_websocket import run_cancellable
 from foxglove_websocket.server import FoxgloveServer, FoxgloveServerListener
 from foxglove_websocket.types import ChannelId, ChannelWithoutId
-import janus
 
 import ecal.core.core as ecal_core
 
@@ -20,11 +18,6 @@ class MyChannelWithoutId(NamedTuple):
     encoding: str
     schemaName: str
     schema: str
-
-class ServerDatum(NamedTuple):
-    id: ChannelId
-    timestamp: int
-    msg: bytes
 
 class MonitoringListener(ABC):
     @abstractmethod
@@ -104,19 +97,24 @@ class TopicSubscriber(object):
     subscriber : ecal_core.subscriber
     server : FoxgloveServer
     
-    def __init__(self, id : ChannelId, info : MyChannelWithoutId, queue: janus.SyncQueue[ServerDatum]):
+    def __init__(self, id : ChannelId, info : MyChannelWithoutId, server : FoxgloveServer, loop):
       self.id = id
       self.info = info
       self.subscriber = None
-      self.queue = queue
-
+      self.server = server
+      self.loop = loop
+    
     @property
     def is_subscribed(self):
         return self.subscriber is not None
 
     def callback(self, topic_name, msg, time):
-        datum = ServerDatum(id=self.id, timestamp = time * 1000, msg = msg)
-        self.queue.put(datum)        
+        self.loop.call_soon_threadsafe(lambda: asyncio.create_task(self.server.handle_message(
+                 self.id,
+                 time * 1000,
+                 msg
+             ))
+        )
     
     def subscribe(self):
         self.subscriber = ecal_core.subscriber(self.info.topic)
@@ -133,11 +131,10 @@ class ConnectionHandler(MonitoringListener):
     id_channel_mapping : dict[ChannelId, str]
     server : FoxgloveServer
 
-    def __init__(self, server : FoxgloveServer, queue: janus.SyncQueue[ServerDatum]):
+    def __init__(self, server : FoxgloveServer):
       self.topic_subscriptions = {}
       self.id_channel_mapping = {}
       self.server = server
-      self.queue = queue
 
     def get_subscriber_by_id(self, id : ChannelId):
       return self.topic_subscriptions[self.id_channel_mapping[id]]
@@ -148,7 +145,8 @@ class ConnectionHandler(MonitoringListener):
         id = await self.server.add_channel(
            channel_without_id
         )
-        self.topic_subscriptions[topic.topic] = TopicSubscriber(id, topic, self.queue)
+        loop = asyncio.get_running_loop()
+        self.topic_subscriptions[topic.topic] = TopicSubscriber(id, topic, self.server, loop)
         self.id_channel_mapping[id] = topic.topic
 
     async def on_removed_topics(self, removed_topics : set[MyChannelWithoutId]):
@@ -174,36 +172,21 @@ class Listener(FoxgloveServerListener):
         self.connection_handler.get_subscriber_by_id(channel_id).unsubscribe()  
 
 
-async def handle_messages(queue: janus.AsyncQueue[ServerDatum], server: FoxgloveServer):
-    while True:
-        data = await queue.get()
-        await server.handle_message(
-            data.id,
-            data.timestamp,
-            data.msg
-        )
-
-
 async def main():
     ecal_core.initialize(sys.argv, "eCAL WS Gateway")
     ecal_core.mon_initialize()
     
     # sleep 1 second so monitoring info will be available
     await asyncio.sleep(1)
-
-    queue: janus.Queue[ServerDatum] = janus.Queue()
     
-    async with FoxgloveServer("0.0.0.0", 8765, "example server", logger=logger) as server:
-        logger.info("Hallo Hallo")
-        connection_handler = ConnectionHandler(server, queue.sync_q)
+    async with FoxgloveServer("0.0.0.0", 8765, "example server") as server:
+        connection_handler = ConnectionHandler(server)
         server.set_listener(Listener(connection_handler))
 
         monitoring = Monitoring()
         monitoring.set_listener(connection_handler)
         asyncio.create_task(monitoring.monitoring())
         
-        asyncio.create_task(handle_messages( queue.async_q, server))
-
         while True:
             await asyncio.sleep(0.5)
 
