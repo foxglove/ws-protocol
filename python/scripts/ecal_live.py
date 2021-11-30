@@ -2,8 +2,10 @@ from abc import ABC, abstractmethod
 import asyncio
 import argparse
 import base64
+from enum import Enum
 import logging
 import sys
+import time
 from typing import TYPE_CHECKING, Type, NamedTuple
 from foxglove_websocket import run_cancellable
 from foxglove_websocket.server import FoxgloveServer, FoxgloveServerListener
@@ -88,6 +90,9 @@ class Monitoring(object):
 
         return current_topics
         
+class TimeSource(Enum):
+    SEND_TIMESTAMP = 1
+    LOCAL_TIME = 2
 
 # This class handles each available Topic
 # It contains an ecal subscriber, and will forward messages to the server.
@@ -97,24 +102,33 @@ class TopicSubscriber(object):
     subscriber : ecal_core.subscriber
     server : FoxgloveServer
     
-    def __init__(self, id : ChannelId, info : MyChannelWithoutId, server : FoxgloveServer, loop):
+    def __init__(self, id : ChannelId, info : MyChannelWithoutId, server : FoxgloveServer, loop, time_source : TimeSource = TimeSource.LOCAL_TIME):
       self.id = id
       self.info = info
       self.subscriber = None
       self.server = server
       self.loop = loop
+      self.time_source = time_source
     
     @property
     def is_subscribed(self):
         return self.subscriber is not None
 
-    def callback(self, topic_name, msg, time):
-        self.loop.call_soon_threadsafe(lambda: asyncio.create_task(self.server.handle_message(
-                 self.id,
-                 time * 1000,
-                 msg
-             ))
-        )
+    def callback(self, topic_name, msg, send_time):
+        try:
+            if self.time_source == TimeSource.SEND_TIMESTAMP:
+                timestamp = send_time * 1000
+            else: #TimeSource.LOCAL_TIME
+                timestamp = time.time_ns()
+            
+            self.loop.call_soon_threadsafe(lambda: asyncio.create_task(self.server.handle_message(
+                     self.id,
+                     timestamp,
+                     msg
+                 ))
+            )
+        except Exception as e:
+            print("Caught exception in callback {}".format(e))
     
     def subscribe(self):
         self.subscriber = ecal_core.subscriber(self.info.topic)
