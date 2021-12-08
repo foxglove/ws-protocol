@@ -2,7 +2,14 @@ import { EventEmitter, EventNames, EventListener } from "eventemitter3";
 
 import { ChannelId, MessageData, ServerInfo, StatusMessage } from ".";
 import { parseServerMessage } from "./parse";
-import { Channel, ClientMessage, SubscriptionId, ServerMessage, BinaryOpcode } from "./types";
+import {
+  Channel,
+  ClientMessage,
+  SubscriptionId,
+  ServerMessage,
+  BinaryOpcode,
+  IWebSocket,
+} from "./types";
 
 type EventTypes = {
   open: () => void;
@@ -15,20 +22,6 @@ type EventTypes = {
   advertise: (newChannels: Channel[]) => void;
   unadvertise: (removedChannels: ChannelId[]) => void;
 };
-
-/**
- * Abstraction that supports both browser and Node WebSockets.
- */
-interface IWebSocket {
-  binaryType: string;
-  protocol: string;
-  onerror: ((event: any) => void) | null | undefined; // eslint-disable-line @typescript-eslint/no-explicit-any
-  onopen: ((event: any) => void) | null | undefined; // eslint-disable-line @typescript-eslint/no-explicit-any
-  onclose: ((event: any) => void) | null | undefined; // eslint-disable-line @typescript-eslint/no-explicit-any
-  onmessage: ((event: any) => void) | null | undefined; // eslint-disable-line @typescript-eslint/no-explicit-any
-  close(): void;
-  send(data: string | ArrayBuffer | Blob | ArrayBufferView): void;
-}
 
 export default class FoxgloveClient {
   static SUPPORTED_SUBPROTOCOL = "foxglove.websocket.v1";
@@ -64,10 +57,15 @@ export default class FoxgloveClient {
     };
     this.ws.onmessage = (event: MessageEvent<ArrayBuffer | string>) => {
       let message: ServerMessage;
-      if (event.data instanceof ArrayBuffer) {
-        message = parseServerMessage(event.data);
-      } else {
-        message = JSON.parse(event.data) as ServerMessage;
+      try {
+        if (event.data instanceof ArrayBuffer) {
+          message = parseServerMessage(event.data);
+        } else {
+          message = JSON.parse(event.data) as ServerMessage;
+        }
+      } catch (error) {
+        this.emitter.emit("error", error as Error);
+        return;
       }
 
       switch (message.op) {
@@ -91,7 +89,10 @@ export default class FoxgloveClient {
           this.emitter.emit("message", message);
           return;
       }
-      throw new Error(`Unrecognized server opcode: ${(message as { op: number }).op}`);
+      this.emitter.emit(
+        "error",
+        new Error(`Unrecognized server opcode: ${(message as { op: number }).op}`),
+      );
     };
     this.ws.onclose = (event: CloseEvent) => {
       this.emitter.emit("close", event);
