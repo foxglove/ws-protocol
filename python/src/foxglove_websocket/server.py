@@ -171,7 +171,7 @@ class FoxgloveServer:
                 },
             )
 
-    async def handle_message(self, chan_id: ChannelId, timestamp: int, payload: bytes):
+    async def send_message(self, chan_id: ChannelId, timestamp: int, payload: bytes):
         for client in self._clients.values():
             subs = client.subscriptions_by_channel.get(chan_id, set())
             for sub_id in subs:
