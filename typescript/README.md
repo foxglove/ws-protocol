@@ -124,7 +124,7 @@ async function main() {
     for (const channel of channels) {
       if (channel.encoding !== "json") {
         console.warn(`Unsupported encoding ${channel.encoding}`);
-        return;
+        continue;
       }
       const subId = client.subscribe(channel.id);
       const textDecoder = new TextDecoder();
