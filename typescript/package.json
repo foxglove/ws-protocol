@@ -2,6 +2,13 @@
   "name": "@foxglove/ws-protocol",
   "version": "0.0.3",
   "description": "Foxglove Studio WebSocket protocol client",
+  "keywords": [
+    "foxglove",
+    "websocket",
+    "robotics",
+    "ros",
+    "ros2"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
