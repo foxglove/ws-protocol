@@ -150,3 +150,4 @@ Note: This package lives inside a monorepo which uses [yarn workspaces](https://
 - Run `yarn install` to install development dependencies.
 - Run `yarn workspace @foxglove/ws-protocol example-server` to run the example server.
 - Run `yarn workspace @foxglove/ws-protocol example-client [host] [topic]` to run the example client.
+- Run `yarn workspace @foxglove/ws-protocol version --patch` (or `--minor` or `--major`) to increment the version number and create the appropriate git tag.
