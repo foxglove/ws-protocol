@@ -20,7 +20,7 @@ To get started with the example server:
 2. Run `python3 example.py`.
 3. In a browser, open up https://studio.foxglove.dev and initiate a Foxglove WebSocket connection to `ws://localhost:8765/`.
 
-<img width="676" alt="Foxglove Studio displaying data from the Python example server" src="https://user-images.githubusercontent.com/14237/145260376-ddda98c5-7ed0-4239-9ce4-10778ee8240b.png">
+<img width="676" alt="Foxglove Studio displaying data from the example server" src="https://user-images.githubusercontent.com/14237/145260376-ddda98c5-7ed0-4239-9ce4-10778ee8240b.png">
 
 ```py
 import asyncio

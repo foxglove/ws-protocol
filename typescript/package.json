@@ -20,7 +20,7 @@
     "src"
   ],
   "scripts": {
-    "prepack": "tsc -b",
+    "prepack": "tsc -b tsconfig.json tsconfig.cjs.json",
     "lint": "eslint --report-unused-disable-directives --fix .",
     "lint:ci": "eslint --report-unused-disable-directives .",
     "test": "jest",
