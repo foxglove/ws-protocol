@@ -1258,6 +1258,11 @@ concat-map@0.0.1:
   resolved "https://registry.yarnpkg.com/concat-map/-/concat-map-0.0.1.tgz#d8a96bd77fd68df7793a73036a3ba0d5405d477b"
   integrity sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=
 
+consumer-queue@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/consumer-queue/-/consumer-queue-1.1.0.tgz#97d00fcab46b983f2e5b508cdb22389d30d28302"
+  integrity sha512-m8thFi9TuzuQfkPjN1Co/8tmuLYF0UvCQzzWkChQhgoamaBaWe1ZgYDS6lCOHlPtf2k/yvJX01JRP7l0As3yPA==
+
 convert-source-map@^1.4.0, convert-source-map@^1.6.0, convert-source-map@^1.7.0:
   version "1.8.0"
   resolved "https://registry.yarnpkg.com/convert-source-map/-/convert-source-map-1.8.0.tgz#f3373c32d21b4d780dd8004514684fb791ca4369"

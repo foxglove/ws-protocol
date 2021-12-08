@@ -123,7 +123,9 @@ export default class FoxgloveServer {
     this.clients.set(connection, client);
 
     this.send(connection, { op: "serverInfo", name: this.name, capabilities: [] });
-    this.send(connection, { op: "advertise", channels: Array.from(this.channels.values()) });
+    if (this.channels.size > 0) {
+      this.send(connection, { op: "advertise", channels: Array.from(this.channels.values()) });
+    }
 
     connection.onclose = (event: CloseEvent) => {
       log(
