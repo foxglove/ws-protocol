@@ -12,7 +12,7 @@ async def main():
             print("First client subscribed to", channel_id)
 
         def on_unsubscribe(self, server: FoxgloveServer, channel_id: ChannelId):
-            print("First client unsubscribed from", channel_id)
+            print("Last client unsubscribed from", channel_id)
 
     async with FoxgloveServer("0.0.0.0", 8765, "example server") as server:
         server.set_listener(Listener())
