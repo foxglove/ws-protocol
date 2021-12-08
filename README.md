@@ -24,14 +24,15 @@ brew install hdf5
 HDF5_DIR=/opt/homebrew/opt/hdf5 pip install -v --no-build-isolation h5py
 ```
 
-### Run example server
+### Run example servers
 
 ```
 python -m python.scripts.example [hdf5 file]
+yarn workspace @foxglove/ws-protocol example-server
 ```
 
 ### Run example client
 
 ```
-yarn workspace @foxglove/ws-protocol example [host] [topic]
+yarn workspace @foxglove/ws-protocol example-client [host] [topic]
 ```
