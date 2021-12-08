@@ -51,7 +51,7 @@ async def main(infile: str):
         while True:
             for chan_id, entry in all_entries:
                 await asyncio.sleep(0.5)
-                await server.handle_message(
+                await server.send_message(
                     chan_id,
                     entry["rcv_timestamp"] * 1000,
                     measurement.get_entry_data(entry["id"]),
