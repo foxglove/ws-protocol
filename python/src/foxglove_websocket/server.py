@@ -144,7 +144,8 @@ class FoxgloveServer:
         self._next_channel_id = ChannelId(new_id + 1)
         new_channel = Channel(id=new_id, **channel)
         self._channels[new_id] = new_channel
-        for client in self._clients.values():
+        # Any clients added during await will already see the new channel.
+        for client in list(self._clients.values()):
             await self._send_json(
                 client.connection,
                 {
@@ -156,7 +157,8 @@ class FoxgloveServer:
 
     async def remove_channel(self, chan_id: ChannelId):
         del self._channels[chan_id]
-        for client in self._clients.values():
+        # Any clients added during await will not have received info about the new channel.
+        for client in list(self._clients.values()):
             subs = client.subscriptions_by_channel.get(chan_id)
             if subs is not None:
                 for sub_id in subs:
@@ -172,7 +174,7 @@ class FoxgloveServer:
             )
 
     async def send_message(self, chan_id: ChannelId, timestamp: int, payload: bytes):
-        for client in self._clients.values():
+        for client in list(self._clients.values()):
             subs = client.subscriptions_by_channel.get(chan_id, set())
             for sub_id in subs:
                 await self._send_message_data(
@@ -183,7 +185,10 @@ class FoxgloveServer:
                 )
 
     async def _send_json(self, connection: WebSocketServerProtocol, msg: ServerMessage):
-        await connection.send(json.dumps(msg, separators=(",", ":")))
+        try:
+            await connection.send(json.dumps(msg, separators=(",", ":")))
+        except ConnectionClosed:
+            pass
 
     async def _send_message_data(
         self,
@@ -193,10 +198,13 @@ class FoxgloveServer:
         timestamp: int,
         payload: bytes,
     ):
-        header = MessageDataHeader.pack(
-            BinaryOpcode.MESSAGE_DATA, subscription, timestamp
-        )
-        await connection.send([header, payload])
+        try:
+            header = MessageDataHeader.pack(
+                BinaryOpcode.MESSAGE_DATA, subscription, timestamp
+            )
+            await connection.send([header, payload])
+        except ConnectionClosed:
+            pass
 
     async def _handle_connection(
         self, connection: WebSocketServerProtocol, path: str
@@ -263,9 +271,7 @@ class FoxgloveServer:
                 raise TypeError(f"Expected JSON object, got {type(message)}")
             await self._handle_client_message(client, cast(ClientMessage, message))
         except ConnectionClosed:
-            self._logger.debug(
-                "Client connection closed while handling message %s", raw_message
-            )
+            pass
         except Exception as exc:
             self._logger.exception("Error handling message %s", raw_message)
             await self._send_json(
