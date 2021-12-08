@@ -27,17 +27,10 @@ pipenv install --dev
 pipenv shell
 ```
 
-#### h5py installation on M1 Macs
-
-```
-brew install hdf5
-HDF5_DIR=/opt/homebrew/opt/hdf5 pip install -v --no-build-isolation h5py
-```
-
 ### Run example servers
 
 ```
-python -m python.scripts.example [hdf5 file]
+python -m foxglove_websocket.examples.simple_server
 yarn workspace @foxglove/ws-protocol example-server
 ```
 
