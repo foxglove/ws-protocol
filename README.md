@@ -4,9 +4,19 @@ This repository provides a protocol specification and reference implementations 
 
 The protocol is encoding-agnostic, i.e. it can support Protobuf messages, ROS 1 or 2 messages, etc. (as long as the desired encoding is supported by both client and server).
 
+The following implementations are provided in this repository and as installable packages:
+
+| Language              | Includes         | Package name            | Version                                                                                                    |
+| --------------------- | ---------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Python                | server           | `foxglove-websocket`    | [![](https://shields.io/pypi/v/foxglove-websocket)](https://pypi.org/project/foxglove-websocket/)          |
+| JavaScript/TypeScript | server + client  | `@foxglove/ws-protocol` | [![](https://shields.io/npm/v/@foxglove/ws-protocol)](https://www.npmjs.com/package/@foxglove/ws-protocol) |
+| C++                   | _in development_ |
+
 ## Documentation
 
-- [Protocol spec](docs/spec.md)
+- [Protocol specification](docs/spec.md)
+- [Python package README](python)
+- [JavaScript/TypeScript package README](typescript)
 
 ## Development
 
