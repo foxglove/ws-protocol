@@ -1,7 +1,7 @@
 {
-  "name": "@foxglove/ws-protocol",
-  "version": "0.0.6",
-  "description": "Foxglove Studio WebSocket protocol client",
+  "name": "@foxglove/ws-protocol-examples",
+  "version": "0.0.0",
+  "description": "Foxglove Studio WebSocket protocol examples",
   "keywords": [
     "foxglove",
     "websocket",
@@ -27,31 +27,24 @@
     "src"
   ],
   "bin": {
-    "example-sysmon": "dist/cjs/examples/sysmon.js",
-    "example-simple-client": "dist/cjs/examples/simple-client.js"
+    "ws-protocol-examples": "dist/cjs/src/index.js"
   },
   "scripts": {
     "prepack": "yarn build",
     "build": "tsc -b tsconfig.json tsconfig.cjs.json",
     "lint": "eslint --report-unused-disable-directives --fix .",
     "lint:ci": "eslint --report-unused-disable-directives .",
-    "test": "jest",
-    "example:image-server": "ts-node --project tsconfig.cjs.json --files examples/image-server.ts",
-    "example:sysmon": "ts-node --project tsconfig.cjs.json --files examples/sysmon.ts",
-    "example:simple-client": "ts-node --project tsconfig.cjs.json --files examples/example-client.ts"
+    "run-example": "yarn build && ts-node --project tsconfig.cjs.json --files src/index.ts"
   },
   "devDependencies": {
     "@foxglove/eslint-plugin": "0.17.1",
-    "@foxglove/rostime": "1.1.1",
     "@foxglove/tsconfig": "1.1.0",
     "@types/debug": "4.1.7",
-    "@types/jest": "^27.0.2",
     "@types/lodash": "4.14.176",
+    "@types/node": "16.11.12",
     "@types/ws": "8.2.0",
     "@typescript-eslint/eslint-plugin": "5.4.0",
     "@typescript-eslint/parser": "5.4.0",
-    "commander": "8.3.0",
-    "consumer-queue": "^1.1.0",
     "eslint": "7.32.0",
     "eslint-config-prettier": "8.3.0",
     "eslint-plugin-es": "4.1.0",
@@ -59,19 +52,19 @@
     "eslint-plugin-import": "2.25.3",
     "eslint-plugin-jest": "25.2.4",
     "eslint-plugin-prettier": "4.0.0",
-    "jest": "27.3.1",
-    "lodash": "4.17.21",
     "prettier": "2.4.1",
-    "protobufjs": "6.11.2",
-    "pureimage": "0.3.6",
-    "ts-jest": "27.0.7",
     "ts-node": "10.4.0",
-    "typescript": "4.4.4",
-    "ws": "8.2.3"
+    "typescript": "4.4.4"
   },
   "dependencies": {
+    "@foxglove/rostime": "^1.1.1",
+    "@foxglove/ws-protocol": "^0.0.6",
+    "commander": "^8.3.0",
     "debug": "^4",
     "eventemitter3": "^4.0.7",
-    "tslib": "^2"
+    "protobufjs": "^6.11.2",
+    "pureimage": "0.3.6",
+    "tslib": "^2",
+    "ws": "8.2.3"
   }
 }

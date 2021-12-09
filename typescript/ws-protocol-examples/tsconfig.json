@@ -1,12 +1,13 @@
 {
   "extends": "@foxglove/tsconfig/base",
-  "include": ["./src/**/*", "./examples/**/*"],
+  "include": ["./src/**/*"],
   "compilerOptions": {
     "rootDir": ".",
     "outDir": "./dist/esm",
     "lib": ["es2020", "dom"],
     "paths": {
-      "@foxglove/ws-protocol": ["./src"]
+      "@foxglove/ws-protocol": ["../ws-protocol/src"]
     }
-  }
+  },
+  "references": [{ "path": "../ws-protocol/tsconfig.json" }]
 }
