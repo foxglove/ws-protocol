@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { program } from "commander";
 
 import ImageServer from "./examples/image-server";
