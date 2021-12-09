@@ -34,6 +34,7 @@
     "build": "tsc -b tsconfig.json tsconfig.cjs.json",
     "lint": "eslint --report-unused-disable-directives --fix .",
     "lint:ci": "eslint --report-unused-disable-directives .",
+    "test": "echo 'Nothing to test'",
     "run-example": "tsc -b ../*/tsconfig*.json && ts-node --project tsconfig.cjs.json --files src/index.ts"
   },
   "devDependencies": {
