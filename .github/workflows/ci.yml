@@ -27,7 +27,7 @@ jobs:
       - run: yarn workspace @foxglove/${{ matrix.package }} test
 
       - name: Publish to NPM
-        if: ${{ startsWith(github.ref, 'refs/tags/releases/typescript/v') }}
+        if: ${{ startsWith(github.ref, 'refs/tags/releases/typescript/' + matrix.package + '/v') }}
         run: yarn workspace @foxglove/${{ matrix.package }} publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
