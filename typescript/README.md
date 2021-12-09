@@ -16,9 +16,20 @@ This package does not require a specific WebSocket server or client implementati
 $ npm install ws
 ```
 
-## Example server
+## Example servers
 
-The following script provides a simple example server which publishes messages on a single topic called `example_msg`, using JSON to encode message data and [JSON Schema](https://json-schema.org) to describe the message layout.
+### System monitor
+
+A system monitor script is provided as an illustrative example of a WebSocket server. To try it out:
+
+1. Run `npx @foxglove/ws-protocol example:sysmon`.
+2. In a browser, open up https://studio.foxglove.dev and initiate a Foxglove WebSocket connection to `ws://localhost:8765/`.
+
+<img width="500" alt="Foxglove Studio displaying memory and CPU usage from the system monitor example" src="https://user-images.githubusercontent.com/14237/145313065-85c05645-6b29-4eb2-a498-849c83f8792d.png">
+
+### Generic server template
+
+The following script provides a simple example server which publishes messages on a single topic called `example_msg`, using JSON to encode message data and [JSON Schema](https://json-schema.org) to describe the message layout. This is meant to be a simple example from which you can begin to build a custom server.
 
 To get started with the example server:
 

@@ -27,12 +27,14 @@
     "src"
   ],
   "scripts": {
-    "prepack": "tsc -b tsconfig.json tsconfig.cjs.json",
+    "prepack": "yarn build",
+    "build": "tsc -b tsconfig.json tsconfig.cjs.json",
     "lint": "eslint --report-unused-disable-directives --fix .",
     "lint:ci": "eslint --report-unused-disable-directives .",
     "test": "jest",
-    "example-client": "ts-node --files --project tsconfig.cjs.json scripts/example-client.ts",
-    "example-server": "ts-node --files --project tsconfig.cjs.json scripts/example-server.ts"
+    "example:image-server": "node dist/cjs/examples/image-server.js",
+    "example:sysmon": "node dist/cjs/examples/sysmon.js",
+    "example:simple-client": "node dist/cjs/examples/example-client.js"
   },
   "devDependencies": {
     "@foxglove/eslint-plugin": "0.17.1",
