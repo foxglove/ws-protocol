@@ -1,11 +1,10 @@
-#!/usr/bin/env node
 import { fromNanoSec } from "@foxglove/rostime";
+import { FoxgloveServer } from "@foxglove/ws-protocol";
+import { Command } from "commander";
 import Debug from "debug";
 import * as PImage from "pureimage";
 import { Writable } from "stream";
 import { WebSocketServer } from "ws";
-
-import FoxgloveServer from "../src/FoxgloveServer";
 
 const log = Debug("foxglove:example-server");
 Debug.enable("foxglove:*");
@@ -53,7 +52,7 @@ function drawImage(time: number) {
   return image;
 }
 
-async function main() {
+async function main(): Promise<void> {
   const server = new FoxgloveServer({ name: "example-server" });
   const ws = new WebSocketServer({
     port: 8765,
@@ -129,4 +128,6 @@ async function main() {
   }
 }
 
-main().catch(console.error);
+export default new Command("image-server")
+  .description("generate images and publish them as base64-encoded binary in JSON")
+  .action(main);

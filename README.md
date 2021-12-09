@@ -6,10 +6,11 @@ The protocol is encoding-agnostic, i.e. it can support Protobuf messages, ROS 1 
 
 The following implementations are provided in this repository and as installable packages:
 
-| Language              | Includes         | Package name            | Version                                                                                                    |
-| --------------------- | ---------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Python                | server           | `foxglove-websocket`    | [![](https://shields.io/pypi/v/foxglove-websocket)](https://pypi.org/project/foxglove-websocket/)          |
-| JavaScript/TypeScript | server + client  | `@foxglove/ws-protocol` | [![](https://shields.io/npm/v/@foxglove/ws-protocol)](https://www.npmjs.com/package/@foxglove/ws-protocol) |
+| Language              | Includes         | Package name                     | Version                                                                                                                      |
+| --------------------- | ---------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Python                | server           | `foxglove-websocket`             | [![](https://shields.io/pypi/v/foxglove-websocket)](https://pypi.org/project/foxglove-websocket/)                            |
+| JavaScript/TypeScript | server + client  | `@foxglove/ws-protocol`          | [![](https://shields.io/npm/v/@foxglove/ws-protocol)](https://www.npmjs.com/package/@foxglove/ws-protocol)                   |
+| JavaScript/TypeScript | examples         | `@foxglove/ws-protocol-examples` | [![](https://shields.io/npm/v/@foxglove/ws-protocol-examples)](https://www.npmjs.com/package/@foxglove/ws-protocol-examples) |
 | C++                   | _in development_ |
 
 ## Documentation
@@ -31,11 +32,11 @@ pipenv shell
 
 ```
 python -m foxglove_websocket.examples.simple_server
-yarn workspace @foxglove/ws-protocol example-server
+npx @foxglove/ws-protocol-examples sysmon
 ```
 
 ### Run example client
 
 ```
-yarn workspace @foxglove/ws-protocol example-client [host] [topic]
+npx @foxglove/ws-protocol-examples simple-client localhost:8765
 ```

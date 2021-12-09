@@ -8,7 +8,7 @@ module.exports = {
       files: ["*.ts", "*.tsx"],
       extends: ["plugin:@foxglove/typescript"],
       parserOptions: {
-        project: "tsconfig.json",
+        project: "./*/tsconfig.json",
         tsconfigRootDir: __dirname,
       },
     },

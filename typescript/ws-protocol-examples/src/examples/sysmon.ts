@@ -1,5 +1,5 @@
-#!/usr/bin/env node
 import { FoxgloveServer } from "@foxglove/ws-protocol";
+import { Command } from "commander";
 import Debug from "debug";
 import os from "os";
 import { WebSocketServer } from "ws";
@@ -174,4 +174,6 @@ async function main() {
   });
 }
 
-main().catch(console.error);
+export default new Command("sysmon")
+  .description("publish CPU, memory, and network info")
+  .action(main);
