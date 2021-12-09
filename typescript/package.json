@@ -37,7 +37,7 @@
     "lint:ci": "eslint --report-unused-disable-directives .",
     "test": "jest",
     "example:image-server": "ts-node --project tsconfig.cjs.json --files examples/image-server.ts",
-    "example-sysmon": "ts-node --project tsconfig.cjs.json --files examples/sysmon.ts",
+    "example:sysmon": "ts-node --project tsconfig.cjs.json --files examples/sysmon.ts",
     "example:simple-client": "ts-node --project tsconfig.cjs.json --files examples/example-client.ts"
   },
   "devDependencies": {

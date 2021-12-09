@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { FoxgloveServer } from "@foxglove/ws-protocol";
 import Debug from "debug";
 import os from "os";

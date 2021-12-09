@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import path from "path";
 import protobufjs from "protobufjs";
 import { FileDescriptorSet } from "protobufjs/ext/descriptor";

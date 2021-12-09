@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { fromNanoSec } from "@foxglove/rostime";
 import Debug from "debug";
 import * as PImage from "pureimage";
