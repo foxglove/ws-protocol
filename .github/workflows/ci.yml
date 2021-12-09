@@ -11,6 +11,7 @@ jobs:
   typescript:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         package: [ws-protocol, ws-protocol-examples]
     steps:
