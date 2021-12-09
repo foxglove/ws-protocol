@@ -6,6 +6,8 @@ import * as PImage from "pureimage";
 import { Writable } from "stream";
 import { WebSocketServer } from "ws";
 
+import boxen from "../boxen";
+
 const log = Debug("foxglove:example-server");
 Debug.enable("foxglove:*");
 
@@ -54,12 +56,17 @@ function drawImage(time: number) {
 
 async function main(): Promise<void> {
   const server = new FoxgloveServer({ name: "example-server" });
+  const port = 8765;
   const ws = new WebSocketServer({
-    port: 8765,
+    port,
     handleProtocols: (protocols) => server.handleProtocols(protocols),
   });
   ws.on("listening", () => {
-    log("server listening on %s", ws.address());
+    void boxen(
+      `📡 Server listening on localhost:${port}. To see data, visit:\n` +
+        `https://studio.foxglove.dev/?ds=foxglove-websocket&ds.url=wss://localhost:${port}/`,
+      { borderStyle: "round", padding: 1 },
+    ).then(log);
   });
   ws.on("connection", (conn, req) => {
     const name = `${req.socket.remoteAddress!}:${req.socket.remotePort!}`;

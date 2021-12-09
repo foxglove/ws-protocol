@@ -4,6 +4,8 @@ import Debug from "debug";
 import os from "os";
 import { WebSocketServer } from "ws";
 
+import boxen from "../boxen";
+
 const log = Debug("foxglove:sysmon");
 Debug.enable("foxglove:*");
 
@@ -71,12 +73,17 @@ function getStats(prevStats: Stats | undefined): Stats {
 
 async function main() {
   const server = new FoxgloveServer({ name: "sysmon" });
+  const port = 8765;
   const ws = new WebSocketServer({
-    port: 8765,
+    port,
     handleProtocols: (protocols) => server.handleProtocols(protocols),
   });
   ws.on("listening", () => {
-    log("server listening on %s", ws.address());
+    void boxen(
+      `📡 Server listening on localhost:${port}. To see data, visit:\n` +
+        `https://studio.foxglove.dev/?ds=foxglove-websocket&ds.url=wss://localhost:${port}/`,
+      { borderStyle: "round", padding: 1 },
+    ).then(log);
   });
   ws.on("connection", (conn, req) => {
     const name = `${req.socket.remoteAddress!}:${req.socket.remotePort!}`;
