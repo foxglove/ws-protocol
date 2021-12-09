@@ -26,15 +26,19 @@
     "dist",
     "src"
   ],
+  "bin": {
+    "example-sysmon": "dist/cjs/examples/sysmon.js",
+    "example-simple-client": "dist/cjs/examples/simple-client.js"
+  },
   "scripts": {
     "prepack": "yarn build",
     "build": "tsc -b tsconfig.json tsconfig.cjs.json",
     "lint": "eslint --report-unused-disable-directives --fix .",
     "lint:ci": "eslint --report-unused-disable-directives .",
     "test": "jest",
-    "example:image-server": "node dist/cjs/examples/image-server.js",
-    "example:sysmon": "node dist/cjs/examples/sysmon.js",
-    "example:simple-client": "node dist/cjs/examples/example-client.js"
+    "example:image-server": "ts-node --project tsconfig.cjs.json --files examples/image-server.ts",
+    "example-sysmon": "ts-node --project tsconfig.cjs.json --files examples/sysmon.ts",
+    "example:simple-client": "ts-node --project tsconfig.cjs.json --files examples/example-client.ts"
   },
   "devDependencies": {
     "@foxglove/eslint-plugin": "0.17.1",
