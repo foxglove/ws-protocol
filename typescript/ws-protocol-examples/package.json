@@ -19,22 +19,22 @@
     "email": "support@foxglove.dev"
   },
   "homepage": "https://foxglove.dev/",
-  "module": "dist/esm/src/index.js",
-  "main": "dist/cjs/src/index.js",
-  "typings": "dist/esm/src/index.d.ts",
+  "module": "dist/esm/ws-protocol-examples/src/index.js",
+  "main": "dist/cjs/ws-protocol-examples/src/index.js",
+  "typings": "dist/esm/ws-protocol-examples/src/index.d.ts",
   "files": [
     "dist",
     "src"
   ],
   "bin": {
-    "ws-protocol-examples": "dist/cjs/src/index.js"
+    "ws-protocol-examples": "dist/cjs/ws-protocol-examples/src/index.js"
   },
   "scripts": {
     "prepack": "yarn build",
     "build": "tsc -b tsconfig.json tsconfig.cjs.json",
     "lint": "eslint --report-unused-disable-directives --fix .",
     "lint:ci": "eslint --report-unused-disable-directives .",
-    "run-example": "yarn build && ts-node --project tsconfig.cjs.json --files src/index.ts"
+    "run-example": "tsc -b ../*/tsconfig*.json && ts-node --project tsconfig.cjs.json --files src/index.ts"
   },
   "devDependencies": {
     "@foxglove/eslint-plugin": "0.17.1",
