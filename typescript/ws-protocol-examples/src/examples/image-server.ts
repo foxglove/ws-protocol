@@ -84,7 +84,7 @@ async function main(): Promise<void> {
   });
 
   const ch1 = server.addChannel({
-    topic: "foo",
+    topic: "example_image",
     encoding: "json",
     schemaName: "ros.sensor_msgs.CompressedImage",
     schema: JSON.stringify({
