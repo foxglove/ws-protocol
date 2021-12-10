@@ -17,7 +17,7 @@ The following implementations are provided in this repository and as installable
 
 - [Protocol specification](docs/spec.md)
 - [Python package README](python)
-- [JavaScript/TypeScript package README](typescript)
+- [JavaScript/TypeScript package README](typescript/ws-protocol)
 
 ## Development
 
