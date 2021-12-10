@@ -2,7 +2,7 @@
 
 This package provides server and client implementations of the [Foxglove Studio WebSocket protocol](https://github.com/foxglove/ws-protocol), enabling [Foxglove Studio](https://github.com/foxglove/studio) to ingest arbitrary “live” streamed data.
 
-The protocol is encoding-agnostic, i.e. it can support Protobuf messages, ROS 1 or 2 messages, etc. (as long as the desired encoding is supported by both client and server).
+The protocol is encoding-agnostic, i.e. it can support Protobuf messages, JSON messages, etc. (as long as the desired encoding is supported by both client and server).
 
 ## Installation
 
