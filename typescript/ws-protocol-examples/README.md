@@ -5,10 +5,10 @@ This package provides example server and client scripts using the [Foxglove Stud
 ## Usage
 
 ```
-$ npx @foxglove/ws-protocol-examples --help
-$ npx @foxglove/ws-protocol-examples image-server
-$ npx @foxglove/ws-protocol-examples sysmon
-$ npx @foxglove/ws-protocol-examples simple-client [host]
+$ npx @foxglove/ws-protocol-examples@latest --help
+$ npx @foxglove/ws-protocol-examples@latest image-server
+$ npx @foxglove/ws-protocol-examples@latest sysmon
+$ npx @foxglove/ws-protocol-examples@latest simple-client [host]
 ```
 
 To see data from the example servers, open up https://studio.foxglove.dev and initiate a Foxglove WebSocket connection to `ws://localhost:8765/`.

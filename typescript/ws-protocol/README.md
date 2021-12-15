@@ -22,7 +22,7 @@ $ npm install ws
 
 A system monitor script is provided as an illustrative example of a WebSocket server. To try it out:
 
-1. Run `npx @foxglove/ws-protocol-examples sysmon`.
+1. Run `npx @foxglove/ws-protocol-examples@latest sysmon`.
 2. In a browser, open up https://studio.foxglove.dev and initiate a Foxglove WebSocket connection to `ws://localhost:8765/`.
 
 <img width="500" alt="Foxglove Studio displaying memory and CPU usage from the system monitor example" src="https://user-images.githubusercontent.com/14237/145313065-85c05645-6b29-4eb2-a498-849c83f8792d.png">
