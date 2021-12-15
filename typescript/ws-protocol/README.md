@@ -1,32 +1,26 @@
-# Foxglove WebSocket protocol in TypeScript
+# Foxglove WebSocket server and client
 
-The Foxglove WebSocket protocol is encoding-agnostic, as long as the desired encoding is supported by both client and server. It currently supports Protobuf and JSON messages.
+This package provides an example server implementation of the [Foxglove WebSocket protocol](https://github.com/foxglove/ws-protocol), enabling [Foxglove Studio](https://github.com/foxglove/studio) to ingest arbitrary “live” streamed data.
 
 ## Installation
-
-Install the `ws-protocol` `npm` package:
 
 ```
 $ npm install @foxglove/ws-protocol
 ```
 
-You'll also need to install your own WebSocket server or client implementation. For Node.js, you can use the [ws](https://www.npmjs.com/package/ws) package:
+This package does not require a specific WebSocket server or client implementation, so you will need to install your own. For Node.js, you can use the [ws](https://www.npmjs.com/package/ws) package:
 
 ```
 $ npm install ws
 ```
 
-Use the custom template provided [here](typescript/ws-protocol#server-template) to write your own custom JavaScript/TypeScript server.
+## Example servers and client
 
-To see the data transmitted by your server, open [studio.foxglove.dev](https://studio.foxglove.dev) in a browser, and initiate a Foxglove WebSocket connection to your WebSocket URL.
-
-<img width="500" alt="Foxglove Studio displaying memory and CPU usage from the system monitor example" src="https://user-images.githubusercontent.com/14237/145313065-85c05645-6b29-4eb2-a498-849c83f8792d.png">
+Run these [example servers and client](https://github.com/foxglove/ws-protocol/tree/main/typescript/ws-protocol-examples), implemented in JavaScript/TypeScript, to get started.
 
 ## Server template
 
-The example server template below publishes messages on a single topic called `example_msg`, using JSON to encode message data and [JSON Schema](https://json-schema.org) to describe the message layout. 
-
-Copy the script below into a file (e.g. `server.js`) and run it (e.g. `node server.js`). Then, make the necessary adjustments to build a custom server.
+The template below publishes messages on a single topic called `example_msg`, using JSON to encode message data and [JSON Schema](https://json-schema.org) to describe the message layout.
 
 ```js
 const { FoxgloveServer } = require("@foxglove/ws-protocol");
@@ -88,11 +82,11 @@ async function main() {
 main().catch(console.error);
 ```
 
+Copy the template code into a file and run it (e.g. `node server.js`). Then, make the necessary adjustments to the file to customize this simple server to your desired specifications.
+
 ## Client template
 
-The example client template below subscribes to messages on all channels that use the `json` encoding. 
-
-Copy the script below into a file (e.g. `client.js`), run a [Foxglove Websocket server](#server-template), and then run the client code (e.g. `node client.js`). Then, make the necessary adjustments to build a custom client.
+The template below subscribes to messages on all channels that use the `json` encoding. See [`@foxglove/ws-protocol-examples`](../ws-protocol-examples#example-client) for an example client that subscribes to messages with the `protobuf` encoding.
 
 ```js
 const { FoxgloveClient } = require("@foxglove/ws-protocol");
@@ -126,9 +120,30 @@ async function main() {
 main().catch(console.error);
 ```
 
+Copy the template code into a file (e.g. `client.js`) and start up a [Foxglove Websocket server](#server-template). In a separate terminal window, run the client code (e.g. `node client.js`).
+
+You should see the following output if both your server and client are running correctly:
+
+```
+$ node client.js
+{
+  subscriptionId: 0,
+  timestamp: 1638999307183000000n,
+  data: { msg: 'Hello!', count: 2849 }
+}
+{
+  subscriptionId: 0,
+  timestamp: 1638999307384000000n,
+  data: { msg: 'Hello!', count: 2850 }
+}
+...
+```
+
+Make the necessary adjustments to the file to customize this simple client.
+
 ## Development
 
-The `ws-protocol` package lives inside a monorepo that uses [yarn workspaces](https://yarnpkg.com/features/workspaces), so most commands (other than `yarn install`) should be prefixed with `yarn workspace @foxglove/ws-protocol...`.
+This package lives inside a monorepo that uses [yarn workspaces](https://yarnpkg.com/features/workspaces), so most commands (other than `yarn install`) should be prefixed with `yarn workspace @foxglove/ws-protocol ...`.
 
 - `yarn install` – Install development dependencies
 - `yarn workspace @foxglove/ws-protocol version --patch` (or `--minor` or `--major`) – Increment the version number and create the appropriate git tag
