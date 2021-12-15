@@ -32,11 +32,11 @@ pipenv shell
 
 ```
 python -m foxglove_websocket.examples.simple_server
-npx @foxglove/ws-protocol-examples sysmon
+npx @foxglove/ws-protocol-examples@latest sysmon
 ```
 
 ### Run example client
 
 ```
-npx @foxglove/ws-protocol-examples simple-client localhost:8765
+npx @foxglove/ws-protocol-examples@latest simple-client localhost:8765
 ```
