@@ -4,7 +4,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-foxglove-websocket = {editable = true, path = "./python"}
+foxglove-websocket = {editable = true, path = "./python/foxglove-websocket"}
+foxglove-websocket-examples = {editable = true, path = "./python/foxglove-websocket-examples"}
 
 [dev-packages]
 black = "*"
