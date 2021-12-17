@@ -1,3 +1,19 @@
+"""
+This script demonstrates how to write a Foxglove WebSocket server that transmits Protobuf-encoded
+data. You should examine the following files in the `proto` directory to understand how to adapt the
+server for use with your own Protobuf data:
+
+- `ExampleMsg.proto`: hand-written Protobuf schema that describes data the server will send.
+
+- `ExampleMsg_pb2.py`: generated Python code from `protoc --python_out=. ExampleMsg.proto`. The
+  example server uses this to serialize messages as binary data via SerializeToString().
+
+- `ExampleMsg.bin`: generated FileDescriptorSet from `protoc --descriptor_set_out=ExampleMsg.bin
+  ExampleMsg.proto`. This binary blob gets passed to clients as the `schema`; Foxglove Studio uses
+  this along with the `schemaName` to decode the message data. A FileDescriptorSet can represent
+  multiple input .proto files (see the --include_imports option to protoc).
+"""
+
 import asyncio
 import os
 import sys
