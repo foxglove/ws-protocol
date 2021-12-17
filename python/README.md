@@ -10,14 +10,23 @@ The protocol is encoding-agnostic, i.e. it can support Protobuf messages, JSON m
 $ pip install foxglove-websocket
 ```
 
-## Example server
+## Example servers
+
+This package includes example servers demonstrating how to use JSON and Protobuf data. To install additional dependencies required for the examples, run:
+
+```
+$ pip install foxglove-websocket[examples]
+```
 
 The following script provides a simple example server which publishes messages on a single topic called `example_msg`, using JSON to encode message data and [JSON Schema](https://json-schema.org) to describe the message layout.
+
+- `python -m foxglove_websocket.examples.json_server`
+- `python -m foxglove_websocket.examples.protobuf_server`
 
 To get started with the example server:
 
 1. Copy the script below into a file named `example.py` and run `python3 example.py`.  
-   **or:** Install the foxglove-websocket package and run `python -m foxglove_websocket.examples.simple_server`.
+   **or:** Install the foxglove-websocket package and run `python -m foxglove_websocket.examples.json_server`.
 
 2. In a browser, open up https://studio.foxglove.dev and initiate a Foxglove WebSocket connection to `ws://localhost:8765/`.
 

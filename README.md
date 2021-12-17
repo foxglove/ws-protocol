@@ -31,7 +31,7 @@ pipenv shell
 ### Run example servers
 
 ```
-python -m foxglove_websocket.examples.simple_server
+python -m foxglove_websocket.examples.json_server
 npx @foxglove/ws-protocol-examples@latest sysmon
 ```
 
