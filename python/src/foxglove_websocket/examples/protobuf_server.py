@@ -37,8 +37,8 @@ async def main():
             {
                 "topic": "example_msg",
                 "encoding": "protobuf",
-                "schemaName": "ExampleMsg",
-                "schema": schema_base64,
+                "schemaName": "ExampleMsg",  # Matches `message ExampleMsg` in ExampleMsg.proto
+                "schema": schema_base64,  # Represents the parsed contents of ExampleMsg.proto
             }
         )
 
