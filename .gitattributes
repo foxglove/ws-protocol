@@ -1,1 +1,1 @@
-*.bin binary
+python/**/proto/*.bin binary linguist-generated
