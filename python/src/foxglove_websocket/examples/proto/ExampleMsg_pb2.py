@@ -15,11 +15,11 @@ _sym_db = _symbol_database.Default()
 
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='ExampleMsg.proto',
-  package='foobar',
+  package='',
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x10\x45xampleMsg.proto\x12\x06\x66oobar\"(\n\nExampleMsg\x12\x0b\n\x03msg\x18\x01 \x01(\t\x12\r\n\x05\x63ount\x18\x02 \x01(\x05\x62\x06proto3'
+  serialized_pb=b'\n\x10\x45xampleMsg.proto\"(\n\nExampleMsg\x12\x0b\n\x03msg\x18\x01 \x01(\t\x12\r\n\x05\x63ount\x18\x02 \x01(\x05\x62\x06proto3'
 )
 
 
@@ -27,21 +27,21 @@ DESCRIPTOR = _descriptor.FileDescriptor(
 
 _EXAMPLEMSG = _descriptor.Descriptor(
   name='ExampleMsg',
-  full_name='foobar.ExampleMsg',
+  full_name='ExampleMsg',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='msg', full_name='foobar.ExampleMsg.msg', index=0,
+      name='msg', full_name='ExampleMsg.msg', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='count', full_name='foobar.ExampleMsg.count', index=1,
+      name='count', full_name='ExampleMsg.count', index=1,
       number=2, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
@@ -59,8 +59,8 @@ _EXAMPLEMSG = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=28,
-  serialized_end=68,
+  serialized_start=20,
+  serialized_end=60,
 )
 
 DESCRIPTOR.message_types_by_name['ExampleMsg'] = _EXAMPLEMSG
@@ -69,7 +69,7 @@ _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 ExampleMsg = _reflection.GeneratedProtocolMessageType('ExampleMsg', (_message.Message,), {
   'DESCRIPTOR' : _EXAMPLEMSG,
   '__module__' : 'ExampleMsg_pb2'
-  # @@protoc_insertion_point(class_scope:foobar.ExampleMsg)
+  # @@protoc_insertion_point(class_scope:ExampleMsg)
   })
 _sym_db.RegisterMessage(ExampleMsg)
 

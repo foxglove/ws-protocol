@@ -1,7 +1,5 @@
 syntax = "proto3";
 
-package foobar;
-
 message ExampleMsg {
   string msg = 1;
   int32 count = 2;
