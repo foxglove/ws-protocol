@@ -27,7 +27,7 @@ To get started with the example server:
 import asyncio
 import json
 import time
-from foxglove_websocket.util import run_cancellable
+from foxglove_websocket import run_cancellable
 from foxglove_websocket.server import FoxgloveServer, FoxgloveServerListener
 from foxglove_websocket.types import ChannelId
 

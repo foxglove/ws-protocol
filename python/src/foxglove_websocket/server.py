@@ -9,7 +9,7 @@ from websockets.exceptions import ConnectionClosed
 from dataclasses import dataclass
 from websockets.typing import Data, Subprotocol
 
-from foxglove_websocket.types import (
+from .types import (
     BinaryOpcode,
     Channel,
     ChannelId,

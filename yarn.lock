@@ -351,15 +351,6 @@
   resolved "https://registry.yarnpkg.com/@foxglove/tsconfig/-/tsconfig-1.1.0.tgz#48c37fffd6f349c3ee08a60fc62ccf636f3b59a6"
   integrity sha512-qZU4MtXVgPhDBFazSEx7yDEuEg8cPHXFQVhBaUABZkCBdcnEE9sxlgEt0gSikF4fRtY6COGIJPVRflnPJXjJKA==
 
-"@foxglove/ws-protocol@^0.0.6":
-  version "0.0.6"
-  resolved "https://registry.yarnpkg.com/@foxglove/ws-protocol/-/ws-protocol-0.0.6.tgz#d8847b65659a33188c30e4a2c69bd92e993042de"
-  integrity sha512-Mg4vInf0iKVCOfW3N+iPl3oWya3O/7cM2TTH3H+KN8/qc9f0yZ+Y8hWIZ0NG6jIbBWG7syjhbqouPRVHE/y6fg==
-  dependencies:
-    debug "^4"
-    eventemitter3 "^4.0.7"
-    tslib "^2"
-
 "@humanwhocodes/config-array@^0.5.0":
   version "0.5.0"
   resolved "https://registry.yarnpkg.com/@humanwhocodes/config-array/-/config-array-0.5.0.tgz#1407967d4c6eecd7388f83acf1eaf4d0c6e58ef9"
