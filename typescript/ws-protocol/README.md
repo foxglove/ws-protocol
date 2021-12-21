@@ -1,6 +1,6 @@
 # Foxglove WebSocket server and client
 
-This package provides an example server implementation of the [Foxglove WebSocket protocol](https://github.com/foxglove/ws-protocol), enabling [Foxglove Studio](https://github.com/foxglove/studio) to ingest arbitrary “live” streamed data.
+This package provides a server implementation of the [Foxglove WebSocket protocol](https://github.com/foxglove/ws-protocol). This protocol enables [Foxglove Studio](https://github.com/foxglove/studio) to ingest arbitrary “live” streamed data.
 
 ## Installation
 
@@ -14,9 +14,9 @@ This package does not require a specific WebSocket server or client implementati
 $ npm install ws
 ```
 
-## Example servers and client
+## Examples
 
-Run these [example servers and client](https://github.com/foxglove/ws-protocol/tree/main/typescript/ws-protocol-examples), implemented in JavaScript/TypeScript, to get started.
+Run these [example scripts](https://github.com/foxglove/ws-protocol/tree/main/typescript/ws-protocol-examples), implemented in TypeScript, to get started.
 
 ## Server template
 
@@ -86,7 +86,7 @@ Copy the template code into a file and run it (e.g. `node server.js`). Then, mak
 
 ## Client template
 
-The template below subscribes to messages on all channels that use the `json` encoding. See [`@foxglove/ws-protocol-examples`](../ws-protocol-examples#example-client) for an example client that subscribes to messages with the `protobuf` encoding.
+The template below subscribes to messages on all channels that use the `json` encoding. See [`@foxglove/ws-protocol-examples`](https://github.com/foxglove/ws-protocol/tree/main/typescript/ws-protocol-examples#example-client) for an example client that subscribes to messages with the `protobuf` encoding.
 
 ```js
 const { FoxgloveClient } = require("@foxglove/ws-protocol");
