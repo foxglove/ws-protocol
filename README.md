@@ -1,42 +1,14 @@
-# Foxglove Studio WebSocket protocol libraries
+# Foxglove WebSocket Protocol
 
-This repository provides a protocol specification and reference implementations enabling [Foxglove Studio](https://github.com/foxglove/studio) to ingest arbitrary “live” streamed data.
+This repository provides a [protocol specification](docs/spec.md) and reference implementations enabling [Foxglove Studio](https://github.com/foxglove/studio) to ingest arbitrary “live” streamed data.
 
-The protocol is encoding-agnostic, i.e. it can support Protobuf messages, JSON messages, etc. (as long as the desired encoding is supported by both client and server).
+A Foxglove WebSocket server can provide multiple data streams, called _channels_. When a client subscribes to a channel, it begins receiving _messages_ on that channel. This protocol does not prescribe the messages' data format. Instead, the server specifies each channel's _encoding_, and the client uses this information to determine whether it can decode that channel's messages. Read the [Foxglove Studio documentation](https://foxglove.dev/docs/connection/foxglove-websocket) for more information on which encodings Studio supports.
 
-The following implementations are provided in this repository and as installable packages:
+Implementations are available in the following languages:
 
-| Language              | Includes         | Package name                     | Version                                                                                                                      |
-| --------------------- | ---------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Python                | server           | `foxglove-websocket`             | [![](https://shields.io/pypi/v/foxglove-websocket)](https://pypi.org/project/foxglove-websocket/)                            |
-| JavaScript/TypeScript | server + client  | `@foxglove/ws-protocol`          | [![](https://shields.io/npm/v/@foxglove/ws-protocol)](https://www.npmjs.com/package/@foxglove/ws-protocol)                   |
-| JavaScript/TypeScript | examples         | `@foxglove/ws-protocol-examples` | [![](https://shields.io/npm/v/@foxglove/ws-protocol-examples)](https://www.npmjs.com/package/@foxglove/ws-protocol-examples) |
-| C++                   | _in development_ |
-
-## Documentation
-
-- [Protocol specification](docs/spec.md)
-- [Python package README](python)
-- [JavaScript/TypeScript package README](typescript/ws-protocol)
-
-## Development
-
-### Virtualenv usage
-
-```
-pipenv install --dev
-pipenv shell
-```
-
-### Run example servers
-
-```
-python -m foxglove_websocket.examples.json_server
-npx @foxglove/ws-protocol-examples@latest sysmon
-```
-
-### Run example client
-
-```
-npx @foxglove/ws-protocol-examples@latest simple-client localhost:8765
-```
+| Language              | Includes                                    | Package name                     | Version                                                                                                                      |
+| --------------------- | ------------------------------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Python                | [server](python)                            | `foxglove-websocket`             | [![](https://shields.io/pypi/v/foxglove-websocket)](https://pypi.org/project/foxglove-websocket/)                            |
+| JavaScript/TypeScript | [server + client](typescript/ws-protocol)   | `@foxglove/ws-protocol`          | [![](https://shields.io/npm/v/@foxglove/ws-protocol)](https://www.npmjs.com/package/@foxglove/ws-protocol)                   |
+| JavaScript/TypeScript | [examples](typescript/ws-protocol-examples) | `@foxglove/ws-protocol-examples` | [![](https://shields.io/npm/v/@foxglove/ws-protocol-examples)](https://www.npmjs.com/package/@foxglove/ws-protocol-examples) |
+| C++                   | _in development_                            |
