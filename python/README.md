@@ -8,12 +8,22 @@ This package provides an example server implementation of the [Foxglove WebSocke
 $ pip install foxglove-websocket
 ```
 
-## Example server
+## Example servers
 
-Run a simple example server that publishes messages on a single `example_msg` topic, using JSON to encode message data and [JSON Schema](https://json-schema.org/) to describe the message layout:
+This package includes example servers demonstrating how to use JSON and Protobuf data. To install additional dependencies required for the examples, run:
 
 ```
-python -m foxglove_websocket.examples.simple_server
+$ pip install foxglove-websocket[examples]
+```
+
+Run a simple example server that publishes messages on a single `example_msg` topic
+
+- using JSON to encode message data and [JSON Schema](https://json-schema.org/) to describe the message layout
+- using Protobuf
+
+```
+python -m foxglove_websocket.examples.json_server
+python -m foxglove_websocket.examples.protobuf_server
 ```
 
 To see data from this server, open [Foxglove Studio](https://studio.foxglove.dev?ds=foxglove-websocket&ds.url=ws://localhost:8765/) with a Foxglove WebSocket connection to `ws://localhost:8765/`:
@@ -22,7 +32,7 @@ To see data from this server, open [Foxglove Studio](https://studio.foxglove.dev
 
 ## Server template
 
-Copy [this template code](https://github.com/foxglove/ws-protocol/blob/main/python/src/foxglove_websocket/examples/simple_server.py) into a file and run it (e.g. `python3 server.py`). Then, make the necessary adjustments to the file to customize this simple server to your desired specifications.
+Copy this [JSON server template](https://github.com/foxglove/ws-protocol/blob/main/python/src/foxglove_websocket/examples/json_server.py) or [Protouf server template](https://github.com/foxglove/ws-protocol/blob/main/python/src/foxglove_websocket/examples/protobuf_server.py) into a file and run it (e.g. `python3 server.py`). Then, make the necessary adjustments to the file to customize this simple server to your desired specifications.
 
 ## Development
 

@@ -5,7 +5,7 @@ This package provides example server and client implementation of the [Foxglove 
 For all possible actions, run the following command:
 
 ```
-$ npx @foxglove/ws-protocol-examples --help
+$ npx @foxglove/ws-protocol-examples@latest --help
 ```
 
 ## Example servers
@@ -13,13 +13,13 @@ $ npx @foxglove/ws-protocol-examples --help
 Run the `sysmon` example server, which uses JSON-encoded data to transmit system monitoring information like memory and CPU usage:
 
 ```
-$ npx @foxglove/ws-protocol-examples sysmon
+$ npx @foxglove/ws-protocol-examples@latest sysmon
 ```
 
 Run the `image-server` example server, which uses JSON-encoded data to transmit images:
 
 ```
-$ npx @foxglove/ws-protocol-examples image-server
+$ npx @foxglove/ws-protocol-examples@latest image-server
 ```
 
 You must close out each server (`control` + `c`) before starting up the other.
@@ -33,7 +33,7 @@ To see data from either server, open [Foxglove Studio](https://studio.foxglove.d
 Run a simple example client that subscribes to messages with the `protobuf` encoding:
 
 ```
-$ npx @foxglove/ws-protocol-examples simple-client localhost:8765
+$ npx @foxglove/ws-protocol-examples@latest simple-client localhost:8765
 ```
 
 ## Development
