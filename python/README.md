@@ -18,13 +18,13 @@ $ pip install foxglove-websocket[examples]
 
 Run a simple example server that publishes messages on a single `example_msg` topic:
 
-- [JSON server](https://github.com/foxglove/ws-protocol/blob/main/python/src/foxglove_websocket/examples/json_server.py) – Uses JSON to encode message data and [JSON Schema](https://json-schema.org/) to describe the message layout
+- [JSON server](https://github.com/foxglove/ws-protocol/blob/main/python/src/foxglove_websocket/examples/json_server.py) – Uses JSON to encode message data and [JSON Schema](https://json-schema.org/) to describe the message layout.
 
   ```
-  python -m foxglove_websocket.examples.protobuf_server
+  python -m foxglove_websocket.examples.json_server
   ```
 
-- [Protobuf server](https://github.com/foxglove/ws-protocol/blob/main/python/src/foxglove_websocket/examples/protobuf_server.py) – Uses [Protobuf](https://developers.google.com/protocol-buffers)-encoded messages
+- [Protobuf server](https://github.com/foxglove/ws-protocol/blob/main/python/src/foxglove_websocket/examples/protobuf_server.py) – Uses [Protobuf](https://developers.google.com/protocol-buffers) to encode message data.
 
   ```
   python -m foxglove_websocket.examples.protobuf_server

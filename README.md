@@ -8,7 +8,7 @@ Implementations are available in the following languages:
 
 | Language              | Includes                                    | Package name                     | Version                                                                                                                      |
 | --------------------- | ------------------------------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Python                | [server](python)                            | `foxglove-websocket`             | [![](https://shields.io/pypi/v/foxglove-websocket)](https://pypi.org/project/foxglove-websocket/)                            |
+| Python                | [server + examples](python)                 | `foxglove-websocket`             | [![](https://shields.io/pypi/v/foxglove-websocket)](https://pypi.org/project/foxglove-websocket/)                            |
 | JavaScript/TypeScript | [server + client](typescript/ws-protocol)   | `@foxglove/ws-protocol`          | [![](https://shields.io/npm/v/@foxglove/ws-protocol)](https://www.npmjs.com/package/@foxglove/ws-protocol)                   |
 | JavaScript/TypeScript | [examples](typescript/ws-protocol-examples) | `@foxglove/ws-protocol-examples` | [![](https://shields.io/npm/v/@foxglove/ws-protocol-examples)](https://www.npmjs.com/package/@foxglove/ws-protocol-examples) |
 | C++                   | _in development_                            |
