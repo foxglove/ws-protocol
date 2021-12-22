@@ -1,11 +1,11 @@
 from conans import ConanFile, CMake, tools
 
-PROJECT = "foxsocketpp"
+PROJECT = "foxglove_websocket"
 
 
-class FoxSocketPpConan(ConanFile):
+class FoxgloveWebSocketConan(ConanFile):
     name = PROJECT
-    version = "1.0.0"
+    version = "0.0.1"
     url = f"https://github.com/foxglove/ws-protocol"
     homepage = f"https://github.com/foxglove/ws-protocol"
     description = "A C++ server implementation of the Foxglove WebSocket Protocol"

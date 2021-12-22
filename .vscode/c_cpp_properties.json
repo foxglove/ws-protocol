@@ -1,0 +1,19 @@
+{
+  "configurations": [
+    {
+      "name": "Mac",
+      "includePath": [
+        "${workspaceFolder}/**",
+        "~/.conan/data/*/*/_/_/package/*/include"
+      ],
+      "defines": [],
+      "macFrameworkPath": [],
+      "compilerPath": "/opt/homebrew/bin/gcc-11",
+      "cStandard": "gnu17",
+      "cppStandard": "gnu++17",
+      "intelliSenseMode": "macos-gcc-arm64",
+      "compileCommands": "${workspaceFolder}/cpp/build/compile_commands.json"
+    }
+  ],
+  "version": 4
+}

@@ -4,4 +4,4 @@
 
 - Install [conan](https://docs.conan.io/en/latest/installation.html) (ex: `pip install conan`, `brew install conan`)
 - Run `make`
-- Run `./build/bin/foxsocketpp`
+- Run `./build/bin/example_server`

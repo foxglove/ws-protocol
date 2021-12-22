@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(foxsocketpp LANGUAGES CXX)
+project(foxglove_websocket LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED on)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -54,9 +54,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPTIMIZATION_FLAGS} ${DESIRED_WARNINGS
 
 include_directories("${PROJECT_SOURCE_DIR}/include")
 
-add_executable(foxsocketpp src/main.cpp src/foxsocketpp.cpp src/rosmsg.cpp)
-target_link_libraries(foxsocketpp CONAN_PKG::nlohmann_json CONAN_PKG::websocketpp)
+add_executable(example_server src/example_server.cpp src/server.cpp)
+target_link_libraries(example_server CONAN_PKG::nlohmann_json CONAN_PKG::websocketpp)
 
-file(GLOB TEST_SOURCES test/*.cpp src/rosmsg.cpp)
+file(GLOB TEST_SOURCES test/*.cpp)
 add_executable(unit-tests ${TEST_SOURCES})
 target_link_libraries(unit-tests CONAN_PKG::catch2)
