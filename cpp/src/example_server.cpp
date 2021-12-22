@@ -7,7 +7,9 @@
 
 std::atomic<bool> running = true;
 
-void ReceiveSigInt([[maybe_unused]] int sig) { running = false; }
+void ReceiveSigInt([[maybe_unused]] int sig) {
+  running = false;
+}
 
 int main() {
   foxglove_websocket::Server server{"example server"};
