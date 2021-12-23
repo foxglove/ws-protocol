@@ -46,6 +46,11 @@ public:
   void sendMessage(ChannelId chanId, uint64_t timestamp,
                    std::string_view data /*FIXME: std::span replacement?*/);
 
+  // TODO: maybe just expose set_timer?
+  WebSocketServer& getEndpoint() & {
+    return server_;
+  }
+
 private:
   std::string _name;
   std::vector<Channel> _channels;

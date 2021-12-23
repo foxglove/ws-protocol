@@ -42,7 +42,10 @@ void to_json(json& j, const Channel& channel) {
 }
 
 Server::Server(std::string name)
-    : _name(name) {}
+    : _name(name) {
+  // Start the WebSocket server
+  server_.init_asio();
+}
 
 Server::~Server() {}
 
@@ -75,8 +78,9 @@ void Server::serverRunLoop(uint16_t port) {
     // Set logging settings
     server_.clear_access_channels(websocketpp::log::alevel::all);
 
-    // Start the WebSocket server
-    server_.init_asio();
+    // FIXME:moved, ok?
+    // // Start the WebSocket server
+    // server_.init_asio();
 
     server_.set_validate_handler([&](ConnHandle hdl) {
       auto con = server_.get_con_from_hdl(hdl);
@@ -165,6 +169,14 @@ void Server::onSocketMessage([[maybe_unused]] ConnHandle hdl, MessagePtr msg) {
   } else {
     // sendError(hdl, "unknown op");
   }
+}
+
+ChannelId Server::addChannel([[maybe_unused]] ChannelWithoutId&& channel) {
+  return 0;
+}
+
+void Server::sendMessage([[maybe_unused]] ChannelId chanId, [[maybe_unused]] uint64_t timestamp,
+                         [[maybe_unused]] std::string_view data /*FIXME: std::span replacement?*/) {
 }
 
 }  // namespace foxglove_websocket
