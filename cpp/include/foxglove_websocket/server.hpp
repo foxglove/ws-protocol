@@ -4,6 +4,8 @@
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/server.hpp>
 
+#include <map>
+#include <memory>
 #include <mutex>
 #include <thread>
 #include <unordered_map>
@@ -19,6 +21,7 @@ using OpCode = websocketpp::frame::opcode::value;
 using AddrToConnHandle = std::unordered_map<std::string, ConnHandle>;
 
 using ChannelId = uint32_t;
+using SubscriptionId = uint32_t;
 
 struct ChannelWithoutId {
   std::string topic;
@@ -28,6 +31,17 @@ struct ChannelWithoutId {
 };
 struct Channel : ChannelWithoutId {
   ChannelId id;
+
+  explicit Channel(ChannelId id, ChannelWithoutId&& ch)
+      : ChannelWithoutId(std::move(ch))
+      , id(id) {}
+};
+
+struct ClientInfo {
+  std::string name;
+  ConnHandle handle;
+  std::unordered_map<SubscriptionId, ChannelId> subscriptions;
+  std::unordered_map<ChannelId, std::unordered_set<SubscriptionId>> subscriptionsByChannel;
 };
 
 void to_json(nlohmann::json& j, const Channel& channel);
@@ -46,14 +60,16 @@ public:
   void sendMessage(ChannelId chanId, uint64_t timestamp,
                    std::string_view data /*FIXME: std::span replacement?*/);
 
-  // TODO: maybe just expose set_timer?
+  // TODO: maybe just expose set_timer or io_service?
   WebSocketServer& getEndpoint() & {
     return server_;
   }
 
 private:
+  uint32_t _nextChannelId = 0;
   std::string _name;
-  std::vector<Channel> _channels;
+  std::map<ConnHandle, ClientInfo, std::owner_less<>> _clients;
+  std::unordered_map<ChannelId, Channel> _channels;
   bool running_ = false;
   WebSocketServer server_;
   std::thread serverThread_;
