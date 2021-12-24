@@ -86,7 +86,6 @@ private:
   std::unordered_map<ChannelId, Channel> _channels;
   std::function<void(ChannelId)> _subscribeHandler;
   std::function<void(ChannelId)> _unsubscribeHandler;
-  bool running_ = false;
   WebSocketServer server_;
   std::thread serverThread_;
 

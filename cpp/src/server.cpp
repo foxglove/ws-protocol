@@ -57,15 +57,12 @@ void Server::setUnsubscribeHandler(std::function<void(ChannelId)> handler) {
 }
 
 void Server::start(uint16_t port) {
-  running_ = true;
   serverThread_ = std::thread([this, port]() {
     serverRunLoop(port);
   });
 }
 
 void Server::stop() {
-  running_ = false;
-
   std::error_code ec;
   server_.stop_listening(ec);
 
