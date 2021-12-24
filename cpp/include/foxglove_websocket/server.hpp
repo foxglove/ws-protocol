@@ -37,6 +37,16 @@ struct Channel : ChannelWithoutId {
       , id(id) {}
 };
 
+enum class BinaryOpcode : uint8_t {
+  MESSAGE_DATA = 1,
+};
+
+enum class StatusLevel : uint8_t {
+  INFO = 0,
+  WARNING = 1,
+  ERROR = 2,
+};
+
 struct ClientInfo {
   std::string name;
   ConnHandle handle;
@@ -57,6 +67,10 @@ public:
 
   ChannelId addChannel(ChannelWithoutId&& channel);
   void removeChannel(ChannelId chanId);
+
+  void setSubscribeHandler(std::function<void(ChannelId)> handler);
+  void setUnsubscribeHandler(std::function<void(ChannelId)> handler);
+
   void sendMessage(ChannelId chanId, uint64_t timestamp,
                    std::string_view data /*FIXME: std::span replacement?*/);
 
@@ -70,6 +84,8 @@ private:
   std::string _name;
   std::map<ConnHandle, ClientInfo, std::owner_less<>> _clients;
   std::unordered_map<ChannelId, Channel> _channels;
+  std::function<void(ChannelId)> _subscribeHandler;
+  std::function<void(ChannelId)> _unsubscribeHandler;
   bool running_ = false;
   WebSocketServer server_;
   std::thread serverThread_;
@@ -86,6 +102,8 @@ private:
   void handleUnsubscribe(ConnHandle hdl, const std::string& remoteEndpoint,
                          const std::string& topic);
   void onSocketMessage(ConnHandle hdl, MessagePtr msg);
+
+  bool anySubscribed(ChannelId chanId) const;
 };
 
 }  // namespace foxglove_websocket

@@ -49,6 +49,13 @@ Server::Server(std::string name)
 
 Server::~Server() {}
 
+void Server::setSubscribeHandler(std::function<void(ChannelId)> handler) {
+  _subscribeHandler = std::move(handler);
+}
+void Server::setUnsubscribeHandler(std::function<void(ChannelId)> handler) {
+  _unsubscribeHandler = std::move(handler);
+}
+
 void Server::start(uint16_t port) {
   running_ = true;
   serverThread_ = std::thread([this, port]() {
@@ -121,10 +128,22 @@ void Server::serverRunLoop(uint16_t port) {
                   .dump());
     });
     server_.set_close_handler([&](ConnHandle hdl) {
-      _clients.erase(hdl);
+      const auto& client = _clients.find(hdl);
+      if (client == _clients.end()) {
+        error("Client ", server_.get_con_from_hdl(hdl)->get_remote_endpoint(),
+              " disconnected but not found in _clients");
+        return;
+      }
 
-      auto con = server_.get_con_from_hdl(hdl);
-      info("Client ", con->get_remote_endpoint(), " disconnected");
+      info("Client ", client->second.name, " disconnected");
+
+      const auto oldSubscriptionsByChannel = std::move(client->second.subscriptionsByChannel);
+      _clients.erase(client);
+      for (const auto& [chanId, subs] : oldSubscriptionsByChannel) {
+        if (!anySubscribed(chanId) && _unsubscribeHandler) {
+          _unsubscribeHandler(chanId);
+        }
+      }
     });
 
     server_.set_message_handler(bind(&Server::onSocketMessage, this, ::_1, ::_2));
@@ -181,37 +200,75 @@ void Server::onSocketMessage([[maybe_unused]] ConnHandle hdl, MessagePtr msg) {
       SubscriptionId subId = sub["id"];
       ChannelId channelId = sub["channelId"];
       if (clientInfo.subscriptions.find(subId) != clientInfo.subscriptions.end()) {
-        //     this.send(client.connection, {
-        //       op: "status",
-        //       level: StatusLevel.ERROR,
-        //       message: `Client subscription id ${subId} was already used; ignoring subscription`,
-        //     });
-        error("Sub id ", subId, " already used; ignoring");
+        sendText(hdl,
+                 json{
+                   {"op", "status"},
+                   {"level", StatusLevel::ERROR},
+                   {"message", "Client subscription id " + std::to_string(subId) +
+                                 " was already used; ignoring subscription"},
+                 }
+                   .dump());
         continue;
       }
       const auto& channelIt = _channels.find(channelId);
       if (channelIt == _channels.end()) {
-        //     this.send(client.connection, {
-        //       op: "status",
-        //       level: StatusLevel.WARNING,
-        //       message: `Channel ${channelId} is not available; ignoring subscription",`,
-        //     });
-        //     continue;
-        error("Subscription to unknown channel ", channelId, "; ignoring");
+        sendText(hdl,
+                 json{
+                   {"op", "status"},
+                   {"level", StatusLevel::WARNING},
+                   {"message", "Channel " + std::to_string(channelId) +
+                                 " is not available; ignoring subscription"},
+                 }
+                   .dump());
         continue;
       }
       info("client ", clientInfo.name, " subscribed to channel ", channelId);
-      //   const firstSubscription = !this.anySubscribed(channelId);
+      bool firstSubscription = !anySubscribed(channelId);
       clientInfo.subscriptions.emplace(subId, channelId);
       clientInfo.subscriptionsByChannel[channelId].insert(subId);
-      //   if (firstSubscription) {
-      //     this.emitter.emit("subscribe", channelId);
-      //   }
+      if (firstSubscription && _subscribeHandler) {
+        _subscribeHandler(channelId);
+      }
     }
   } else if (op == "unsubscribe") {
-    // handleUnsubscribe(hdl, remoteEndpoint, payload["topic"].get<std::string>());
+    for (const auto& subIdJson : payload["subscriptionIds"]) {
+      SubscriptionId subId = subIdJson;
+      const auto& sub = clientInfo.subscriptions.find(subId);
+      if (sub == clientInfo.subscriptions.end()) {
+        sendText(hdl,
+                 json{
+                   {"op", "status"},
+                   {"level", StatusLevel::WARNING},
+                   {"message", "Client subscription id " + std::to_string(subId) +
+                                 " did not exist; ignoring unsubscription"},
+                 }
+                   .dump());
+        continue;
+      }
+      ChannelId chanId = sub->second;
+      info("client ", clientInfo.name, " unsubscribed from channel ", chanId);
+      clientInfo.subscriptions.erase(sub);
+      if (const auto& subs = clientInfo.subscriptionsByChannel.find(chanId);
+          subs != clientInfo.subscriptionsByChannel.end()) {
+        subs->second.erase(subId);
+        if (subs->second.empty()) {
+          clientInfo.subscriptionsByChannel.erase(subs);
+        }
+      }
+      if (!anySubscribed(chanId) && _unsubscribeHandler) {
+        _unsubscribeHandler(chanId);
+      }
+    }
+
   } else {
-    // sendError(hdl, "unknown op");
+    error("Unrecognized client opcode: ", op);
+    sendText(hdl,
+             json{
+               {"op", "status"},
+               {"level", StatusLevel::ERROR},
+               {"message", "Unrecognized opcode " + op},
+             }
+               .dump());
   }
 }
 
@@ -243,7 +300,7 @@ void Server::sendMessage(ChannelId chanId, uint64_t timestamp,
     for (const auto subId : subs->second) {
       if (message.empty()) {
         message.resize(1 + 4 + 8 + data.size());
-        message[0] = 1;  // TODO: enum
+        message[0] = uint8_t(BinaryOpcode::MESSAGE_DATA);
         message[5] = (timestamp >> 0) & 0xff;
         message[6] = (timestamp >> 8) & 0xff;
         message[7] = (timestamp >> 16) & 0xff;
@@ -261,6 +318,15 @@ void Server::sendMessage(ChannelId chanId, uint64_t timestamp,
       sendBinary(hdl, message);
     }
   }
+}
+
+bool Server::anySubscribed(ChannelId chanId) const {
+  for (const auto& [hdl, client] : _clients) {
+    if (client.subscriptionsByChannel.find(chanId) != client.subscriptionsByChannel.end()) {
+      return true;
+    }
+  }
+  return false;
 }
 
 }  // namespace foxglove_websocket

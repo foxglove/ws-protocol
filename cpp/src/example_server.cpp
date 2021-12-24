@@ -30,6 +30,13 @@ int main() {
         .dump(),
   });
 
+  server.setSubscribeHandler([&](foxglove_websocket::ChannelId chanId) {
+    std::cout << "first client subscribed to " << chanId << std::endl;
+  });
+  server.setUnsubscribeHandler([&](foxglove_websocket::ChannelId chanId) {
+    std::cout << "last client unsubscribed from " << chanId << std::endl;
+  });
+
   uint64_t i = 0;
   static foxglove_websocket::WebSocketServer::timer_ptr timerHandle;
   std::function<void()> setTimer = [&] {
