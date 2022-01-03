@@ -5,29 +5,10 @@
 #include <algorithm>
 #include <iostream>
 
-using json = nlohmann::json;
-
-using websocketpp::lib::bind;
-using websocketpp::lib::placeholders::_1;
-using websocketpp::lib::placeholders::_2;
-
 namespace foxglove_websocket {
 
-template <typename... Args>
-void info(Args&&... args) {
-  ((std::cout << "[INFO] ") << ... << std::forward<Args>(args)) << "\n";
-}
-
-template <typename... Args>
-void error(Args&&... args) {
-  ((std::cerr << "[ERROR] ") << ... << std::forward<Args>(args)) << "\n";
-}
-
-template <typename... Args>
-void fatal(Args&&... args) {
-  ((std::cerr << "[FATAL] ") << ... << std::forward<Args>(args)) << "\n";
-  std::exit(1);
-}
+using json = nlohmann::json;
+using namespace std::placeholders;
 
 const std::string Server::SUPPORTED_SUBPROTOCOL = "foxglove.websocket.v1";
 
@@ -41,13 +22,88 @@ void to_json(json& j, const Channel& channel) {
   };
 }
 
-Server::Server(std::string name)
-    : _name(name) {
-  // Start the WebSocket server
-  server_.init_asio();
+Server::Server(uint16_t port, std::string name)
+    : _port(port)
+    , _name(std::move(name)) {
+  _server.init_asio();
+  _server.clear_access_channels(websocketpp::log::alevel::all);
+  _server.set_access_channels(websocketpp::log::alevel::app);
+  _server.set_validate_handler(std::bind(&Server::validateConnection, this, _1));
+  _server.set_open_handler(std::bind(&Server::handleConnectionOpened, this, _1));
+  _server.set_close_handler(std::bind(&Server::handleConnectionClosed, this, _1));
+  _server.set_message_handler(std::bind(&Server::handleMessage, this, _1, _2));
+  _server.set_reuse_addr(true);
+  _server.set_listen_backlog(128);
+  _server.listen(_port);
+  _server.start_accept();
 }
 
 Server::~Server() {}
+
+bool Server::validateConnection(ConnHandle hdl) {
+  auto con = _server.get_con_from_hdl(hdl);
+
+  const auto& subprotocols = con->get_requested_subprotocols();
+  if (std::find(subprotocols.begin(), subprotocols.end(), SUPPORTED_SUBPROTOCOL) !=
+      subprotocols.end()) {
+    con->select_subprotocol(SUPPORTED_SUBPROTOCOL);
+    return true;
+  }
+  _server.get_alog().write(websocketpp::log::alevel::app,
+                           "Rejecting client " + con->get_remote_endpoint() +
+                             " which did not declare support for subprotocol " +
+                             SUPPORTED_SUBPROTOCOL);
+  return false;
+}
+
+void Server::handleConnectionOpened(ConnHandle hdl) {
+  auto con = _server.get_con_from_hdl(hdl);
+  _server.get_alog().write(
+    websocketpp::log::alevel::app,
+    "Client " + con->get_remote_endpoint() + " connected via " + con->get_resource());
+  _clients.emplace(hdl, ClientInfo{
+                          .name = con->get_remote_endpoint(),
+                          .handle = hdl,
+                        });
+
+  con->send(json({
+                   {"op", "serverInfo"},
+                   {"name", _name},
+                   {"capabilities", json::array()},
+                 })
+              .dump());
+
+  json channels;
+  for (const auto& [id, channel] : _channels) {
+    channels.push_back(channel);
+  }
+  con->send(json{
+    {"op", "advertise"},
+    {"channels", std::move(channels)},
+  }
+              .dump());
+}
+
+void Server::handleConnectionClosed(ConnHandle hdl) {
+  const auto& client = _clients.find(hdl);
+  if (client == _clients.end()) {
+    _server.get_elog().write(websocketpp::log::elevel::rerror,
+                             "Client " + _server.get_con_from_hdl(hdl)->get_remote_endpoint() +
+                               " disconnected but not found in _clients");
+    return;
+  }
+
+  _server.get_alog().write(websocketpp::log::alevel::app,
+                           "Client " + client->second.name + " disconnected");
+
+  const auto oldSubscriptionsByChannel = std::move(client->second.subscriptionsByChannel);
+  _clients.erase(client);
+  for (const auto& [chanId, subs] : oldSubscriptionsByChannel) {
+    if (!anySubscribed(chanId) && _unsubscribeHandler) {
+      _unsubscribeHandler(chanId);
+    }
+  }
+}
 
 void Server::setSubscribeHandler(std::function<void(ChannelId)> handler) {
   _subscribeHandler = std::move(handler);
@@ -56,133 +112,51 @@ void Server::setUnsubscribeHandler(std::function<void(ChannelId)> handler) {
   _unsubscribeHandler = std::move(handler);
 }
 
-void Server::start(uint16_t port) {
-  serverThread_ = std::thread([this, port]() {
-    serverRunLoop(port);
-  });
-}
-
 void Server::stop() {
   std::error_code ec;
-  server_.stop_listening(ec);
+  _server.stop_listening(ec);
 
   // Iterate over all client connections and start the close connection handshake
   for (const auto& [hdl, clientInfo] : _clients) {
-    if (auto con = server_.get_con_from_hdl(hdl, ec)) {
+    if (auto con = _server.get_con_from_hdl(hdl, ec)) {
       con->close(websocketpp::close::status::going_away, "server shutdown", ec);
     }
   }
-
-  serverThread_.join();
 }
 
-void Server::serverRunLoop(uint16_t port) {
-  try {
-    // Set logging settings
-    server_.clear_access_channels(websocketpp::log::alevel::all);
-
-    // FIXME:moved, ok?
-    // // Start the WebSocket server
-    // server_.init_asio();
-
-    server_.set_validate_handler([&](ConnHandle hdl) {
-      auto con = server_.get_con_from_hdl(hdl);
-
-      const auto& subprotocols = con->get_requested_subprotocols();
-      if (std::find(subprotocols.begin(), subprotocols.end(), SUPPORTED_SUBPROTOCOL) !=
-          subprotocols.end()) {
-        con->select_subprotocol(SUPPORTED_SUBPROTOCOL);
-        return true;
-      }
-      info("Rejecting client ", con->get_remote_endpoint(),
-           " which did not declare support for subprotocol ", SUPPORTED_SUBPROTOCOL);
-      return false;
-    });
-
-    server_.set_open_handler([&](ConnHandle hdl) {
-      auto con = server_.get_con_from_hdl(hdl);
-      info("Client ", con->get_remote_endpoint(), " connected via ", con->get_resource());
-      _clients.emplace(hdl, ClientInfo{
-                              .name = con->get_remote_endpoint(),
-                              .handle = hdl,
-                            });
-
-      con->send(json({
-                       {"op", "serverInfo"},
-                       {"name", _name},
-                       {"capabilities", json::array()},
-                     })
-                  .dump());
-
-      json channels;
-      for (const auto& [id, channel] : _channels) {
-        channels.push_back(channel);
-      }
-      con->send(json{
-        {"op", "advertise"},
-        {"channels", std::move(channels)},
-      }
-                  .dump());
-    });
-    server_.set_close_handler([&](ConnHandle hdl) {
-      const auto& client = _clients.find(hdl);
-      if (client == _clients.end()) {
-        error("Client ", server_.get_con_from_hdl(hdl)->get_remote_endpoint(),
-              " disconnected but not found in _clients");
-        return;
-      }
-
-      info("Client ", client->second.name, " disconnected");
-
-      const auto oldSubscriptionsByChannel = std::move(client->second.subscriptionsByChannel);
-      _clients.erase(client);
-      for (const auto& [chanId, subs] : oldSubscriptionsByChannel) {
-        if (!anySubscribed(chanId) && _unsubscribeHandler) {
-          _unsubscribeHandler(chanId);
-        }
-      }
-    });
-
-    server_.set_message_handler(bind(&Server::onSocketMessage, this, ::_1, ::_2));
-    server_.set_reuse_addr(true);
-    server_.set_listen_backlog(128);
-    server_.listen(port);
-    server_.start_accept();
-    info("Server listening on port ", port);
-    server_.run();
-  } catch (std::exception const& e) {
-    fatal(e.what());
-  } catch (...) {
-    fatal("Failed to start a server on port ", port, ", unknown error");
-  }
+void Server::run() {
+  _server.get_alog().write(websocketpp::log::alevel::app,
+                           "Server listening on port " + std::to_string(_port));
+  _server.run();
 }
 
 void Server::sendText(ConnHandle hdl, const std::string& payload) {
   try {
-    server_.send(hdl, payload, OpCode::TEXT);
+    _server.send(hdl, payload, OpCode::TEXT);
   } catch (websocketpp::exception const& e) {
-    error(e.what());
+    _server.get_elog().write(websocketpp::log::elevel::rerror, e.what());
   }
 }
 
 void Server::sendBinary(ConnHandle hdl, const std::vector<uint8_t>& payload) {
   try {
-    server_.send(hdl, payload.data(), payload.size(), OpCode::BINARY);
+    _server.send(hdl, payload.data(), payload.size(), OpCode::BINARY);
   } catch (websocketpp::exception const& e) {
-    error(e.what());
+    _server.get_elog().write(websocketpp::log::elevel::rerror, e.what());
   }
 }
 
-void Server::onSocketMessage(ConnHandle hdl, MessagePtr msg) {
+void Server::handleMessage(ConnHandle hdl, MessagePtr msg) {
   const auto& payloadStr = msg->get_payload();
   const auto payload = json::parse(payloadStr);
   // FIXME: handle missing "op" key
   const std::string& op = payload["op"].get<std::string>();
 
   std::error_code ec;
-  auto con = server_.get_con_from_hdl(hdl, ec);
+  auto con = _server.get_con_from_hdl(hdl, ec);
   if (!con) {
-    error("get_con_from_hdl failed in onSocketMessage");
+    _server.get_elog().write(websocketpp::log::elevel::rerror,
+                             "get_con_from_hdl failed in handleMessage");
     return;
   }
 
@@ -190,7 +164,6 @@ void Server::onSocketMessage(ConnHandle hdl, MessagePtr msg) {
 
   auto& clientInfo = _clients.at(hdl);
 
-  info("Got message from ", remoteEndpoint, ": ", payloadStr);
   if (op == "subscribe") {
     // FIXME: validation throughout?
     for (const auto& sub : payload["subscriptions"]) {
@@ -219,7 +192,9 @@ void Server::onSocketMessage(ConnHandle hdl, MessagePtr msg) {
                    .dump());
         continue;
       }
-      info("client ", clientInfo.name, " subscribed to channel ", channelId);
+      _server.get_alog().write(
+        websocketpp::log::alevel::app,
+        "Client " + remoteEndpoint + " subscribed to channel " + std::to_string(channelId));
       bool firstSubscription = !anySubscribed(channelId);
       clientInfo.subscriptions.emplace(subId, channelId);
       clientInfo.subscriptionsByChannel[channelId].insert(subId);
@@ -243,7 +218,9 @@ void Server::onSocketMessage(ConnHandle hdl, MessagePtr msg) {
         continue;
       }
       ChannelId chanId = sub->second;
-      info("client ", clientInfo.name, " unsubscribed from channel ", chanId);
+      _server.get_alog().write(
+        websocketpp::log::alevel::app,
+        "Client " + clientInfo.name + " unsubscribed from channel " + std::to_string(chanId));
       clientInfo.subscriptions.erase(sub);
       if (const auto& subs = clientInfo.subscriptionsByChannel.find(chanId);
           subs != clientInfo.subscriptionsByChannel.end()) {
@@ -258,7 +235,7 @@ void Server::onSocketMessage(ConnHandle hdl, MessagePtr msg) {
     }
 
   } else {
-    error("Unrecognized client opcode: ", op);
+    _server.get_elog().write(websocketpp::log::elevel::rerror, "Unrecognized client opcode: " + op);
     sendText(hdl,
              json{
                {"op", "status"},

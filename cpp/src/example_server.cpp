@@ -9,8 +9,14 @@
 
 using json = nlohmann::json;
 
+static uint64_t nanosecondsSinceEpoch() {
+  return uint64_t(std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::system_clock::now().time_since_epoch())
+                    .count());
+}
+
 int main() {
-  foxglove_websocket::Server server{"example server"};
+  foxglove_websocket::Server server{8765, "example server"};
 
   const auto chanId = server.addChannel({
     .topic = "example_msg",
@@ -38,37 +44,36 @@ int main() {
   });
 
   uint64_t i = 0;
-  static foxglove_websocket::WebSocketServer::timer_ptr timerHandle;
+  std::shared_ptr<asio::steady_timer> timer;
   std::function<void()> setTimer = [&] {
-    timerHandle = server.getEndpoint().set_timer(200, [&](std::error_code const& ec) {
+    timer = server.getEndpoint().set_timer(200, [&](std::error_code const& ec) {
       if (ec) {
         std::cerr << "timer error: " << ec.message() << std::endl;
         return;
       }
-      auto timeNs = uint64_t(std::chrono::duration_cast<std::chrono::nanoseconds>(
-                               std::chrono::system_clock::now().time_since_epoch())
-                               .count());
-      server.sendMessage(chanId, timeNs, json{{"msg", "Hello"}, {"count", i++}}.dump());
+      server.sendMessage(chanId, nanosecondsSinceEpoch(),
+                         json{{"msg", "Hello"}, {"count", i++}}.dump());
       setTimer();
     });
   };
 
   setTimer();
 
-  server.start(8765);
+  asio::signal_set signals(server.getEndpoint().get_io_service(), SIGINT);
 
-  static std::atomic<bool> running = true;
-
-  signal(SIGINT, []([[maybe_unused]] int sig) {
-    running = false;
-    if (timerHandle) timerHandle->cancel();
+  signals.async_wait([&](std::error_code const& ec, int sig) {
+    if (ec) {
+      std::cerr << "signal error: " << ec.message() << std::endl;
+      return;
+    }
+    std::cerr << "received signal " << sig << ", shutting down" << std::endl;
+    server.stop();
+    if (timer) {
+      timer->cancel();
+    }
   });
 
-  while (running) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-  }
-
-  server.stop();
+  server.run();
 
   return 0;
 }
