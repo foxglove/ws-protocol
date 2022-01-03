@@ -48,7 +48,7 @@ int main() {
       auto timeNs = uint64_t(std::chrono::duration_cast<std::chrono::nanoseconds>(
                                std::chrono::system_clock::now().time_since_epoch())
                                .count());
-      server.sendMessage(chanId, timeNs, json{{{"msg", "Hello"}, {"count", i++}}}.dump());
+      server.sendMessage(chanId, timeNs, json{{"msg", "Hello"}, {"count", i++}}.dump());
       setTimer();
     });
   };

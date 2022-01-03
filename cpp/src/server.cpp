@@ -173,7 +173,7 @@ void Server::sendBinary(ConnHandle hdl, const std::vector<uint8_t>& payload) {
   }
 }
 
-void Server::onSocketMessage([[maybe_unused]] ConnHandle hdl, MessagePtr msg) {
+void Server::onSocketMessage(ConnHandle hdl, MessagePtr msg) {
   const auto& payloadStr = msg->get_payload();
   const auto payload = json::parse(payloadStr);
   // FIXME: handle missing "op" key
