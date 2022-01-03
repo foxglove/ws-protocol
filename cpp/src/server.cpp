@@ -3,7 +3,6 @@
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
-#include <iostream>
 
 namespace foxglove_websocket {
 
@@ -13,7 +12,7 @@ using namespace std::placeholders;
 const std::string Server::SUPPORTED_SUBPROTOCOL = "foxglove.websocket.v1";
 
 void to_json(json& j, const Channel& channel) {
-  j = json{
+  j = {
     {"id", channel.id},
     {"topic", channel.topic},
     {"encoding", channel.encoding},
@@ -77,11 +76,10 @@ void Server::handleConnectionOpened(ConnHandle hdl) {
   for (const auto& [id, channel] : _channels) {
     channels.push_back(channel);
   }
-  con->send(json{
-    {"op", "advertise"},
-    {"channels", std::move(channels)},
-  }
-              .dump());
+  sendJson(hdl, {
+                  {"op", "advertise"},
+                  {"channels", std::move(channels)},
+                });
 }
 
 void Server::handleConnectionClosed(ConnHandle hdl) {
@@ -130,10 +128,10 @@ void Server::run() {
   _server.run();
 }
 
-void Server::sendText(ConnHandle hdl, const std::string& payload) {
+void Server::sendJson(ConnHandle hdl, json&& payload) {
   try {
-    _server.send(hdl, payload, OpCode::TEXT);
-  } catch (websocketpp::exception const& e) {
+    _server.send(hdl, std::move(payload).dump(), OpCode::TEXT);
+  } catch (std::exception const& e) {
     _server.get_elog().write(websocketpp::log::elevel::rerror, e.what());
   }
 }
@@ -141,17 +139,12 @@ void Server::sendText(ConnHandle hdl, const std::string& payload) {
 void Server::sendBinary(ConnHandle hdl, const std::vector<uint8_t>& payload) {
   try {
     _server.send(hdl, payload.data(), payload.size(), OpCode::BINARY);
-  } catch (websocketpp::exception const& e) {
+  } catch (std::exception const& e) {
     _server.get_elog().write(websocketpp::log::elevel::rerror, e.what());
   }
 }
 
 void Server::handleMessage(ConnHandle hdl, MessagePtr msg) {
-  const auto& payloadStr = msg->get_payload();
-  const auto payload = json::parse(payloadStr);
-  // FIXME: handle missing "op" key
-  const std::string& op = payload["op"].get<std::string>();
-
   std::error_code ec;
   auto con = _server.get_con_from_hdl(hdl, ec);
   if (!con) {
@@ -162,101 +155,101 @@ void Server::handleMessage(ConnHandle hdl, MessagePtr msg) {
 
   const std::string remoteEndpoint = con->get_remote_endpoint();
 
-  auto& clientInfo = _clients.at(hdl);
+  try {
+    auto& clientInfo = _clients.at(hdl);
 
-  if (op == "subscribe") {
-    // FIXME: validation throughout?
-    for (const auto& sub : payload["subscriptions"]) {
-      SubscriptionId subId = sub["id"];
-      ChannelId channelId = sub["channelId"];
-      if (clientInfo.subscriptions.find(subId) != clientInfo.subscriptions.end()) {
-        sendText(hdl,
-                 json{
-                   {"op", "status"},
-                   {"level", StatusLevel::ERROR},
-                   {"message", "Client subscription id " + std::to_string(subId) +
-                                 " was already used; ignoring subscription"},
-                 }
-                   .dump());
-        continue;
-      }
-      const auto& channelIt = _channels.find(channelId);
-      if (channelIt == _channels.end()) {
-        sendText(hdl,
-                 json{
-                   {"op", "status"},
-                   {"level", StatusLevel::WARNING},
-                   {"message", "Channel " + std::to_string(channelId) +
-                                 " is not available; ignoring subscription"},
-                 }
-                   .dump());
-        continue;
-      }
-      _server.get_alog().write(
-        websocketpp::log::alevel::app,
-        "Client " + remoteEndpoint + " subscribed to channel " + std::to_string(channelId));
-      bool firstSubscription = !anySubscribed(channelId);
-      clientInfo.subscriptions.emplace(subId, channelId);
-      clientInfo.subscriptionsByChannel[channelId].insert(subId);
-      if (firstSubscription && _subscribeHandler) {
-        _subscribeHandler(channelId);
-      }
-    }
-  } else if (op == "unsubscribe") {
-    for (const auto& subIdJson : payload["subscriptionIds"]) {
-      SubscriptionId subId = subIdJson;
-      const auto& sub = clientInfo.subscriptions.find(subId);
-      if (sub == clientInfo.subscriptions.end()) {
-        sendText(hdl,
-                 json{
-                   {"op", "status"},
-                   {"level", StatusLevel::WARNING},
-                   {"message", "Client subscription id " + std::to_string(subId) +
-                                 " did not exist; ignoring unsubscription"},
-                 }
-                   .dump());
-        continue;
-      }
-      ChannelId chanId = sub->second;
-      _server.get_alog().write(
-        websocketpp::log::alevel::app,
-        "Client " + clientInfo.name + " unsubscribed from channel " + std::to_string(chanId));
-      clientInfo.subscriptions.erase(sub);
-      if (const auto& subs = clientInfo.subscriptionsByChannel.find(chanId);
-          subs != clientInfo.subscriptionsByChannel.end()) {
-        subs->second.erase(subId);
-        if (subs->second.empty()) {
-          clientInfo.subscriptionsByChannel.erase(subs);
+    const auto& payloadStr = msg->get_payload();
+    const json payload = json::parse(payloadStr);
+    const std::string& op = payload.at("op").get<std::string>();
+
+    if (op == "subscribe") {
+      for (const auto& sub : payload.at("subscriptions")) {
+        SubscriptionId subId = sub.at("id");
+        ChannelId channelId = sub.at("channelId");
+        if (clientInfo.subscriptions.find(subId) != clientInfo.subscriptions.end()) {
+          sendJson(hdl, json{
+                          {"op", "status"},
+                          {"level", StatusLevel::ERROR},
+                          {"message", "Client subscription id " + std::to_string(subId) +
+                                        " was already used; ignoring subscription"},
+                        });
+          continue;
+        }
+        const auto& channelIt = _channels.find(channelId);
+        if (channelIt == _channels.end()) {
+          sendJson(hdl, json{
+                          {"op", "status"},
+                          {"level", StatusLevel::WARNING},
+                          {"message", "Channel " + std::to_string(channelId) +
+                                        " is not available; ignoring subscription"},
+                        });
+          continue;
+        }
+        _server.get_alog().write(
+          websocketpp::log::alevel::app,
+          "Client " + remoteEndpoint + " subscribed to channel " + std::to_string(channelId));
+        bool firstSubscription = !anySubscribed(channelId);
+        clientInfo.subscriptions.emplace(subId, channelId);
+        clientInfo.subscriptionsByChannel[channelId].insert(subId);
+        if (firstSubscription && _subscribeHandler) {
+          _subscribeHandler(channelId);
         }
       }
-      if (!anySubscribed(chanId) && _unsubscribeHandler) {
-        _unsubscribeHandler(chanId);
+    } else if (op == "unsubscribe") {
+      for (const auto& subIdJson : payload.at("subscriptionIds")) {
+        SubscriptionId subId = subIdJson;
+        const auto& sub = clientInfo.subscriptions.find(subId);
+        if (sub == clientInfo.subscriptions.end()) {
+          sendJson(hdl, json{
+                          {"op", "status"},
+                          {"level", StatusLevel::WARNING},
+                          {"message", "Client subscription id " + std::to_string(subId) +
+                                        " did not exist; ignoring unsubscription"},
+                        });
+          continue;
+        }
+        ChannelId chanId = sub->second;
+        _server.get_alog().write(
+          websocketpp::log::alevel::app,
+          "Client " + clientInfo.name + " unsubscribed from channel " + std::to_string(chanId));
+        clientInfo.subscriptions.erase(sub);
+        if (const auto& subs = clientInfo.subscriptionsByChannel.find(chanId);
+            subs != clientInfo.subscriptionsByChannel.end()) {
+          subs->second.erase(subId);
+          if (subs->second.empty()) {
+            clientInfo.subscriptionsByChannel.erase(subs);
+          }
+        }
+        if (!anySubscribed(chanId) && _unsubscribeHandler) {
+          _unsubscribeHandler(chanId);
+        }
       }
-    }
 
-  } else {
-    _server.get_elog().write(websocketpp::log::elevel::rerror, "Unrecognized client opcode: " + op);
-    sendText(hdl,
-             json{
-               {"op", "status"},
-               {"level", StatusLevel::ERROR},
-               {"message", "Unrecognized opcode " + op},
-             }
-               .dump());
+    } else {
+      _server.get_elog().write(websocketpp::log::elevel::rerror,
+                               "Unrecognized client opcode: " + op);
+      sendJson(hdl, {
+                      {"op", "status"},
+                      {"level", StatusLevel::ERROR},
+                      {"message", "Unrecognized opcode " + op},
+                    });
+    }
+  } catch (std::exception const& ex) {
+    _server.get_elog().write(websocketpp::log::elevel::rerror,
+                             "Error parsing message from " + remoteEndpoint + ": " + ex.what());
+    return;
   }
 }
 
-ChannelId Server::addChannel([[maybe_unused]] ChannelWithoutId&& channel) {
+ChannelId Server::addChannel(ChannelWithoutId&& channel) {
   const auto newId = ++_nextChannelId;
   Channel newChannel{newId, std::move(channel)};
 
   for (const auto& [hdl, clientInfo] : _clients) {
-    sendText(hdl,
-             json{
-               {"op", "advertise"},
-               {"channels", {newChannel}},
-             }
-               .dump());
+    sendJson(hdl, {
+                    {"op", "advertise"},
+                    {"channels", {newChannel}},
+                  });
   }
 
   _channels.emplace(newId, std::move(newChannel));

@@ -57,13 +57,13 @@ void to_json(nlohmann::json& j, const Channel& channel);
 
 class Server final {
 public:
+  static const std::string SUPPORTED_SUBPROTOCOL;
+
   explicit Server(uint16_t port, std::string name);
   ~Server();
 
   void run();
   void stop();
-
-  static const std::string SUPPORTED_SUBPROTOCOL;
 
   ChannelId addChannel(ChannelWithoutId&& channel);
   void removeChannel(ChannelId chanId);
@@ -94,9 +94,8 @@ private:
   void handleConnectionClosed(ConnHandle hdl);
   void handleMessage(ConnHandle hdl, MessagePtr msg);
 
-  void sendText(ConnHandle hdl, const std::string& payload);
+  void sendJson(ConnHandle hdl, nlohmann::json&& payload);
   void sendBinary(ConnHandle hdl, const std::vector<uint8_t>& payload);
-  // void sendJson(ConnHandle hdl, const Hjson::Value& data);
 
   // WebSocket client message handlers
   void handleSubscribe(ConnHandle hdl, const std::string& remoteEndpoint, const std::string& topic,
