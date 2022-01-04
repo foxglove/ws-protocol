@@ -54,7 +54,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPTIMIZATION_FLAGS} ${DESIRED_WARNINGS
 
 # Enable extended diagnostics for JSON parsing:
 # https://json.nlohmann.me/home/exceptions/#extended-diagnostic-messages
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DJSON_HAS_FILESYSTEM=0")
+add_compile_options("-stdlib=libc++")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DJSON_DIAGNOSTICS=1")
 
 include_directories("${PROJECT_SOURCE_DIR}/include")
