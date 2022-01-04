@@ -77,7 +77,11 @@ jobs:
         working-directory: cpp
     steps:
       - uses: actions/checkout@v2
-      - run: apt-get install clang-format
+      - name: install build dependencies
+        run: |
+          apt-get update
+          apt-get install clang-format-10
+          update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-10 100
       - run: make format
       - run: make coverage
       - run: make debug
