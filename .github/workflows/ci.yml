@@ -79,6 +79,7 @@ jobs:
         working-directory: cpp
     steps:
       - name: install build dependencies
+        working-directory: /
         run: |
           # add Git PPA; Git must be at least v2.18 for actions/checkout to work
           echo "deb http://ppa.launchpad.net/git-core/ppa/ubuntu bionic main" >> /etc/apt/sources.list
