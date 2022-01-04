@@ -71,6 +71,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: conanio/clang10
+      options: --user root
     defaults:
       run:
         working-directory: cpp
