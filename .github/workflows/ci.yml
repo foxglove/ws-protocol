@@ -72,6 +72,8 @@ jobs:
     container:
       image: conanio/clang10
       options: --user root
+      env:
+        GIT_DISCOVERY_ACROSS_FILESYSTEM: 1
     defaults:
       run:
         working-directory: cpp
