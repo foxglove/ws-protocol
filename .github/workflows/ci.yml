@@ -85,7 +85,7 @@ jobs:
           echo "deb http://ppa.launchpad.net/git-core/ppa/ubuntu bionic main" >> /etc/apt/sources.list
           apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A1715D88E1DF1F24
           apt-get update
-          apt-get install git clang-format-10
+          apt-get install --upgrade git clang-format-10
           update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-10 100
       - uses: actions/checkout@v2
       - run: make format
