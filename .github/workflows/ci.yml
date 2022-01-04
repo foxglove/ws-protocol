@@ -88,5 +88,5 @@ jobs:
           update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-10 100
       - uses: actions/checkout@v2
       - run: make format
-      - run: make coverage
+      # - run: make coverage
       - run: make debug

@@ -18,7 +18,6 @@ class FoxgloveWebSocketConan(ConanFile):
 
     def configure(self):
         self.options["websocketpp"].asio = "standalone"
-        self.options["compiler"].libcxx = "libc++"
 
     def source(self):
         self.run(f"git clone https://github.com/foxglove/ws-protocol.git")
