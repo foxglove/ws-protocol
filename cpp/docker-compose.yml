@@ -1,0 +1,10 @@
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: dev.Dockerfile
+    volumes:
+      - .:/cpp
+      - /cpp/build
+      - /cpp/examples/build
+      
