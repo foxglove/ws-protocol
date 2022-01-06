@@ -1,0 +1,12 @@
+services:
+  base:
+    build:
+      context: .
+      dockerfile: dev.Dockerfile
+      target: base
+
+  example_server:
+    build:
+      context: .
+      dockerfile: dev.Dockerfile
+      target: example_server

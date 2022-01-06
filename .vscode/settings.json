@@ -18,5 +18,8 @@
   "python.testing.pytestEnabled": true,
   "python.formatting.provider": "black",
   "python.analysis.typeCheckingMode": "strict",
-  "jest.rootPath": "typescript"
+  "jest.rootPath": "typescript",
+
+  // https://github.com/microsoft/vscode-cpptools/issues/722
+  "C_Cpp.autoAddFileAssociations": false
 }

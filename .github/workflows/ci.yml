@@ -74,11 +74,5 @@ jobs:
         working-directory: cpp
     steps:
       - uses: actions/checkout@v2
-      - run: sudo apt-get install clang-10 llvm-10 clang-format
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
-      - run: pip install conan
-      - run: make format
-      - run: make coverage
-      - run: make debug
+      - run: make format-check
+      - run: make build
