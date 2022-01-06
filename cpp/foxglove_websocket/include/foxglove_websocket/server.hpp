@@ -83,8 +83,7 @@ public:
   void setSubscribeHandler(std::function<void(ChannelId)> handler);
   void setUnsubscribeHandler(std::function<void(ChannelId)> handler);
 
-  void sendMessage(ChannelId chanId, uint64_t timestamp,
-                   std::string_view data /*FIXME: std::span replacement?*/);
+  void sendMessage(ChannelId chanId, uint64_t timestamp, std::string_view data);
 
   AsioServer::endpoint_type& getEndpoint() & {
     return _server;
@@ -349,8 +348,7 @@ inline ChannelId Server::addChannel(ChannelWithoutId&& channel) {
   return newId;
 }
 
-inline void Server::sendMessage(ChannelId chanId, uint64_t timestamp,
-                                std::string_view data /*FIXME: std::span replacement?*/) {
+inline void Server::sendMessage(ChannelId chanId, uint64_t timestamp, std::string_view data) {
   std::vector<uint8_t> message;
   for (const auto& [hdl, client] : _clients) {
     const auto& subs = client.subscriptionsByChannel.find(chanId);
