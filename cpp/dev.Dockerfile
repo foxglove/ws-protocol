@@ -28,7 +28,6 @@ RUN update-alternatives --install /usr/bin/git-clang-format git-clang-format /us
 ENV CC=clang-13
 ENV CXX=clang++-13
 
-VOLUME /src
 WORKDIR /src
 
 FROM base as build_example_server
