@@ -2,5 +2,5 @@
 
 ## Instructions
 
-- Run `docker compose build`
-- Run `docker compose run example_server`
+- Run `make build`
+- Run `make example_server`

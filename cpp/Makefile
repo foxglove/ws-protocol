@@ -1,6 +1,5 @@
 default: build
 
-
 .PHONY: build
 build:
 	docker compose build
