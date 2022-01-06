@@ -74,8 +74,5 @@ jobs:
         working-directory: cpp
     steps:
       - uses: actions/checkout@v2
-      - run: docker compose build
-      - run: docker compose run --rm dev conan build examples -bf examples/build
-      - run: make format
-      # - run: make coverage
-      - run: make debug
+      - run: make format-check
+      - run: make build

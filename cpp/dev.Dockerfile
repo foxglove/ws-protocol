@@ -1,4 +1,4 @@
-FROM ubuntu:focal
+FROM ubuntu:focal AS base
 
 # https://askubuntu.com/questions/909277/avoiding-user-interaction-with-tzdata-when-installing-certbot-in-a-docker-contai
 ENV DEBIAN_FRONTEND=noninteractive
@@ -22,24 +22,26 @@ RUN echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-13 main" >> /etc/a
     clang-13 \
     clang-format-13 
 
+RUN update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-13 100
+RUN update-alternatives --install /usr/bin/git-clang-format git-clang-format /usr/bin/git-clang-format-13 100
+
 ENV CC=clang-13
 ENV CXX=clang++-13
 
+VOLUME /cpp
+WORKDIR /cpp
+
+FROM base as build_example_server
 RUN pip --no-cache-dir install conan
 
 ENV CONAN_V2_MODE=1
-
 RUN conan config init
 RUN conan profile update settings.compiler.cppstd=17 default
-# RUN conan profile update settings.compiler=clang default
-# RUN conan profile update settings.compiler.version=13 default
 
-# update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-10 100
-WORKDIR /cpp
-
-COPY ./conanfile.py ./conanfile.py
-COPY ./examples/conanfile.py ./examples/conanfile.py
+COPY . /cpp
 RUN conan editable add . foxglove_websocket/0.0.1
-RUN cd examples && mkdir build && cd build && conan install .. --build=openssl --build=zlib
+RUN conan install examples --install-folder examples/build --build=openssl --build=zlib
 
-VOLUME /cpp
+FROM build_example_server AS example_server
+RUN conan build examples --build-folder examples/build
+ENTRYPOINT ["examples/build/bin/example_server"]

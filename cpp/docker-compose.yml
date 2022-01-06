@@ -1,10 +1,12 @@
 services:
-  dev:
+  base:
     build:
       context: .
       dockerfile: dev.Dockerfile
-    volumes:
-      - .:/cpp
-      - /cpp/build
-      - /cpp/examples/build
-      
+      target: base
+
+  example_server:
+    build:
+      context: .
+      dockerfile: dev.Dockerfile
+      target: example_server
