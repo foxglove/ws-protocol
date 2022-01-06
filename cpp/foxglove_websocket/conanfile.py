@@ -1,4 +1,4 @@
-from conans import ConanFile, CMake, tools
+from conans import ConanFile
 
 
 class FoxgloveWebSocketConan(ConanFile):
@@ -21,19 +21,6 @@ class FoxgloveWebSocketConan(ConanFile):
 
     def configure(self):
         self.options["websocketpp"].asio = "standalone"
-
-    # def source(self):
-    #     git = tools.Git(folder="ws-protocol")
-    #     git.clone("https://github.com/foxglove/ws-protocol.git", shallow=True)
-
-    # def build(self):
-    #     """
-    #     Build and run unit tests during packaging.
-    #     """
-    #     cmake = CMake(self)
-    #     cmake.configure()
-    #     cmake.build()
-    #     cmake.test()
 
     def package(self):
         self.copy(pattern="LICENSE", dst="licenses")

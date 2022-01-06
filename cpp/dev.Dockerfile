@@ -28,8 +28,8 @@ RUN update-alternatives --install /usr/bin/git-clang-format git-clang-format /us
 ENV CC=clang-13
 ENV CXX=clang++-13
 
-VOLUME /cpp
-WORKDIR /cpp
+VOLUME /src
+WORKDIR /src
 
 FROM base as build_example_server
 RUN pip --no-cache-dir install conan
@@ -38,10 +38,13 @@ ENV CONAN_V2_MODE=1
 RUN conan config init
 RUN conan profile update settings.compiler.cppstd=17 default
 
-COPY . /cpp
-RUN conan editable add . foxglove_websocket/0.0.1
+COPY ./examples /src/examples/
+COPY ./foxglove_websocket /src/foxglove_websocket/
+COPY ./.clang-format /src/
+RUN conan editable add ./foxglove_websocket foxglove_websocket/0.0.1
 RUN conan install examples --install-folder examples/build --build=openssl --build=zlib
 
 FROM build_example_server AS example_server
+COPY --from=build_example_server /src /src
 RUN conan build examples --build-folder examples/build
 ENTRYPOINT ["examples/build/bin/example_server"]
