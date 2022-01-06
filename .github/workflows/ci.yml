@@ -74,5 +74,5 @@ jobs:
         working-directory: cpp
     steps:
       - uses: actions/checkout@v2
-      - run: make build
       - run: make format-check
+      - run: make build
