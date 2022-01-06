@@ -46,5 +46,6 @@ RUN conan install examples --install-folder examples/build --build=openssl --bui
 
 FROM build_example_server AS example_server
 COPY --from=build_example_server /src /src
+COPY --from=build_example_server /src/examples/build/ /src/examples/build/
 RUN conan build examples --build-folder examples/build
 ENTRYPOINT ["examples/build/bin/example_server"]
