@@ -8,7 +8,7 @@ import { WebSocketServer } from "ws";
 
 import boxen from "../boxen";
 
-const log = Debug("foxglove:example-server");
+const log = Debug("foxglove:image-server");
 Debug.enable("foxglove:*");
 
 // eslint-disable-next-line @typescript-eslint/promise-function-async
@@ -55,7 +55,7 @@ function drawImage(time: number) {
 }
 
 async function main(): Promise<void> {
-  const server = new FoxgloveServer({ name: "example-server" });
+  const server = new FoxgloveServer({ name: "image-server" });
   const port = 8765;
   const ws = new WebSocketServer({
     port,

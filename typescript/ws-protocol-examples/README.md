@@ -31,7 +31,7 @@ To see data from any server, open [Foxglove Studio](https://studio.foxglove.dev?
 
 ## Example client
 
-Run a simple example client that subscribes to messages with the `protobuf` encoding:
+Run a simple example client that subscribes to messages with the `protobuf` or `json` encoding:
 
 ```
 $ npx @foxglove/ws-protocol-examples@latest simple-client localhost:8765
