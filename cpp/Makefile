@@ -7,11 +7,11 @@ build:
 
 .PHONY: format-check
 format-check:
-	docker compose run --rm -v .:/cpp base python3 scripts/format.py /cpp
+	docker compose run --rm -v .:/src base python3 scripts/format.py /src
 
 .PHONY: format-fix
 format-fix:
-	docker compose run --rm -v .:/cpp base python3 scripts/format.py --fix /cpp
+	docker compose run --rm -v .:/src base python3 scripts/format.py --fix /src
 
 .PHONY: example_server
 example_server:
