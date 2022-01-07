@@ -1,4 +1,4 @@
-#include <foxglove_websocket/server.hpp>
+#include <foxglove/websocket/server.hpp>
 
 #include <nlohmann/json.hpp>
 
@@ -16,7 +16,7 @@ static uint64_t nanosecondsSinceEpoch() {
 }
 
 int main() {
-  foxglove_websocket::Server server{8765, "example server"};
+  foxglove::websocket::Server server{8765, "example server"};
 
   const auto chanId = server.addChannel({
     .topic = "example_msg",
@@ -36,10 +36,10 @@ int main() {
         .dump(),
   });
 
-  server.setSubscribeHandler([&](foxglove_websocket::ChannelId chanId) {
+  server.setSubscribeHandler([&](foxglove::websocket::ChannelId chanId) {
     std::cout << "first client subscribed to " << chanId << std::endl;
   });
-  server.setUnsubscribeHandler([&](foxglove_websocket::ChannelId chanId) {
+  server.setUnsubscribeHandler([&](foxglove::websocket::ChannelId chanId) {
     std::cout << "last client unsubscribed from " << chanId << std::endl;
   });
 

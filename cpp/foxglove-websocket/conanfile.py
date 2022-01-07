@@ -1,8 +1,8 @@
-from conans import ConanFile
+from conans import ConanFile, tools
 
 
 class FoxgloveWebSocketConan(ConanFile):
-    name = "foxglove_websocket"
+    name = "foxglove-websocket"
     version = "0.0.1"
     url = "https://github.com/foxglove/ws-protocol"
     homepage = "https://github.com/foxglove/ws-protocol"
@@ -11,25 +11,18 @@ class FoxgloveWebSocketConan(ConanFile):
     topics = ("foxglove", "websocket")
 
     settings = ("os", "compiler", "build_type", "arch")
-    requires = ("nlohmann_json/3.10.4", "websocketpp/0.8.2")
+    requires = ("nlohmann_json/[^3.10.4]", "websocketpp/[^0.8.2]")
     generators = "cmake"
 
-    exports_sources = (
-        "include/*",
-        "LICENSE",
-    )
+    def validate(self):
+        tools.check_min_cppstd(self, "17")
 
     def configure(self):
         self.options["websocketpp"].asio = "standalone"
 
     def package(self):
         self.copy(pattern="LICENSE", dst="licenses")
-        self.copy("*.h")
+        self.copy("include/*")
 
     def package_id(self):
-        """
-        Since this is a single-header package, we only need one unique package id regardless of
-        configuration and dependencies.
-        https://docs.conan.io/en/1.36/howtos/header_only.html#header-only
-        """
         self.info.header_only()

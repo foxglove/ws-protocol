@@ -5,6 +5,12 @@ services:
       dockerfile: dev.Dockerfile
       target: base
 
+  build:
+    build:
+      context: .
+      dockerfile: dev.Dockerfile
+      target: build
+
   example_server:
     build:
       context: .

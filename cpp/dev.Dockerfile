@@ -30,17 +30,18 @@ ENV CXX=clang++-13
 
 WORKDIR /src
 
-FROM base as build_example_server
+FROM base as build
 RUN pip --no-cache-dir install conan
 
 ENV CONAN_V2_MODE=1
 RUN conan config init
 RUN conan profile update settings.compiler.cppstd=17 default
 
+FROM build as build_example_server
 COPY ./examples /src/examples/
-COPY ./foxglove_websocket /src/foxglove_websocket/
+COPY ./foxglove-websocket /src/foxglove-websocket/
 COPY ./.clang-format /src/
-RUN conan editable add ./foxglove_websocket foxglove_websocket/0.0.1
+RUN conan editable add ./foxglove-websocket foxglove-websocket/0.0.1
 RUN conan install examples --install-folder examples/build --build=openssl --build=zlib
 
 FROM build_example_server AS example_server
