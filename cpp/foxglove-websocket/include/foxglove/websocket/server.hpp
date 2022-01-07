@@ -13,7 +13,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace foxglove_websocket {
+namespace foxglove::websocket {
 
 using json = nlohmann::json;
 using namespace std::placeholders;
@@ -387,4 +387,4 @@ inline bool Server::anySubscribed(ChannelId chanId) const {
   return false;
 }
 
-}  // namespace foxglove_websocket
+}  // namespace foxglove::websocket
