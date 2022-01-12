@@ -9,6 +9,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <string_view>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -31,7 +32,13 @@ struct ChannelWithoutId {
   std::string encoding;
   std::string schemaName;
   std::string schema;
+
+  bool operator==(const ChannelWithoutId& other) const {
+    return topic == other.topic && encoding == other.encoding && schemaName == other.schemaName &&
+           schema == other.schema;
+  }
 };
+
 struct Channel : ChannelWithoutId {
   ChannelId id;
 
@@ -47,6 +54,10 @@ struct Channel : ChannelWithoutId {
       {"schemaName", channel.schemaName},
       {"schema", channel.schema},
     };
+  }
+
+  bool operator==(const Channel& other) const {
+    return id == other.id && ChannelWithoutId::operator==(other);
   }
 };
 
@@ -77,6 +88,7 @@ public:
   void run();
   void stop();
 
+  ChannelId addChannel(ChannelWithoutId channel);
   ChannelId addChannel(ChannelWithoutId&& channel);
   void removeChannel(ChannelId chanId);
 
@@ -333,6 +345,10 @@ inline void Server::handleMessage(ConnHandle hdl, MessagePtr msg) {
   }
 }
 
+inline ChannelId Server::addChannel(ChannelWithoutId channel) {
+  return addChannel(std::move(channel));
+}
+
 inline ChannelId Server::addChannel(ChannelWithoutId&& channel) {
   const auto newId = ++_nextChannelId;
   Channel newChannel{newId, std::move(channel)};
@@ -346,6 +362,20 @@ inline ChannelId Server::addChannel(ChannelWithoutId&& channel) {
 
   _channels.emplace(newId, std::move(newChannel));
   return newId;
+}
+
+inline void Server::removeChannel(ChannelId chanId) {
+  _channels.erase(chanId);
+  for (const auto& [hdl, clientInfo] : _clients) {
+    if (const auto it = clientInfo.subscriptionsByChannel.find(chanId);
+        it != clientInfo.subscriptionsByChannel.end()) {
+      for (const auto& subId : it->second) {
+        clientInfo.subscriptions.erase(subId);
+      }
+      clientInfo.subscriptionsByChannel.erase(it);
+    }
+    sendJson(hdl, {{"op", "unadvertise"}, {"channelIds", {channel}}});
+  }
 }
 
 inline void Server::sendMessage(ChannelId chanId, uint64_t timestamp, std::string_view data) {
