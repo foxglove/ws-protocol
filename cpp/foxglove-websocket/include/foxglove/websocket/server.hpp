@@ -42,7 +42,7 @@ struct ChannelWithoutId {
 struct Channel : ChannelWithoutId {
   ChannelId id;
 
-  explicit Channel(ChannelId id, ChannelWithoutId&& ch)
+  explicit Channel(ChannelId id, ChannelWithoutId ch)
       : ChannelWithoutId(std::move(ch))
       , id(id) {}
 
@@ -89,7 +89,6 @@ public:
   void stop();
 
   ChannelId addChannel(ChannelWithoutId channel);
-  ChannelId addChannel(ChannelWithoutId&& channel);
   void removeChannel(ChannelId chanId);
 
   void setSubscribeHandler(std::function<void(ChannelId)> handler);
@@ -346,10 +345,6 @@ inline void Server::handleMessage(ConnHandle hdl, MessagePtr msg) {
 }
 
 inline ChannelId Server::addChannel(ChannelWithoutId channel) {
-  return addChannel(std::move(channel));
-}
-
-inline ChannelId Server::addChannel(ChannelWithoutId&& channel) {
   const auto newId = ++_nextChannelId;
   Channel newChannel{newId, std::move(channel)};
 
