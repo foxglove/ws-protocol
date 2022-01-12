@@ -67,6 +67,7 @@ int main() {
       return;
     }
     std::cerr << "received signal " << sig << ", shutting down" << std::endl;
+    server.removeChannel(chanId);
     server.stop();
     if (timer) {
       timer->cancel();

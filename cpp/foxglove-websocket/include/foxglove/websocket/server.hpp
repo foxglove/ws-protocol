@@ -9,6 +9,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <string_view>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -31,11 +32,17 @@ struct ChannelWithoutId {
   std::string encoding;
   std::string schemaName;
   std::string schema;
+
+  bool operator==(const ChannelWithoutId& other) const {
+    return topic == other.topic && encoding == other.encoding && schemaName == other.schemaName &&
+           schema == other.schema;
+  }
 };
+
 struct Channel : ChannelWithoutId {
   ChannelId id;
 
-  explicit Channel(ChannelId id, ChannelWithoutId&& ch)
+  explicit Channel(ChannelId id, ChannelWithoutId ch)
       : ChannelWithoutId(std::move(ch))
       , id(id) {}
 
@@ -47,6 +54,10 @@ struct Channel : ChannelWithoutId {
       {"schemaName", channel.schemaName},
       {"schema", channel.schema},
     };
+  }
+
+  bool operator==(const Channel& other) const {
+    return id == other.id && ChannelWithoutId::operator==(other);
   }
 };
 
@@ -60,13 +71,6 @@ enum class StatusLevel : uint8_t {
   ERROR = 2,
 };
 
-struct ClientInfo {
-  std::string name;
-  ConnHandle handle;
-  std::unordered_map<SubscriptionId, ChannelId> subscriptions;
-  std::unordered_map<ChannelId, std::unordered_set<SubscriptionId>> subscriptionsByChannel;
-};
-
 class Server final {
 public:
   static const std::string SUPPORTED_SUBPROTOCOL;
@@ -74,10 +78,15 @@ public:
   explicit Server(uint16_t port, std::string name);
   ~Server();
 
+  Server(const Server&) = delete;
+  Server(Server&&) = delete;
+  Server& operator=(const Server&) = delete;
+  Server& operator=(Server&&) = delete;
+
   void run();
   void stop();
 
-  ChannelId addChannel(ChannelWithoutId&& channel);
+  ChannelId addChannel(ChannelWithoutId channel);
   void removeChannel(ChannelId chanId);
 
   void setSubscribeHandler(std::function<void(ChannelId)> handler);
@@ -90,6 +99,19 @@ public:
   }
 
 private:
+  struct ClientInfo {
+    std::string name;
+    ConnHandle handle;
+    std::unordered_map<SubscriptionId, ChannelId> subscriptions;
+    std::unordered_map<ChannelId, std::unordered_set<SubscriptionId>> subscriptionsByChannel;
+
+    ClientInfo(const ClientInfo&) = delete;
+    ClientInfo& operator=(const ClientInfo&) = delete;
+
+    ClientInfo(ClientInfo&&) = default;
+    ClientInfo& operator=(ClientInfo&&) = default;
+  };
+
   uint16_t _port;
   std::string _name;
   AsioServer _server;
@@ -333,7 +355,7 @@ inline void Server::handleMessage(ConnHandle hdl, MessagePtr msg) {
   }
 }
 
-inline ChannelId Server::addChannel(ChannelWithoutId&& channel) {
+inline ChannelId Server::addChannel(ChannelWithoutId channel) {
   const auto newId = ++_nextChannelId;
   Channel newChannel{newId, std::move(channel)};
 
@@ -346,6 +368,20 @@ inline ChannelId Server::addChannel(ChannelWithoutId&& channel) {
 
   _channels.emplace(newId, std::move(newChannel));
   return newId;
+}
+
+inline void Server::removeChannel(ChannelId chanId) {
+  _channels.erase(chanId);
+  for (auto& [hdl, clientInfo] : _clients) {
+    if (const auto it = clientInfo.subscriptionsByChannel.find(chanId);
+        it != clientInfo.subscriptionsByChannel.end()) {
+      for (const auto& subId : it->second) {
+        clientInfo.subscriptions.erase(subId);
+      }
+      clientInfo.subscriptionsByChannel.erase(it);
+    }
+    sendJson(hdl, {{"op", "unadvertise"}, {"channelIds", {chanId}}});
+  }
 }
 
 inline void Server::sendMessage(ChannelId chanId, uint64_t timestamp, std::string_view data) {

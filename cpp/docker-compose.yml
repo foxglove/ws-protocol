@@ -16,3 +16,5 @@ services:
       context: .
       dockerfile: dev.Dockerfile
       target: example_server
+    ports:
+      - "8765:8765"

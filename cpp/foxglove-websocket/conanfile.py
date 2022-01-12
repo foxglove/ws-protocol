@@ -11,7 +11,7 @@ class FoxgloveWebSocketConan(ConanFile):
     topics = ("foxglove", "websocket")
 
     settings = ("os", "compiler", "build_type", "arch")
-    requires = ("nlohmann_json/[^3.10.4]", "websocketpp/[^0.8.2]")
+    requires = ("nlohmann_json/3.10.5", "websocketpp/0.8.2")
     generators = "cmake"
 
     def validate(self):
