@@ -369,7 +369,7 @@ inline void Server::removeChannel(ChannelId chanId) {
       }
       clientInfo.subscriptionsByChannel.erase(it);
     }
-    sendJson(hdl, {{"op", "unadvertise"}, {"channelIds", {channel}}});
+    sendJson(hdl, {{"op", "unadvertise"}, {"channelIds", {chanId}}});
   }
 }
 
