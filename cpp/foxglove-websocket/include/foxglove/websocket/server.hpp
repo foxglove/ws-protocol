@@ -71,19 +71,17 @@ enum class StatusLevel : uint8_t {
   ERROR = 2,
 };
 
-struct ClientInfo {
-  std::string name;
-  ConnHandle handle;
-  std::unordered_map<SubscriptionId, ChannelId> subscriptions;
-  std::unordered_map<ChannelId, std::unordered_set<SubscriptionId>> subscriptionsByChannel;
-};
-
 class Server final {
 public:
   static const std::string SUPPORTED_SUBPROTOCOL;
 
   explicit Server(uint16_t port, std::string name);
   ~Server();
+
+  Server(const Server&) = delete;
+  Server(Server&&) = delete;
+  Server& operator=(const Server&) = delete;
+  Server& operator=(Server&&) = delete;
 
   void run();
   void stop();
@@ -101,6 +99,19 @@ public:
   }
 
 private:
+  struct ClientInfo {
+    std::string name;
+    ConnHandle handle;
+    std::unordered_map<SubscriptionId, ChannelId> subscriptions;
+    std::unordered_map<ChannelId, std::unordered_set<SubscriptionId>> subscriptionsByChannel;
+
+    ClientInfo(const ClientInfo&) = delete;
+    ClientInfo& operator=(const ClientInfo&) = delete;
+
+    ClientInfo(ClientInfo&&) = default;
+    ClientInfo& operator=(ClientInfo&&) = default;
+  };
+
   uint16_t _port;
   std::string _name;
   AsioServer _server;
