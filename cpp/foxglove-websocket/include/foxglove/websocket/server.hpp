@@ -361,7 +361,7 @@ inline ChannelId Server::addChannel(ChannelWithoutId channel) {
 
 inline void Server::removeChannel(ChannelId chanId) {
   _channels.erase(chanId);
-  for (const auto& [hdl, clientInfo] : _clients) {
+  for (auto& [hdl, clientInfo] : _clients) {
     if (const auto it = clientInfo.subscriptionsByChannel.find(chanId);
         it != clientInfo.subscriptionsByChannel.end()) {
       for (const auto& subId : it->second) {

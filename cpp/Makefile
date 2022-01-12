@@ -14,4 +14,4 @@ format-fix:
 
 .PHONY: example_server
 example_server:
-	docker compose run example_server
+	docker compose run --service-ports example_server
