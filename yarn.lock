@@ -336,10 +336,10 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
-"@foxglove/eslint-plugin@0.17.1":
-  version "0.17.1"
-  resolved "https://registry.yarnpkg.com/@foxglove/eslint-plugin/-/eslint-plugin-0.17.1.tgz#f29fbe7bf538f2721535a9c06ec6ec607ad72f71"
-  integrity sha512-/Z32WFj7bBfEIdCh0aXTc5mQbVUcm1KvG586FxCq8k0r0oBUml0bAtLIem9IjE7sUWtabSDJWTFLJpHJhlP+XA==
+"@foxglove/eslint-plugin@0.19.0":
+  version "0.19.0"
+  resolved "https://registry.yarnpkg.com/@foxglove/eslint-plugin/-/eslint-plugin-0.19.0.tgz#ad5be6462df5a1e3bb0425e948bea57d82dddcf3"
+  integrity sha512-pl/9v20nePLoY1+xHXUqcX4xADQeQnj20DHRP+E3cF+rNqayAklRDsM0lByVVdtgloBeoCwTas2uFYasNGpQGw==
 
 "@foxglove/rostime@1.1.1", "@foxglove/rostime@^1.1.1":
   version "1.1.1"
