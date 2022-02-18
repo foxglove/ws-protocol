@@ -9,3 +9,6 @@ xfail_strict=true
 
 [tool.black]
 exclude = '_pb2\.py$'
+color = true
+diff = true
+verbose = true
