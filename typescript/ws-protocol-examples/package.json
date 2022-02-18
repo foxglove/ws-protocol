@@ -65,7 +65,7 @@
     "debug": "^4",
     "eventemitter3": "^4.0.7",
     "protobufjs": "^6.11.2",
-    "pureimage": "0.3.6",
+    "pureimage": "0.3.8",
     "tslib": "^2",
     "ws": "8.2.3"
   }
