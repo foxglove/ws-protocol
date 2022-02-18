@@ -9,7 +9,7 @@ foxglove-websocket = {editable = true, path = "./python", extras = ["examples"]}
 [dev-packages]
 black = "*"
 build = "*"
-pipenv = "*"
+pipenv = ">=2022.1.8"
 pytest = "*"
 pytest-asyncio = "*"
 pyright = "*"
