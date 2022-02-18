@@ -1,6 +1,7 @@
 import asyncio
 import logging
-from typing import Dict
+import concurrent.futures
+from typing import Any, Coroutine, Dict
 from foxglove_websocket import run_cancellable
 from foxglove_websocket.server import FoxgloveServer, FoxgloveServerListener
 from foxglove_websocket.types import ChannelId, ChannelWithoutId
@@ -51,6 +52,25 @@ async def main():
 
         # Configure callbacks that our middleware will call when channels are added or removed and
         # when messages are received.
+
+        def run_coroutine_on_server_thread(coro: Coroutine[Any, Any, None]):
+            """
+            The `run_coroutine_threadsafe()` function used below by default ignores exceptions
+            raised in the `handler()` coroutines. To log any errors to the console, we set an
+            exception-logging function as a done callback on the Future object returned by
+            `run_coroutine_threadsafe()`.
+            """
+
+            def log_exc(future: "concurrent.futures.Future[Any]"):
+                exc = future.exception()
+                if exc:
+                    logger.error(
+                        "Error in middleware handler:",
+                        exc_info=(type(exc), exc, exc.__traceback__),
+                    )
+
+            asyncio.run_coroutine_threadsafe(coro, loop).add_done_callback(log_exc)
+
         def on_add_channel(id: MiddlewareChannelId, channel: ChannelWithoutId):
             """
             When the middleware notifies us a channel is added, add it to the WebSocket server.
@@ -66,7 +86,7 @@ async def main():
                 id_map[id] = ws_id
                 reverse_id_map[ws_id] = id
 
-            asyncio.run_coroutine_threadsafe(handler(), loop)
+            run_coroutine_on_server_thread(handler())
 
         def on_remove_channel(id: MiddlewareChannelId):
             """
@@ -79,7 +99,7 @@ async def main():
                 del reverse_id_map[ws_id]
                 await server.remove_channel(ws_id)
 
-            asyncio.run_coroutine_threadsafe(handler(), loop)
+            run_coroutine_on_server_thread(handler())
 
         def on_message(id: MiddlewareChannelId, timestamp: int, payload: bytes):
             """
@@ -90,7 +110,7 @@ async def main():
                 logger.info("Sending message on channel %d %d", id, timestamp)
                 await server.send_message(id_map[id], timestamp, payload)
 
-            asyncio.run_coroutine_threadsafe(handler(), loop)
+            run_coroutine_on_server_thread(handler())
 
         middleware.on_add_channel = on_add_channel
         middleware.on_remove_channel = on_remove_channel
