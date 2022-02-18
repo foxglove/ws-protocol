@@ -3,13 +3,13 @@ import asyncio
 import json
 import logging
 from struct import Struct
-from typing import Any, Dict, Optional, Set, cast
+from typing import Any, Dict, Optional, Tuple, cast
 from websockets.server import serve, WebSocketServer, WebSocketServerProtocol
 from websockets.exceptions import ConnectionClosed
-from dataclasses import dataclass
 from websockets.typing import Data, Subprotocol
 
-from .types import (
+from .client_state import ClientState
+from ..types import (
     BinaryOpcode,
     Channel,
     ChannelId,
@@ -33,13 +33,6 @@ def _get_default_logger():
 MessageDataHeader = Struct("<BIQ")
 
 
-@dataclass
-class Client:
-    connection: WebSocketServerProtocol
-    subscriptions: Dict[SubscriptionId, ChannelId]
-    subscriptions_by_channel: Dict[ChannelId, Set[SubscriptionId]]
-
-
 class FoxgloveServerListener(ABC):
     @abstractmethod
     def on_subscribe(self, server: "FoxgloveServer", channel_id: ChannelId):
@@ -57,7 +50,7 @@ class FoxgloveServerListener(ABC):
 
 
 class FoxgloveServer:
-    _clients: Dict[WebSocketServerProtocol, Client]
+    _clients: Tuple[ClientState, ...]
     _channels: Dict[ChannelId, Channel]
     _next_channel_id: ChannelId
     _logger: logging.Logger
@@ -75,7 +68,7 @@ class FoxgloveServer:
         self.host = host
         self.port = port
         self.name = name
-        self._clients = {}
+        self._clients = ()
         self._channels = {}
         self._next_channel_id = ChannelId(0)
         self._logger = logger
@@ -87,8 +80,7 @@ class FoxgloveServer:
 
     def _any_subscribed(self, chan_id: ChannelId):
         return any(
-            chan_id in client.subscriptions_by_channel
-            for client in self._clients.values()
+            chan_id in client.subscriptions_by_channel for client in self._clients
         )
 
     async def __aenter__(self):
@@ -145,7 +137,7 @@ class FoxgloveServer:
         new_channel = Channel(id=new_id, **channel)
         self._channels[new_id] = new_channel
         # Any clients added during await will already see the new channel.
-        for client in list(self._clients.values()):
+        for client in self._clients:
             await self._send_json(
                 client.connection,
                 {
@@ -158,12 +150,8 @@ class FoxgloveServer:
     async def remove_channel(self, chan_id: ChannelId):
         del self._channels[chan_id]
         # Any clients added during await will not have received info about the new channel.
-        for client in list(self._clients.values()):
-            subs = client.subscriptions_by_channel.get(chan_id)
-            if subs is not None:
-                for sub_id in subs:
-                    del client.subscriptions[sub_id]
-                del client.subscriptions_by_channel[chan_id]
+        for client in self._clients:
+            client.remove_channel(chan_id)
 
             await self._send_json(
                 client.connection,
@@ -174,8 +162,8 @@ class FoxgloveServer:
             )
 
     async def send_message(self, chan_id: ChannelId, timestamp: int, payload: bytes):
-        for client in list(self._clients.values()):
-            subs = client.subscriptions_by_channel.get(chan_id, set())
+        for client in self._clients:
+            subs = client.subscriptions_by_channel.get(chan_id, ())
             for sub_id in subs:
                 await self._send_message_data(
                     client.connection,
@@ -213,10 +201,8 @@ class FoxgloveServer:
             "Connection to %s opened via %s", connection.remote_address, path
         )
 
-        client = Client(
-            connection=connection, subscriptions={}, subscriptions_by_channel={}
-        )
-        self._clients[connection] = client
+        client = ClientState(connection=connection)
+        self._clients += (client,)
 
         try:
             await self._send_json(
@@ -253,13 +239,13 @@ class FoxgloveServer:
 
         finally:
             potential_unsubscribes = client.subscriptions_by_channel.keys()
-            del self._clients[connection]
+            self._clients = tuple(c for c in self._clients if c != client)
             if self._listener:
                 for chan_id in potential_unsubscribes:
                     if not self._any_subscribed(chan_id):
                         self._listener.on_unsubscribe(self, chan_id)
 
-    async def _handle_raw_client_message(self, client: Client, raw_message: Data):
+    async def _handle_raw_client_message(self, client: ClientState, raw_message: Data):
         try:
             if not isinstance(raw_message, str):
                 raise TypeError(
@@ -283,7 +269,7 @@ class FoxgloveServer:
                 },
             )
 
-    async def _handle_client_message(self, client: Client, message: ClientMessage):
+    async def _handle_client_message(self, client: ClientState, message: ClientMessage):
         if message["op"] == "subscribe":
             for sub in message["subscriptions"]:
                 chan_id = sub["channelId"]
@@ -315,14 +301,13 @@ class FoxgloveServer:
                     chan_id,
                 )
                 first_subscription = not self._any_subscribed(chan_id)
-                client.subscriptions[sub_id] = chan_id
-                client.subscriptions_by_channel.setdefault(chan_id, set()).add(sub_id)
+                client.add_subscription(sub_id, chan_id)
                 if self._listener and first_subscription:
                     self._listener.on_subscribe(self, chan_id)
 
         elif message["op"] == "unsubscribe":
             for sub_id in message["subscriptionIds"]:
-                chan_id = client.subscriptions.get(sub_id)
+                chan_id = client.remove_subscription(sub_id)
                 if chan_id is None:
                     await self._send_json(
                         client.connection,
@@ -338,12 +323,6 @@ class FoxgloveServer:
                     client.connection.remote_address,
                     chan_id,
                 )
-                del client.subscriptions[sub_id]
-                subs = client.subscriptions_by_channel.get(chan_id)
-                if subs is not None:
-                    subs.remove(sub_id)
-                    if len(subs) == 0:
-                        del client.subscriptions_by_channel[chan_id]
                 if self._listener and not self._any_subscribed(chan_id):
                     self._listener.on_unsubscribe(self, chan_id)
         else:
