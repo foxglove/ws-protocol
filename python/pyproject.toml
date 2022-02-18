@@ -6,3 +6,9 @@ build-backend = "setuptools.build_meta"
 addopts = '-vv --color=yes'
 log_cli = true
 xfail_strict=true
+
+[tool.black]
+exclude = '_pb2\.py$'
+color = true
+diff = true
+verbose = true

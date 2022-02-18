@@ -43,9 +43,9 @@ jobs:
         with:
           python-version: 3.8
           cache: pipenv
-      - run: pip install pipenv
+      - run: pip install pipenv>=2022.1.8
       - run: pipenv install --dev --deploy
-      - run: pipenv run black --check --diff --color
+      - run: pipenv run black --check .
       - run: pipenv run pyright src tests
       - run: pipenv run pytest
       - run: pipenv run python -m build
