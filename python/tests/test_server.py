@@ -5,9 +5,14 @@ import pytest
 from socket import AddressFamily
 from typing import List, Tuple
 from websockets.client import connect
-from foxglove_websocket.server import FoxgloveServer, FoxgloveServerListener
-from foxglove_websocket.types import ChannelId
 from websockets.server import WebSocketServer
+
+from foxglove_websocket.server import (
+    FoxgloveServer,
+    FoxgloveServerListener,
+    MessageDataHeader,
+)
+from foxglove_websocket.types import BinaryOpcode, ChannelId, ChannelWithoutId
 
 
 def get_server_url(server: WebSocketServer):
@@ -179,3 +184,78 @@ async def test_update_channels():
                 "channelIds": [chan_id],
                 "op": "unadvertise",
             }
+
+
+@pytest.mark.xfail
+@pytest.mark.asyncio
+async def test_unsubscribe_during_send():
+    subscribed_event = asyncio.Event()
+    unsubscribed_event = asyncio.Event()
+
+    class Listener(FoxgloveServerListener):
+        def on_subscribe(self, server: FoxgloveServer, channel_id: ChannelId):
+            subscribed_event.set()
+
+        def on_unsubscribe(self, server: FoxgloveServer, channel_id: ChannelId):
+            unsubscribed_event.set()
+
+    async with FoxgloveServer("localhost", None, "test server") as server:
+        server.set_listener(Listener())
+        ws_server = await server.wait_opened()
+        channel: ChannelWithoutId = {
+            "topic": "t",
+            "encoding": "e",
+            "schemaName": "S",
+            "schema": "s",
+        }
+        chan_id = await server.add_channel(channel)
+        async with connect(get_server_url(ws_server)) as ws:
+            assert json.loads(await ws.recv()) == {
+                "op": "serverInfo",
+                "name": "test server",
+                "capabilities": [],
+            }
+            assert json.loads(await ws.recv()) == {
+                "channels": [{**channel, "id": chan_id}],
+                "op": "advertise",
+            }
+
+            await ws.send(
+                json.dumps(
+                    {
+                        "op": "subscribe",
+                        "subscriptions": [{"id": 42, "channelId": chan_id}],
+                    }
+                )
+            )
+            await subscribed_event.wait()
+
+            # Force the server to yield during send_message() sending by starting a fragmented message
+            assert len(ws_server.websockets) == 1
+            client = next(iter(ws_server.websockets))
+            fragment_future: "asyncio.Future[str]" = asyncio.Future()
+            sent_first_fragment = asyncio.Event()
+
+            async def fragments():
+                yield "frag1"
+                sent_first_fragment.set()
+                yield await fragment_future
+
+            pause_task = asyncio.create_task(client.send(fragments()))
+            await sent_first_fragment.wait()
+
+            payload = json.dumps({"hello": "world"}).encode()
+            send_task = asyncio.create_task(server.send_message(chan_id, 100, payload))
+
+            await ws.send(json.dumps({"op": "unsubscribe", "subscriptionIds": [42]}))
+            await unsubscribed_event.wait()
+
+            fragment_future.set_result("frag2")
+            await pause_task
+            await send_task
+
+            assert await ws.recv() == "frag1frag2"
+            assert (
+                await ws.recv()
+                == MessageDataHeader.pack(BinaryOpcode.MESSAGE_DATA, 42, 100) + payload
+            )
