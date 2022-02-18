@@ -35,7 +35,7 @@
   },
   "devDependencies": {
     "@foxglove/eslint-plugin": "0.17.1",
-    "@foxglove/rostime": "1.1.1",
+    "@foxglove/rostime": "1.1.2",
     "@foxglove/tsconfig": "1.1.0",
     "@types/debug": "4.1.7",
     "@types/jest": "^27.0.2",
