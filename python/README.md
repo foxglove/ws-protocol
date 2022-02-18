@@ -38,6 +38,20 @@ To see data from any server, open [Foxglove Studio](https://studio.foxglove.dev?
 
 To customize each server for your specifications, copy either server into a separate file like `server.py` and make the desired adjustments to this template. Start up your server from the command line, using `python3 server.py`.
 
+### Multi-threaded usage
+
+The [`threaded_server` example](https://github.com/foxglove/ws-protocol/blob/main/python/src/foxglove_websocket/examples/threaded_server/__main__.py) demonstrates how to use the `FoxgloveServer` class in a thread-safe way when interacting with a threaded middleware. Run the server using:
+
+```
+python -m foxglove_websocket.examples.threaded_server
+```
+
+When connected to the server in Foxglove Studio, use the [Data Source Info](https://foxglove.dev/docs/studio/panels/data-source-info) panel to see channels appearing and disappearing, and a [Plot](https://foxglove.dev/docs/studio/panels/plot) panel to visualize data on each channel.
+
+<img width="869" alt="image" src="https://user-images.githubusercontent.com/14237/154611361-37f87c06-b85f-4117-8bfe-e1bbbc31f7f4.png">
+
+For a more detailed explanation, read the [example's source code](https://github.com/foxglove/ws-protocol/blob/main/python/src/foxglove_websocket/examples/threaded_server/__main__.py).
+
 ## Development
 
 When developing or maintaining the `foxglove-websocket` package, it is recommended to use [`pipenv`](https://github.com/pypa/pipenv) to manage development dependencies and `virtualenv`.
