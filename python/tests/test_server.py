@@ -186,7 +186,6 @@ async def test_update_channels():
             }
 
 
-@pytest.mark.xfail
 @pytest.mark.asyncio
 async def test_unsubscribe_during_send():
     subscribed_event = asyncio.Event()
