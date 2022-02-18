@@ -1,0 +1,26 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: daily
+
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: npm
+    directory: "/typescript/ws-protocol"
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: npm
+    directory: "/typescript/ws-protocol-examples"
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: pip
+    directory: "/python"
+    schedule:
+      interval: weekly
