@@ -29,7 +29,7 @@ export type Unsubscribe = {
   subscriptionIds: SubscriptionId[];
 };
 
-export type ClientMessage = Subscribe | Unsubscribe;
+export type ClientMessage = Subscribe | Unsubscribe | Advertise | Unadvertise | MessageData;
 
 export type ServerInfo = {
   op: "serverInfo";
