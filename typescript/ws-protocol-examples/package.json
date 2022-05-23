@@ -46,7 +46,7 @@
     "@types/ws": "^8.5.3",
     "@typescript-eslint/eslint-plugin": "5.25.0",
     "@typescript-eslint/parser": "5.25.0",
-    "eslint": "8.15.0",
+    "eslint": "8.16.0",
     "eslint-config-prettier": "8.5.0",
     "eslint-plugin-es": "4.1.0",
     "eslint-plugin-filenames": "1.3.2",
