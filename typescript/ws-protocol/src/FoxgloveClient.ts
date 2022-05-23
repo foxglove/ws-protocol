@@ -134,11 +134,7 @@ export default class FoxgloveClient {
     this.send({ op: "unadvertise", channelIds: [channelId] });
   }
 
-  sendMessageData(
-    subscriptionId: SubscriptionId,
-    timestamp: bigint,
-    payload: BufferSource,
-  ): void {
+  sendMessageData(subscriptionId: SubscriptionId, timestamp: bigint, payload: BufferSource): void {
     const header = new DataView(new ArrayBuffer(1 + 4 + 8));
     header.setUint8(0, BinaryOpcode.MESSAGE_DATA);
     header.setUint32(1, subscriptionId, true);
