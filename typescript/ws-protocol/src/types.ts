@@ -16,7 +16,25 @@ export type Channel = {
   schema: string;
 };
 export type SubscriptionId = number;
+export type ClientChannel = {
+  topic: string;
+  schemaName: string;
+};
 
+export type ClientAdvertise = {
+  op: "clientAdvertise";
+  channels: ClientChannel[];
+};
+export type ClientUnadvertise = {
+  op: "clientUnadvertise";
+  topics: string[];
+};
+export type ClientData = {
+  op: "clientData";
+  topic: string;
+  data: Record<string, unknown>;
+  timestamp?: number;
+};
 export type Subscribe = {
   op: "subscribe";
   subscriptions: Array<{
@@ -28,8 +46,7 @@ export type Unsubscribe = {
   op: "unsubscribe";
   subscriptionIds: SubscriptionId[];
 };
-
-export type ClientMessage = Subscribe | Unsubscribe | Advertise | Unadvertise | MessageData;
+export type ClientMessage = Subscribe | Unsubscribe | ClientAdvertise | ClientUnadvertise | ClientData;
 
 export type ServerInfo = {
   op: "serverInfo";
@@ -57,6 +74,11 @@ export type MessageData = {
 };
 
 export type ServerMessage = ServerInfo | StatusMessage | Advertise | Unadvertise | MessageData;
+
+export const ServerCapabilities: Record<string, string> = {
+  // Server can receive client data.
+  receiveClientData: "receiveClientData",
+};
 
 /**
  * Abstraction that supports both browser and Node WebSocket clients.

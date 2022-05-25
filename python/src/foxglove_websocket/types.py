@@ -1,5 +1,5 @@
-from typing import List, Literal, NewType, TypedDict, Union
-from enum import IntEnum
+from typing import Any, Dict, List, Literal, NewType, Optional, TypedDict, Union
+from enum import Enum, IntEnum
 
 ChannelId = NewType("ChannelId", int)
 SubscriptionId = NewType("SubscriptionId", int)
@@ -20,7 +20,28 @@ class Unsubscribe(TypedDict):
     subscriptionIds: List[SubscriptionId]
 
 
-ClientMessage = Union[Subscribe, Unsubscribe]
+class ClientChannel(TypedDict):
+    topic: str
+    schemaName: str
+
+
+class ClientAdvertise(TypedDict):
+    op: Literal["clientAdvertise"]
+    channels: List[ClientChannel]
+
+
+class ClientUnadvertise(TypedDict):
+    op: Literal["clientUnadvertise"]
+    topics: List[str]
+
+
+class ClientData(TypedDict):
+    op: Literal["clientData"]
+    topic: str
+    data: Dict[str, Any]
+    timestamp: Optional[int]
+
+ClientMessage = Union[Subscribe, Unsubscribe, ClientAdvertise, ClientUnadvertise, ClientData]
 
 
 class BinaryOpcode(IntEnum):
@@ -67,3 +88,6 @@ class Unadvertise(TypedDict):
 
 
 ServerMessage = Union[ServerInfo, StatusMessage, Advertise, Unadvertise]
+
+class ServerCapabilities(Enum):
+    receiveClientData = "receiveClientData"

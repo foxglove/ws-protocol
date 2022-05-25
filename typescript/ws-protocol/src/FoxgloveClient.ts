@@ -4,6 +4,7 @@ import { ChannelId, MessageData, ServerInfo, StatusMessage } from ".";
 import { parseServerMessage } from "./parse";
 import {
   Channel,
+  ClientChannel,
   ClientMessage,
   SubscriptionId,
   ServerMessage,
@@ -29,8 +30,6 @@ export default class FoxgloveClient {
   private emitter = new EventEmitter<EventTypes>();
   private ws: IWebSocket;
   private nextSubscriptionId = 0;
-  private nextChannelId = 0;
-  private channelsById = new Map<ChannelId, Channel>();
 
   constructor({ ws }: { ws: IWebSocket }) {
     this.ws = ws;
@@ -113,50 +112,21 @@ export default class FoxgloveClient {
   }
 
   /**
-   * Advertise a new channel and inform any connected servers.
-   * @returns The id of the new channel
+   * Advertise a new client channel to any connected servers.
    */
-  addChannel(channel: Omit<Channel, "id">): ChannelId {
-    const newId = ++this.nextChannelId;
-    const newChannel: Channel = { ...channel, id: newId };
-    this.channelsById.set(newId, newChannel);
-    this.send({ op: "advertise", channels: [newChannel] });
-    return newId;
+  advertise(channel: ClientChannel): void {
+    this.send({ op: "clientAdvertise", channels: [channel] });
   }
 
   /**
-   * Remove a previously advertised channel and inform any connected servers.
+   * unadvetise a previously advertised client channel to any connected servers.
    */
-  removeChannel(channelId: ChannelId): void {
-    if (!this.channelsById.delete(channelId)) {
-      throw new Error(`Channel ${channelId} does not exist`);
-    }
-    this.send({ op: "unadvertise", channelIds: [channelId] });
+  unadvertise(topic: string): void {
+    this.send({ op: "clientUnadvertise", topics: [topic] });
   }
 
-  sendMessageData(subscriptionId: SubscriptionId, timestamp: bigint, payload: BufferSource): void {
-    const header = new DataView(new ArrayBuffer(1 + 4 + 8));
-    header.setUint8(0, BinaryOpcode.MESSAGE_DATA);
-    header.setUint32(1, subscriptionId, true);
-    header.setBigUint64(5, timestamp, true);
-
-    // attempt to detect support for {fin: false}
-    if (this.ws.send.length > 1) {
-      this.ws.send(header.buffer, { fin: false });
-      this.ws.send(payload, { fin: true });
-    } else if (typeof Blob === "function") {
-      this.ws.send(new Blob([header.buffer, payload]));
-    } else {
-      const buffer = new Uint8Array(header.buffer.byteLength + payload.byteLength);
-      buffer.set(new Uint8Array(header.buffer), 0);
-      buffer.set(
-        ArrayBuffer.isView(payload)
-          ? new Uint8Array(payload.buffer, payload.byteOffset, payload.byteLength)
-          : new Uint8Array(payload),
-        header.buffer.byteLength,
-      );
-      this.ws.send(buffer);
-    }
+  sendData(topic: string, timestamp: number, msg: Record<string, unknown>): void {
+    this.send({ op: "clientData", topic, timestamp, data: msg })
   }
 
   unsubscribe(subscriptionId: SubscriptionId): void {

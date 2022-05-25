@@ -21,7 +21,8 @@ import time
 from base64 import standard_b64encode
 from foxglove_websocket import run_cancellable
 from foxglove_websocket.server import FoxgloveServer, FoxgloveServerListener
-from foxglove_websocket.types import ChannelId
+from foxglove_websocket.types import ClientChannel, ChannelId
+from typing import Any, Dict, Optional
 
 try:
     from foxglove_websocket.examples.proto import ExampleMsg_pb2
@@ -40,6 +41,15 @@ async def main():
 
         def on_unsubscribe(self, server: FoxgloveServer, channel_id: ChannelId):
             print("Last client unsubscribed from", channel_id)
+
+        def on_client_advertise(self, server: "FoxgloveServer", channel: ClientChannel):
+            pass
+
+        def on_client_unadvertise(self, server: "FoxgloveServer", topic: str):
+            pass
+
+        def on_client_data(self, server: "FoxgloveServer", data: Dict[str, Any], timestamp: Optional[int] = None):
+            pass
 
     # Load the FileDescriptorSet, which was generated via `protoc --descriptor_set_out`.
     with open(

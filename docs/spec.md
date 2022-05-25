@@ -33,6 +33,9 @@
 
 - [Subscribe](#subscribe) (json)
 - [Unsubscribe](#unsubscribe) (json)
+- [Client Advertise](#client-advertise) (json)
+- [Client Unadvertise](#client-unadvertise) (json)
+- [Client Data](#client-data) (json)
 
 ## JSON messages
 
@@ -167,6 +170,72 @@ Informs the client that channels are no longer available.
 {
   "op": "unsubscribe",
   "subscriptionIds": [0, 1]
+}
+```
+
+### Client Advertise
+
+- Informs the server about available client channels.
+
+#### Fields
+
+- `op`: string `"clientAdvertise"`
+- `channels`: array of:
+  - `topic`: string
+  - `schemaName`: string
+
+#### Example
+
+```json
+{
+  "op": "clientAdvertise",
+  "channels": [
+    {
+      "topic": "foo",
+      "schemaName": "ExampleMsg"
+    }
+  ]
+}
+```
+
+### Client Unadvertise
+
+Informs the server that client channels are no longer available.
+
+#### Fields
+
+- `op`: string `"clientUnadvertise"`
+- `topics`: array of string, corresponding to previous Client Advertise
+
+#### Example
+
+```json
+{
+  "op": "clientUnadvertise",
+  "topics": ["foo"]
+}
+```
+
+### Client Data
+
+- A message sent from client to the server.
+- Client messages are in json encoding.
+
+#### Fields
+
+- `op`: string `"clientData"`
+- `topic`: string
+- `data`: key:value pairs of string keys and unknown values containing the client message data
+- `timestamp` (optional): number, client send timestamp (nanoseconds)
+
+#### Example
+
+```json
+{
+  "op": "clientData",
+  "topic": "foo",
+  "data": { "ExampleData": [1, 2] },
+  "timestamp": 123456789
 }
 ```
 
