@@ -41,7 +41,10 @@ class ClientData(TypedDict):
     data: Dict[str, Any]
     timestamp: Optional[int]
 
-ClientMessage = Union[Subscribe, Unsubscribe, ClientAdvertise, ClientUnadvertise, ClientData]
+
+ClientMessage = Union[
+    Subscribe, Unsubscribe, ClientAdvertise, ClientUnadvertise, ClientData
+]
 
 
 class BinaryOpcode(IntEnum):
@@ -88,6 +91,7 @@ class Unadvertise(TypedDict):
 
 
 ServerMessage = Union[ServerInfo, StatusMessage, Advertise, Unadvertise]
+
 
 class ServerCapabilities(Enum):
     receiveClientData = "receiveClientData"

@@ -6,6 +6,7 @@ from foxglove_websocket.server import FoxgloveServer, FoxgloveServerListener
 from foxglove_websocket.types import ClientChannel, ChannelId
 from typing import Any, Dict, Optional
 
+
 async def main():
     class Listener(FoxgloveServerListener):
         def on_subscribe(self, server: FoxgloveServer, channel_id: ChannelId):
@@ -20,7 +21,12 @@ async def main():
         def on_client_unadvertise(self, server: "FoxgloveServer", topic: str):
             pass
 
-        def on_client_data(self, server: "FoxgloveServer", data: Dict[str, Any], timestamp: Optional[int] = None):
+        def on_client_data(
+            self,
+            server: "FoxgloveServer",
+            data: Dict[str, Any],
+            timestamp: Optional[int] = None,
+        ):
             pass
 
     async with FoxgloveServer("0.0.0.0", 8765, "example server") as server:

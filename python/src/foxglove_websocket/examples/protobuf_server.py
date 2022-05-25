@@ -48,7 +48,12 @@ async def main():
         def on_client_unadvertise(self, server: "FoxgloveServer", topic: str):
             pass
 
-        def on_client_data(self, server: "FoxgloveServer", data: Dict[str, Any], timestamp: Optional[int] = None):
+        def on_client_data(
+            self,
+            server: "FoxgloveServer",
+            data: Dict[str, Any],
+            timestamp: Optional[int] = None,
+        ):
             pass
 
     # Load the FileDescriptorSet, which was generated via `protoc --descriptor_set_out`.

@@ -65,11 +65,17 @@ class FoxgloveServerListener(ABC):
         ...
 
     @abstractmethod
-    def on_client_data(self, server: "FoxgloveServer", data: Dict[str, Any], timestamp: Optional[int] = None):
+    def on_client_data(
+        self,
+        server: "FoxgloveServer",
+        data: Dict[str, Any],
+        timestamp: Optional[int] = None,
+    ):
         """
         Called when server receives client data.
         """
         ...
+
 
 class FoxgloveServer:
     _clients: Tuple[ClientState, ...]
@@ -357,6 +363,8 @@ class FoxgloveServer:
                     self._listener.on_client_unadvertise(self, topic)
         elif message["op"] == "clientData":
             if self._listener:
-                self._listener.on_client_data(self, message["data"], message.get("timestamp"))
+                self._listener.on_client_data(
+                    self, message["data"], message.get("timestamp")
+                )
         else:
             raise ValueError(f"Unrecognized client opcode: {message['op']}")

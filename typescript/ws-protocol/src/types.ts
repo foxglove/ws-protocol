@@ -46,7 +46,12 @@ export type Unsubscribe = {
   op: "unsubscribe";
   subscriptionIds: SubscriptionId[];
 };
-export type ClientMessage = Subscribe | Unsubscribe | ClientAdvertise | ClientUnadvertise | ClientData;
+export type ClientMessage =
+  | Subscribe
+  | Unsubscribe
+  | ClientAdvertise
+  | ClientUnadvertise
+  | ClientData;
 
 export type ServerInfo = {
   op: "serverInfo";
@@ -75,7 +80,7 @@ export type MessageData = {
 
 export type ServerMessage = ServerInfo | StatusMessage | Advertise | Unadvertise | MessageData;
 
-export const ServerCapabilities: Record<string, string> = {
+export const ServerCapabilities = {
   // Server can receive client data.
   receiveClientData: "receiveClientData",
 };
