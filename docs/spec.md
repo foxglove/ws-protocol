@@ -234,7 +234,9 @@ Informs the server that client channels are no longer available.
 {
   "op": "clientData",
   "topic": "foo",
-  "data": { "ExampleData": [1, 2] },
+  "data": {
+    "ExampleData": [1, 2]
+  },
   "timestamp": 123456789
 }
 ```

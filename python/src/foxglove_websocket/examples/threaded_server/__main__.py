@@ -1,10 +1,10 @@
 import asyncio
 import logging
 import concurrent.futures
-from typing import Any, Coroutine, Dict
+from typing import Any, Coroutine, Dict, Optional
 from foxglove_websocket import run_cancellable
 from foxglove_websocket.server import FoxgloveServer, FoxgloveServerListener
-from foxglove_websocket.types import ChannelId, ChannelWithoutId
+from foxglove_websocket.types import ClientChannel, ChannelId, ChannelWithoutId
 
 from .middleware import ExampleMiddlewareThread, MiddlewareChannelId
 
@@ -132,6 +132,22 @@ async def main():
                 """
                 logger.info("Last client unsubscribed from %d", channel_id)
                 middleware.handle_unsubscribe_threadsafe(reverse_id_map[channel_id])
+
+            def on_client_advertise(
+                self, server: "FoxgloveServer", channel: ClientChannel
+            ):
+                pass
+
+            def on_client_unadvertise(self, server: "FoxgloveServer", topic: str):
+                pass
+
+            def on_client_data(
+                self,
+                server: "FoxgloveServer",
+                data: Dict[str, Any],
+                timestamp: Optional[int] = None,
+            ):
+                pass
 
         server.set_listener(Listener())
 

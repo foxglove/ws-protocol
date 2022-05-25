@@ -126,7 +126,7 @@ export default class FoxgloveClient {
   }
 
   sendData(topic: string, msg: Record<string, unknown>, timestamp?: number): void {
-    this.send({ op: "clientData", topic, data: msg, ...(timestamp != undefined) && {timestamp} })
+    this.send({ op: "clientData", topic, data: msg, ...(timestamp != undefined && { timestamp }) });
   }
 
   unsubscribe(subscriptionId: SubscriptionId): void {
