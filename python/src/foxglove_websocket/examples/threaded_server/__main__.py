@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import concurrent.futures
-from typing import Any, Coroutine, Dict, Optional
+from typing import Any, Coroutine, Dict
 from foxglove_websocket import run_cancellable
 from foxglove_websocket.server import FoxgloveServer, SimpleFoxgloveServerListener
 from foxglove_websocket.types import ChannelId, ChannelWithoutId
