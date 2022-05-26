@@ -3,7 +3,7 @@ import json
 import logging
 import pytest
 from socket import AddressFamily
-from typing import List, Tuple
+from typing import Any, Dict, List, Tuple, Optional
 from websockets.client import connect
 from websockets.server import WebSocketServer
 
@@ -12,7 +12,12 @@ from foxglove_websocket.server import (
     FoxgloveServerListener,
     MessageDataHeader,
 )
-from foxglove_websocket.types import BinaryOpcode, ChannelId, ChannelWithoutId
+from foxglove_websocket.types import (
+    BinaryOpcode,
+    ChannelId,
+    ChannelWithoutId,
+    ClientChannel,
+)
 
 
 def get_server_url(server: WebSocketServer):
@@ -102,6 +107,20 @@ async def test_listener_callbacks():
 
         def on_unsubscribe(self, server: FoxgloveServer, channel_id: ChannelId):
             listener_calls.append(("unsubscribe", channel_id))
+
+        def on_client_advertise(self, server: "FoxgloveServer", channel: ClientChannel):
+            pass
+
+        def on_client_unadvertise(self, server: "FoxgloveServer", topic: str):
+            pass
+
+        def on_client_data(
+            self,
+            server: "FoxgloveServer",
+            data: Dict[str, Any],
+            timestamp: Optional[int] = None,
+        ):
+            pass
 
     async with FoxgloveServer("localhost", None, "test server") as server:
         server.set_listener(Listener())
@@ -197,6 +216,20 @@ async def test_unsubscribe_during_send():
 
         def on_unsubscribe(self, server: FoxgloveServer, channel_id: ChannelId):
             unsubscribed_event.set()
+
+        def on_client_advertise(self, server: "FoxgloveServer", channel: ClientChannel):
+            pass
+
+        def on_client_unadvertise(self, server: "FoxgloveServer", topic: str):
+            pass
+
+        def on_client_data(
+            self,
+            server: "FoxgloveServer",
+            data: Dict[str, Any],
+            timestamp: Optional[int] = None,
+        ):
+            pass
 
     async with FoxgloveServer("localhost", None, "test server") as server:
         server.set_listener(Listener())
