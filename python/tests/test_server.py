@@ -3,20 +3,20 @@ import json
 import logging
 import pytest
 from socket import AddressFamily
-from typing import Any, Dict, List, Tuple, Optional
+from typing import List, Tuple
 from websockets.client import connect
 from websockets.server import WebSocketServer
 
 from foxglove_websocket.server import (
     FoxgloveServer,
-    FoxgloveServerListener,
+    SimpleFoxgloveServerListener,
     MessageDataHeader,
 )
 from foxglove_websocket.types import (
     BinaryOpcode,
     ChannelId,
     ChannelWithoutId,
-    ClientChannel,
+    ServerCapabilities,
 )
 
 
@@ -101,26 +101,12 @@ async def test_disconnect_during_send(caplog: pytest.LogCaptureFixture):
 async def test_listener_callbacks():
     listener_calls: List[Tuple[str, ChannelId]] = []
 
-    class Listener(FoxgloveServerListener):
+    class Listener(SimpleFoxgloveServerListener):
         def on_subscribe(self, server: FoxgloveServer, channel_id: ChannelId):
             listener_calls.append(("subscribe", channel_id))
 
         def on_unsubscribe(self, server: FoxgloveServer, channel_id: ChannelId):
             listener_calls.append(("unsubscribe", channel_id))
-
-        def on_client_advertise(self, server: "FoxgloveServer", channel: ClientChannel):
-            pass
-
-        def on_client_unadvertise(self, server: "FoxgloveServer", topic: str):
-            pass
-
-        def on_client_data(
-            self,
-            server: "FoxgloveServer",
-            data: Dict[str, Any],
-            timestamp: Optional[int] = None,
-        ):
-            pass
 
     async with FoxgloveServer("localhost", None, "test server") as server:
         server.set_listener(Listener())
@@ -137,7 +123,7 @@ async def test_listener_callbacks():
             assert json.loads(await ws.recv()) == {
                 "op": "serverInfo",
                 "name": "test server",
-                "capabilities": [],
+                "capabilities": [ServerCapabilities.receiveClientData.value],
             }
             assert json.loads(await ws.recv()) == {
                 "channels": [
@@ -171,7 +157,7 @@ async def test_update_channels():
             assert json.loads(await ws.recv()) == {
                 "op": "serverInfo",
                 "name": "test server",
-                "capabilities": [],
+                "capabilities": [ServerCapabilities.receiveClientData.value],
             }
             assert json.loads(await ws.recv()) == {
                 "channels": [],
@@ -210,26 +196,12 @@ async def test_unsubscribe_during_send():
     subscribed_event = asyncio.Event()
     unsubscribed_event = asyncio.Event()
 
-    class Listener(FoxgloveServerListener):
+    class Listener(SimpleFoxgloveServerListener):
         def on_subscribe(self, server: FoxgloveServer, channel_id: ChannelId):
             subscribed_event.set()
 
         def on_unsubscribe(self, server: FoxgloveServer, channel_id: ChannelId):
             unsubscribed_event.set()
-
-        def on_client_advertise(self, server: "FoxgloveServer", channel: ClientChannel):
-            pass
-
-        def on_client_unadvertise(self, server: "FoxgloveServer", topic: str):
-            pass
-
-        def on_client_data(
-            self,
-            server: "FoxgloveServer",
-            data: Dict[str, Any],
-            timestamp: Optional[int] = None,
-        ):
-            pass
 
     async with FoxgloveServer("localhost", None, "test server") as server:
         server.set_listener(Listener())
@@ -245,7 +217,7 @@ async def test_unsubscribe_during_send():
             assert json.loads(await ws.recv()) == {
                 "op": "serverInfo",
                 "name": "test server",
-                "capabilities": [],
+                "capabilities": [ServerCapabilities.receiveClientData.value],
             }
             assert json.loads(await ws.recv()) == {
                 "channels": [{**channel, "id": chan_id}],

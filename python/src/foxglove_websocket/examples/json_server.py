@@ -2,32 +2,17 @@ import asyncio
 import json
 import time
 from foxglove_websocket import run_cancellable
-from foxglove_websocket.server import FoxgloveServer, FoxgloveServerListener
-from foxglove_websocket.types import ClientChannel, ChannelId
-from typing import Any, Dict, Optional
+from foxglove_websocket.server import FoxgloveServer, SimpleFoxgloveServerListener
+from foxglove_websocket.types import ChannelId
 
 
 async def main():
-    class Listener(FoxgloveServerListener):
+    class Listener(SimpleFoxgloveServerListener):
         def on_subscribe(self, server: FoxgloveServer, channel_id: ChannelId):
             print("First client subscribed to", channel_id)
 
         def on_unsubscribe(self, server: FoxgloveServer, channel_id: ChannelId):
             print("Last client unsubscribed from", channel_id)
-
-        def on_client_advertise(self, server: "FoxgloveServer", channel: ClientChannel):
-            pass
-
-        def on_client_unadvertise(self, server: "FoxgloveServer", topic: str):
-            pass
-
-        def on_client_data(
-            self,
-            server: "FoxgloveServer",
-            data: Dict[str, Any],
-            timestamp: Optional[int] = None,
-        ):
-            pass
 
     async with FoxgloveServer("0.0.0.0", 8765, "example server") as server:
         server.set_listener(Listener())

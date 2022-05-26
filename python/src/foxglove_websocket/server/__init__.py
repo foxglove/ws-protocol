@@ -77,6 +77,22 @@ class FoxgloveServerListener(ABC):
         ...
 
 
+class SimpleFoxgloveServerListener(FoxgloveServerListener):
+    def on_client_advertise(self, server: "FoxgloveServer", channel: ClientChannel):
+        pass
+
+    def on_client_unadvertise(self, server: "FoxgloveServer", topic: str):
+        pass
+
+    def on_client_data(
+        self,
+        server: "FoxgloveServer",
+        data: Dict[str, Any],
+        timestamp: Optional[int] = None,
+    ):
+        pass
+
+
 class FoxgloveServer:
     _clients: Tuple[ClientState, ...]
     _channels: Dict[ChannelId, Channel]
