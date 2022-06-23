@@ -12,3 +12,6 @@ exclude = '_pb2\.py$'
 color = true
 diff = true
 verbose = true
+
+[tool.pyright]
+exclude = ['**/*_pb2.py']
