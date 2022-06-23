@@ -20,19 +20,37 @@ import os
 import sys
 import time
 from base64 import standard_b64encode
+from traceback import print_exception
 from foxglove_websocket import run_cancellable
 from foxglove_websocket.server import FoxgloveServer, FoxgloveServerListener
 from foxglove_websocket.types import ChannelId
 
+sys.path.append(os.path.join(os.path.dirname(__file__), "proto"))
 try:
     from foxglove_websocket.examples.proto import ExampleMsg_pb2
+    from foxglove_websocket.examples.proto.foxglove.Grid_pb2 import Grid
 except ImportError as err:
+    print_exception(*sys.exc_info())
     print(
         "Unable to import protobuf definitions; did you forget to run `pip install foxglove-websocket[examples]`?",
     )
-    print(err)
     sys.exit(1)
 
+from google.protobuf.descriptor_pb2 import FileDescriptorSet
+from google.protobuf.descriptor import Descriptor, FileDescriptor
+from google.protobuf.timestamp_pb2 import Timestamp
+def get_descriptor_set(desc: Descriptor) -> bytes:
+    fds = FileDescriptorSet()
+    seen_files = set()
+    def add_deps(fd: FileDescriptor):
+        for dep in fd.dependencies:
+            if dep.name in seen_files:
+                continue
+            seen_files.add(dep.name)
+            add_deps(dep)
+        fd.CopyToProto(fds.file.add())
+    add_deps(desc.file)
+    return fds.SerializeToString()
 
 async def main():
     class Listener(FoxgloveServerListener):
@@ -48,14 +66,15 @@ async def main():
     ) as schema_bin:
         schema_base64 = standard_b64encode(schema_bin.read()).decode("ascii")
 
+    schema_base64 = standard_b64encode(get_descriptor_set(Grid.DESCRIPTOR)).decode("ascii")
     async with FoxgloveServer("0.0.0.0", 8765, "example server") as server:
         server.set_listener(Listener())
         chan_id = await server.add_channel(
             {
                 "topic": "example_msg",
                 "encoding": "protobuf",
-                "schemaName": "ExampleMsg",  # Matches `message ExampleMsg` in ExampleMsg.proto
-                "schema": schema_base64,  # Represents the parsed contents of ExampleMsg.proto
+                "schemaName": Grid.DESCRIPTOR.full_name,
+                "schema": schema_base64,
             }
         )
 
@@ -66,7 +85,8 @@ async def main():
             await server.send_message(
                 chan_id,
                 time.time_ns(),
-                ExampleMsg_pb2.ExampleMsg(msg="Hello!", count=i).SerializeToString(),  # type: ignore
+                # ExampleMsg_pb2.ExampleMsg(msg="Hello!", count=i).SerializeToString(),  # type: ignore
+                Grid(timestamp=Timestamp(seconds=100,nanos=1000)).SerializeToString()
             )
 
 
