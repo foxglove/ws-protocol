@@ -60,7 +60,7 @@
   "dependencies": {
     "@foxglove/rostime": "^1.1.2",
     "@foxglove/ws-protocol": "^0.0.8",
-    "boxen": "^6.2.1",
+    "boxen": "^7.0.0",
     "commander": "^9.3.0",
     "debug": "^4",
     "eventemitter3": "^4.0.7",
