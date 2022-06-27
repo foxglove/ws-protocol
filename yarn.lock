@@ -3252,10 +3252,10 @@ punycode@^2.1.0, punycode@^2.1.1:
   resolved "https://registry.yarnpkg.com/punycode/-/punycode-2.1.1.tgz#b58b010ac40c22c5657616c8d2c2c02c7bf479ec"
   integrity sha512-XRsRjdf+j5ml+y/6GKHPZbrF/8p2Yga0JPtdqTIY2Xe5ohJPD9saDJJLPvp9+NSBprVvevdXZybnj2cv8OEd0A==
 
-pureimage@0.3.8:
-  version "0.3.8"
-  resolved "https://registry.yarnpkg.com/pureimage/-/pureimage-0.3.8.tgz#b9c2a127f3182ab94fb4520e83f4fbcbdd9b38f1"
-  integrity sha512-+CuR0HM0VmBfKKQTM56myBonDZAhZkS6ymJ8W5oYYDXG7y7X34B/dEH3UesbJI497Vc2OkA+g8T1/Xj/FTyQ8A==
+pureimage@0.3.14:
+  version "0.3.14"
+  resolved "https://registry.yarnpkg.com/pureimage/-/pureimage-0.3.14.tgz#e5fde69c7999d5114667926bda620ba462f72823"
+  integrity sha512-MoXNFWnJaaxMCqfB97Gyw73rI4MEY075VW/WJ+Z+F/ZgQP7HH8kdcIf8Meif15sdCXhTFlMTSHQxSIrSWkQILw==
   dependencies:
     jpeg-js "^0.4.1"
     opentype.js "^0.4.3"
