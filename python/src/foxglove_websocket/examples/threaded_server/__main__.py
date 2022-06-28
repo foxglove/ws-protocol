@@ -3,7 +3,7 @@ import logging
 import concurrent.futures
 from typing import Any, Coroutine, Dict
 from foxglove_websocket import run_cancellable
-from foxglove_websocket.server import FoxgloveServer, FoxgloveServerListener
+from foxglove_websocket.server import FoxgloveServer, SimpleFoxgloveServerListener
 from foxglove_websocket.types import ChannelId, ChannelWithoutId
 
 from .middleware import ExampleMiddlewareThread, MiddlewareChannelId
@@ -118,7 +118,7 @@ async def main():
 
         # Configure callbacks that the FoxgloveServer will call when its clients subscribe or
         # unsubscribe from our channels.
-        class Listener(FoxgloveServerListener):
+        class Listener(SimpleFoxgloveServerListener):
             def on_subscribe(self, server: FoxgloveServer, channel_id: ChannelId):
                 """
                 When a WebSocket client first subscribes to a channel, create a subscription in the middleware.

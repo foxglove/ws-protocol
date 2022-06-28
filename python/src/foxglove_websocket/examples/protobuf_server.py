@@ -20,7 +20,7 @@ import sys
 import time
 from base64 import standard_b64encode
 from foxglove_websocket import run_cancellable
-from foxglove_websocket.server import FoxgloveServer, FoxgloveServerListener
+from foxglove_websocket.server import FoxgloveServer, SimpleFoxgloveServerListener
 from foxglove_websocket.types import ChannelId
 
 try:
@@ -34,7 +34,7 @@ except ImportError as err:
 
 
 async def main():
-    class Listener(FoxgloveServerListener):
+    class Listener(SimpleFoxgloveServerListener):
         def on_subscribe(self, server: FoxgloveServer, channel_id: ChannelId):
             print("First client subscribed to", channel_id)
 

@@ -12,10 +12,12 @@ from .client_state import ClientState
 from ..types import (
     BinaryOpcode,
     Channel,
+    ClientChannel,
     ChannelId,
     ChannelWithoutId,
     ClientMessage,
     SubscriptionId,
+    ServerCapabilities,
     ServerMessage,
     StatusLevel,
 )
@@ -47,6 +49,48 @@ class FoxgloveServerListener(ABC):
         Called when the last subscribed client unsubscribes from `channel_id`.
         """
         ...
+
+    @abstractmethod
+    def on_client_advertise(self, server: "FoxgloveServer", channel: ClientChannel):
+        """
+        Called when the client advertises a channel.
+        """
+        ...
+
+    @abstractmethod
+    def on_client_unadvertise(self, server: "FoxgloveServer", topic: str):
+        """
+        Called when the client unadvertises a channel.
+        """
+        ...
+
+    @abstractmethod
+    def on_client_data(
+        self,
+        server: "FoxgloveServer",
+        data: Dict[str, Any],
+        timestamp: Optional[int] = None,
+    ):
+        """
+        Called when server receives client data.
+        """
+        ...
+
+
+class SimpleFoxgloveServerListener(FoxgloveServerListener):
+    def on_client_advertise(self, server: "FoxgloveServer", channel: ClientChannel):
+        pass
+
+    def on_client_unadvertise(self, server: "FoxgloveServer", topic: str):
+        pass
+
+    def on_client_data(
+        self,
+        server: "FoxgloveServer",
+        data: Dict[str, Any],
+        timestamp: Optional[int] = None,
+    ):
+        pass
 
 
 class FoxgloveServer:
@@ -210,7 +254,7 @@ class FoxgloveServer:
                 {
                     "op": "serverInfo",
                     "name": self.name,
-                    "capabilities": [],
+                    "capabilities": [ServerCapabilities.receiveClientData.value],
                 },
             )
             await self._send_json(
@@ -325,5 +369,18 @@ class FoxgloveServer:
                 )
                 if self._listener and not self._any_subscribed(chan_id):
                     self._listener.on_unsubscribe(self, chan_id)
+        elif message["op"] == "clientAdvertise":
+            if self._listener:
+                for channel in message["channels"]:
+                    self._listener.on_client_advertise(self, channel)
+        elif message["op"] == "clientUnadvertise":
+            if self._listener:
+                for topic in message["topics"]:
+                    self._listener.on_client_unadvertise(self, topic)
+        elif message["op"] == "clientData":
+            if self._listener:
+                self._listener.on_client_data(
+                    self, message["data"], message.get("timestamp")
+                )
         else:
             raise ValueError(f"Unrecognized client opcode: {message['op']}")

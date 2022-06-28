@@ -4,6 +4,7 @@ import { ChannelId, MessageData, ServerInfo, StatusMessage } from ".";
 import { parseServerMessage } from "./parse";
 import {
   Channel,
+  ClientChannel,
   ClientMessage,
   SubscriptionId,
   ServerMessage,
@@ -108,6 +109,24 @@ export default class FoxgloveClient {
     const subscriptions = [{ id, channelId }];
     this.send({ op: "subscribe", subscriptions });
     return id;
+  }
+
+  /**
+   * Advertise a new client channel to any connected servers.
+   */
+  advertise(channel: ClientChannel): void {
+    this.send({ op: "clientAdvertise", channels: [channel] });
+  }
+
+  /**
+   * unadvetise a previously advertised client channel to any connected servers.
+   */
+  unadvertise(topic: string): void {
+    this.send({ op: "clientUnadvertise", topics: [topic] });
+  }
+
+  sendData(topic: string, msg: Record<string, unknown>, timestamp?: number): void {
+    this.send({ op: "clientData", topic, data: msg, ...(timestamp != undefined && { timestamp }) });
   }
 
   unsubscribe(subscriptionId: SubscriptionId): void {
