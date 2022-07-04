@@ -41,7 +41,7 @@
     "@types/lodash": "4.14.182",
     "@types/node": "^18.0.0",
     "@typescript-eslint/eslint-plugin": "5.29.0",
-    "@typescript-eslint/parser": "5.29.0",
+    "@typescript-eslint/parser": "5.30.4",
     "commander": "9.3.0",
     "consumer-queue": "^1.1.0",
     "eslint": "8.18.0",
