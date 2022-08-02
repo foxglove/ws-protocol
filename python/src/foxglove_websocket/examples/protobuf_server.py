@@ -8,10 +8,11 @@ server for use with your own Protobuf data:
 - `ExampleMsg_pb2.py`: generated Python code from `protoc --python_out=. ExampleMsg.proto`. The
   example server uses this to serialize messages as binary data via SerializeToString().
 
-- `ExampleMsg.bin`: generated FileDescriptorSet from `protoc --descriptor_set_out=ExampleMsg.bin
-  ExampleMsg.proto`. This binary blob gets passed to clients as the `schema`; Foxglove Studio uses
-  this along with the `schemaName` to decode the message data. A FileDescriptorSet can represent
-  multiple input .proto files (see the --include_imports option to protoc).
+- `ExampleMsg.bin`: generated FileDescriptorSet from `protoc --include_imports
+  --descriptor_set_out=ExampleMsg.bin ExampleMsg.proto`. This binary blob gets passed to clients as
+  the `schema`; Foxglove Studio uses this along with the `schemaName` to decode the message data. A
+  FileDescriptorSet can represent multiple input .proto files (see the --include_imports option to
+  protoc).
 """
 
 import asyncio
@@ -41,7 +42,7 @@ async def main():
         def on_unsubscribe(self, server: FoxgloveServer, channel_id: ChannelId):
             print("Last client unsubscribed from", channel_id)
 
-    # Load the FileDescriptorSet, which was generated via `protoc --descriptor_set_out`.
+    # Load the FileDescriptorSet, which was generated via `protoc --include_imports --descriptor_set_out`.
     with open(
         os.path.join(os.path.dirname(ExampleMsg_pb2.__file__), "ExampleMsg.bin"), "rb"
     ) as schema_bin:
