@@ -44,7 +44,7 @@
     "@types/lodash": "^4.14.182",
     "@types/node": "^18.0.0",
     "@types/ws": "^8.5.3",
-    "@typescript-eslint/eslint-plugin": "5.29.0",
+    "@typescript-eslint/eslint-plugin": "5.35.1",
     "@typescript-eslint/parser": "5.29.0",
     "eslint": "8.23.0",
     "eslint-config-prettier": "8.5.0",
@@ -67,6 +67,6 @@
     "protobufjs": "^7.1.0",
     "pureimage": "0.3.14",
     "tslib": "^2",
-    "ws": "8.8.0"
+    "ws": "8.8.1"
   }
 }
