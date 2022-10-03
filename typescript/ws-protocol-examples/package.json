@@ -61,7 +61,7 @@
     "@foxglove/rostime": "^1.1.2",
     "@foxglove/ws-protocol": "^0.0.8",
     "boxen": "^7.0.0",
-    "commander": "^9.4.0",
+    "commander": "^9.4.1",
     "debug": "^4",
     "eventemitter3": "^4.0.7",
     "protobufjs": "^7.1.2",
