@@ -4,13 +4,16 @@ updates:
     directory: "/"
     schedule:
       interval: daily
+    labels: [] # disable default labels
 
   - package-ecosystem: npm
     directory: "/"
     schedule:
       interval: weekly
+    labels: [] # disable default labels
 
   - package-ecosystem: pip
     directory: "/python"
     schedule:
       interval: weekly
+    labels: [] # disable default labels
