@@ -33,6 +33,9 @@
 
 - [Subscribe](#subscribe) (json)
 - [Unsubscribe](#unsubscribe) (json)
+- [Client Advertise](#client-advertise) (json)
+- [Client Unadvertise](#client-unadvertise) (json)
+- [Client Message Data](#client-message-data) (json)
 
 ## JSON messages
 
@@ -167,6 +170,82 @@ Informs the client that channels are no longer available.
 {
   "op": "unsubscribe",
   "subscriptionIds": [0, 1]
+}
+```
+
+### Client Advertise
+
+- Informs the server about available client channels.
+
+#### Fields
+
+- `op`: string `"client_advertise"`
+- `channels`: array of:
+  - `id`: number chosen by the client. The client may not reuse ids across multiple advertised channels.
+  - `topic`: string
+  - `encoding`: string `"json"`
+  - `schemaName`: string
+
+#### Example
+
+```json
+{
+  "op": "client_advertise",
+  "channels": [
+    {
+      "id": 1,
+      "topic": "foo",
+      "encoding": "json",
+      "schemaName": "ExampleMsg"
+    }
+  ]
+}
+```
+
+### Client Unadvertise
+
+- Informs the server that client channels are no longer available.
+
+#### Fields
+
+- `op`: string `"client_unadvertise"`
+- `channelIds`: array of number, corresponding to previous [Client Advertise](#client-advertise)
+
+#### Example
+
+```json
+{
+  "op": "client_unadvertise",
+  "channelIds": [1, 2]
+}
+```
+
+### Client Message Data
+
+- Sends a JSON message from the client to the server.
+
+#### Fields
+
+- `op`: string `"client_message_data"`
+- `channelId`: number. Channel ID corresponding to previous [Client Advertise](#client-advertise)
+- `data`: object. JSON object
+
+#### Example
+
+```json
+{
+  "op": "client_message_data",
+  "channelId": 1,
+  "data": {
+    "header": {
+      "frame_id": "/map"
+    },
+    "point": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 0.0
+    }
+  }
 }
 ```
 
