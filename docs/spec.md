@@ -49,7 +49,8 @@ Each JSON message must be an object containing a field called `op` which identif
 
 - `op`: string `"serverInfo"`
 - `name`: free-form information about the server which the client may optionally display or use for debugging purposes
-- `capabilities`: array of strings (reserved for future expansions to the spec)
+- `capabilities`: array of strings, informing the client about which optional features are supported
+  - `clientPublish`: Allow clients to advertise channels to send data messages to the server
 
 #### Example
 
@@ -57,7 +58,7 @@ Each JSON message must be an object containing a field called `op` which identif
 {
   "op": "serverInfo",
   "name": "example server",
-  "capabilities": []
+  "capabilities": ["clientPublish"]
 }
 ```
 
@@ -175,22 +176,22 @@ Informs the client that channels are no longer available.
 
 ### Client Advertise
 
-- Informs the server about available client channels.
+- Informs the server about available client channels. Note that hhe client is only allowed to advertise channels if the server previously declared that it has the `clientPublish` [capability](#server-info).
 
 #### Fields
 
-- `op`: string `"client_advertise"`
+- `op`: string `"advertise"`
 - `channels`: array of:
   - `id`: number chosen by the client. The client may not reuse ids across multiple advertised channels.
   - `topic`: string
-  - `encoding`: string `"json"`
+  - `encoding`: string, must be `"json"`
   - `schemaName`: string
 
 #### Example
 
 ```json
 {
-  "op": "client_advertise",
+  "op": "advertise",
   "channels": [
     {
       "id": 1,
@@ -208,14 +209,14 @@ Informs the client that channels are no longer available.
 
 #### Fields
 
-- `op`: string `"client_unadvertise"`
+- `op`: string `"unadvertise"`
 - `channelIds`: array of number, corresponding to previous [Client Advertise](#client-advertise)
 
 #### Example
 
 ```json
 {
-  "op": "client_unadvertise",
+  "op": "unadvertise",
   "channelIds": [1, 2]
 }
 ```
@@ -226,7 +227,7 @@ Informs the client that channels are no longer available.
 
 #### Fields
 
-- `op`: string `"client_message_data"`
+- `op`: string `"publish"`
 - `channelId`: number. Channel ID corresponding to previous [Client Advertise](#client-advertise)
 - `data`: object. JSON object
 
@@ -234,7 +235,7 @@ Informs the client that channels are no longer available.
 
 ```json
 {
-  "op": "client_message_data",
+  "op": "publish",
   "channelId": 1,
   "data": {
     "header": {
