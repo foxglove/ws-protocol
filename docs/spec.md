@@ -176,13 +176,13 @@ Informs the client that channels are no longer available.
 
 ### Client Advertise
 
-- Informs the server about available client channels. Note that hhe client is only allowed to advertise channels if the server previously declared that it has the `clientPublish` [capability](#server-info).
+- Informs the server about available client channels. Note that the client is only allowed to advertise channels if the server previously declared that it has the `clientPublish` [capability](#server-info).
 
 #### Fields
 
 - `op`: string `"advertise"`
 - `channels`: array of:
-  - `id`: number chosen by the client. The client may not reuse ids across multiple advertised channels.
+  - `id`: number chosen by the client. The client may reuse ids that have previously been unadvertised.
   - `topic`: string
   - `encoding`: string, must be `"json"`
   - `schemaName`: string
@@ -205,7 +205,7 @@ Informs the client that channels are no longer available.
 
 ### Client Unadvertise
 
-- Informs the server that client channels are no longer available.
+- Informs the server that client channels are no longer available. Note that the client is only allowed to unadvertise channels if the server previously declared that it has the `clientPublish` [capability](#server-info).
 
 #### Fields
 
@@ -223,7 +223,7 @@ Informs the client that channels are no longer available.
 
 ### Client Message Data
 
-- Sends a JSON message from the client to the server.
+- Sends a JSON message from the client to the server. Note that the client is only allowed to publish messages if the server previously declared that it has the `clientPublish` [capability](#server-info).
 
 #### Fields
 
