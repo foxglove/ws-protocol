@@ -9,9 +9,9 @@ xfail_strict=true
 
 [tool.black]
 exclude = '/build|_pb2\.pyi?$'
-color = false
+color = true
 diff = true
-verbose = false
+verbose = true
 
 [tool.pyright]
 exclude = ['**/*_pb2.py*']
