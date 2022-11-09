@@ -8,7 +8,7 @@ log_cli = true
 xfail_strict=true
 
 [tool.black]
-exclude = '_pb2\.py$'
+exclude = '_pb2\.pyi?$|'
 color = true
 diff = true
 verbose = true

@@ -83,7 +83,7 @@ static void setAxisAngle(foxglove::Quaternion* q, double x, double y, double z, 
 }
 
 int main() {
-  foxglove::websocket::Server server{8765, "example server"};
+  foxglove::websocket::Server server{8765, "C++ Protobuf example server"};
 
   const auto chanId = server.addChannel({
     .topic = "example_msg",
