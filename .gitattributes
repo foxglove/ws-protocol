@@ -1,2 +1,2 @@
 python/**/proto/**/*.py* linguist-generated
-cpp/**/proto/**/*.pb.* linguist-generated
+cpp/**/proto/**/*.proto linguist-generated
