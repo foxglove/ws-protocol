@@ -4,7 +4,6 @@ data. The included Protobuf schemas are generated from https://github.com/foxglo
 """
 
 import asyncio
-import os
 import sys
 import time
 from base64 import b64encode
@@ -13,9 +12,6 @@ from typing import Set, Type
 from foxglove_websocket import run_cancellable
 from foxglove_websocket.server import FoxgloveServer, FoxgloveServerListener
 from foxglove_websocket.types import ChannelId
-
-# Enable nested Protobuf imports to work relative to the proto directory
-sys.path.append(os.path.join(os.path.dirname(__file__), "proto"))
 
 try:
     from foxglove_websocket.examples.proto.foxglove.SceneUpdate_pb2 import SceneUpdate
