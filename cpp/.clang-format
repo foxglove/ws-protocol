@@ -28,3 +28,6 @@ IncludeCategories:
   - Regex: "^<.*"
     Priority: 3
     SortPriority: 0
+  - Regex: ".*"
+    Priority: 4
+    SortPriority: 0

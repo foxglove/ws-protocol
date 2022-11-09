@@ -1,6 +1,0 @@
-syntax = "proto3";
-
-message ExampleMsg {
-  string msg = 1;
-  int32 count = 2;
-}

@@ -1,34 +1,28 @@
 """
 This script demonstrates how to write a Foxglove WebSocket server that transmits Protobuf-encoded
-data. You should examine the following files in the `proto` directory to understand how to adapt the
-server for use with your own Protobuf data:
-
-- `ExampleMsg.proto`: hand-written Protobuf schema that describes data the server will send.
-
-- `ExampleMsg_pb2.py`: generated Python code from `protoc --python_out=. ExampleMsg.proto`. The
-  example server uses this to serialize messages as binary data via SerializeToString().
-
-- `ExampleMsg.bin`: generated FileDescriptorSet from `protoc --include_imports
-  --descriptor_set_out=ExampleMsg.bin ExampleMsg.proto`. This binary blob gets passed to clients as
-  the `schema`; Foxglove Studio uses this along with the `schemaName` to decode the message data. A
-  FileDescriptorSet can represent multiple input .proto files (see the --include_imports option to
-  protoc).
+data. The included Protobuf schemas are generated from https://github.com/foxglove/schemas.
 """
 
 import asyncio
 import os
 import sys
 import time
-from base64 import standard_b64encode
+from base64 import b64encode
 from traceback import print_exception
+from typing import Set, Type
 from foxglove_websocket import run_cancellable
 from foxglove_websocket.server import FoxgloveServer, FoxgloveServerListener
 from foxglove_websocket.types import ChannelId
 
+# Enable nested Protobuf imports to work relative to the proto directory
 sys.path.append(os.path.join(os.path.dirname(__file__), "proto"))
+
 try:
-    from foxglove_websocket.examples.proto import ExampleMsg_pb2
-    from foxglove_websocket.examples.proto.foxglove.Grid_pb2 import Grid
+    from foxglove_websocket.examples.proto.foxglove.SceneUpdate_pb2 import SceneUpdate
+    import google.protobuf.message
+    from google.protobuf.descriptor_pb2 import FileDescriptorSet
+    from google.protobuf.descriptor import FileDescriptor
+    from pyquaternion import Quaternion
 except ImportError as err:
     print_exception(*sys.exc_info())
     print(
@@ -36,21 +30,22 @@ except ImportError as err:
     )
     sys.exit(1)
 
-from google.protobuf.descriptor_pb2 import FileDescriptorSet
-from google.protobuf.descriptor import Descriptor, FileDescriptor
-from google.protobuf.timestamp_pb2 import Timestamp
-def get_descriptor_set(desc: Descriptor) -> bytes:
-    fds = FileDescriptorSet()
-    seen_files = set()
-    def add_deps(fd: FileDescriptor):
-        for dep in fd.dependencies:
-            if dep.name in seen_files:
-                continue
-            seen_files.add(dep.name)
-            add_deps(dep)
-        fd.CopyToProto(fds.file.add())
-    add_deps(desc.file)
-    return fds.SerializeToString()
+def build_file_descriptor_set(message_class: Type[google.protobuf.message.Message]) -> FileDescriptorSet:
+    """
+    Build a FileDescriptorSet representing the message class and its dependencies.
+    """
+    file_descriptor_set = FileDescriptorSet()
+    seen_dependencies: Set[str] = set()
+
+    def append_file_descriptor(file_descriptor: FileDescriptor):
+        for dep in file_descriptor.dependencies:
+            if dep.name not in seen_dependencies:
+                seen_dependencies.add(dep.name)
+                append_file_descriptor(dep)
+        file_descriptor.CopyToProto(file_descriptor_set.file.add()) # type: ignore
+
+    append_file_descriptor(message_class.DESCRIPTOR.file)
+    return file_descriptor_set
 
 async def main():
     class Listener(FoxgloveServerListener):
@@ -60,33 +55,48 @@ async def main():
         def on_unsubscribe(self, server: FoxgloveServer, channel_id: ChannelId):
             print("Last client unsubscribed from", channel_id)
 
-    # Load the FileDescriptorSet, which was generated via `protoc --include_imports --descriptor_set_out`.
-    with open(
-        os.path.join(os.path.dirname(ExampleMsg_pb2.__file__), "ExampleMsg.bin"), "rb"
-    ) as schema_bin:
-        schema_base64 = standard_b64encode(schema_bin.read()).decode("ascii")
-
-    schema_base64 = standard_b64encode(get_descriptor_set(Grid.DESCRIPTOR)).decode("ascii")
     async with FoxgloveServer("0.0.0.0", 8765, "example server") as server:
         server.set_listener(Listener())
         chan_id = await server.add_channel(
             {
                 "topic": "example_msg",
                 "encoding": "protobuf",
-                "schemaName": Grid.DESCRIPTOR.full_name,
-                "schema": schema_base64,
+                "schemaName": SceneUpdate.DESCRIPTOR.full_name,
+                "schema": b64encode(build_file_descriptor_set(SceneUpdate).SerializeToString()).decode("ascii"),
             }
         )
 
         i = 0
         while True:
             i += 1
-            await asyncio.sleep(0.2)
+            await asyncio.sleep(0.05)
+            now = time.time_ns()
+
+            scene_update = SceneUpdate()
+            entity = scene_update.entities.add()
+            entity.timestamp.FromNanoseconds(now)
+            entity.frame_id = "root"
+            cube = entity.cubes.add()
+            cube.size.x = 1
+            cube.size.y = 1
+            cube.size.z = 1
+            cube.pose.position.x = 2
+            cube.pose.position.y = 0
+            cube.pose.position.z = 0
+            q = Quaternion(axis=[0, 0, 1], angle=i * 0.1)
+            cube.pose.orientation.x = q.x
+            cube.pose.orientation.y = q.y
+            cube.pose.orientation.z = q.z
+            cube.pose.orientation.w = q.w
+            cube.color.r = 0.6
+            cube.color.g = 0.2
+            cube.color.b = 1
+            cube.color.a = 1
+
             await server.send_message(
                 chan_id,
-                time.time_ns(),
-                # ExampleMsg_pb2.ExampleMsg(msg="Hello!", count=i).SerializeToString(),  # type: ignore
-                Grid(timestamp=Timestamp(seconds=100,nanos=1000)).SerializeToString()
+                now,
+                scene_update.SerializeToString()
             )
 
 
