@@ -30,7 +30,10 @@ except ImportError as err:
     )
     sys.exit(1)
 
-def build_file_descriptor_set(message_class: Type[google.protobuf.message.Message]) -> FileDescriptorSet:
+
+def build_file_descriptor_set(
+    message_class: Type[google.protobuf.message.Message],
+) -> FileDescriptorSet:
     """
     Build a FileDescriptorSet representing the message class and its dependencies.
     """
@@ -42,10 +45,11 @@ def build_file_descriptor_set(message_class: Type[google.protobuf.message.Messag
             if dep.name not in seen_dependencies:
                 seen_dependencies.add(dep.name)
                 append_file_descriptor(dep)
-        file_descriptor.CopyToProto(file_descriptor_set.file.add()) # type: ignore
+        file_descriptor.CopyToProto(file_descriptor_set.file.add())  # type: ignore
 
     append_file_descriptor(message_class.DESCRIPTOR.file)
     return file_descriptor_set
+
 
 async def main():
     class Listener(FoxgloveServerListener):
@@ -62,7 +66,9 @@ async def main():
                 "topic": "example_msg",
                 "encoding": "protobuf",
                 "schemaName": SceneUpdate.DESCRIPTOR.full_name,
-                "schema": b64encode(build_file_descriptor_set(SceneUpdate).SerializeToString()).decode("ascii"),
+                "schema": b64encode(
+                    build_file_descriptor_set(SceneUpdate).SerializeToString()
+                ).decode("ascii"),
             }
         )
 
@@ -93,11 +99,7 @@ async def main():
             cube.color.b = 1
             cube.color.a = 1
 
-            await server.send_message(
-                chan_id,
-                now,
-                scene_update.SerializeToString()
-            )
+            await server.send_message(chan_id, now, scene_update.SerializeToString())
 
 
 if __name__ == "__main__":

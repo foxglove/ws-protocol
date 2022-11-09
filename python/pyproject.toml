@@ -8,10 +8,10 @@ log_cli = true
 xfail_strict=true
 
 [tool.black]
-exclude = '_pb2\.pyi?$|'
-color = true
+exclude = '/build|_pb2\.pyi?$'
+color = false
 diff = true
-verbose = true
+verbose = false
 
 [tool.pyright]
-exclude = ['**/*_pb2.py']
+exclude = ['**/*_pb2.py*']
