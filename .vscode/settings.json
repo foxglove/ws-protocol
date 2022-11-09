@@ -20,6 +20,12 @@
   "python.analysis.typeCheckingMode": "strict",
   "jest.rootPath": "typescript",
 
+  "search.exclude": {
+    "**/*_pb2.py*": true,
+    "**/*.pb.cc": true,
+    "**/*.pb.h": true
+  },
+
   // https://github.com/microsoft/vscode-cpptools/issues/722
   "C_Cpp.autoAddFileAssociations": false
 }
