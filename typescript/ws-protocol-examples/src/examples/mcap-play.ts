@@ -1,10 +1,10 @@
-import { Mcap0IndexedReader, Mcap0Types } from "@mcap/core";
 import { FoxgloveServer } from "@foxglove/ws-protocol";
+import { Mcap0IndexedReader, Mcap0Types } from "@mcap/core";
 import { Command } from "commander";
 import Debug from "debug";
 import fs from "fs/promises";
-import { WebSocketServer } from "ws";
 import decompressLZ4 from "wasm-lz4";
+import { WebSocketServer } from "ws";
 import { ZstdCodec, ZstdModule, ZstdStreaming } from "zstd-codec";
 
 import boxen from "../boxen";
