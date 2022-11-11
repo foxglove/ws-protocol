@@ -315,6 +315,11 @@
     minimatch "^3.1.2"
     strip-json-comments "^3.1.1"
 
+"@foxglove/crc@^0.0.3":
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/@foxglove/crc/-/crc-0.0.3.tgz#04cd8816454e14f1ec48de17c949199b4b3ec9c2"
+  integrity sha512-DjIZsnL3CyP/yQ/vUYA9cjrD0a/8YXejI5ZmsaOiT16cLfZcTwaCxIN01/ys4jsy+dZCQ/9DnWFn7AEFbiMDaA==
+
 "@foxglove/eslint-plugin@0.20.0":
   version "0.20.0"
   resolved "https://registry.yarnpkg.com/@foxglove/eslint-plugin/-/eslint-plugin-0.20.0.tgz#386933c44b38ba1deccb345e9941f65c040ae063"
@@ -563,6 +568,15 @@
   dependencies:
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
+
+"@mcap/core@^0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@mcap/core/-/core-0.2.2.tgz#f1510cb4f2078b06d6ef80e56ec7014c23f648d4"
+  integrity sha512-5a+Y2kj3uIj4ABcmr4N7oPnWRIii3bSoAVfiKoEaxe/dkgajL3GAuY9IbCSiAR6HlN8k1siObQaNu7QhxN+DuA==
+  dependencies:
+    "@foxglove/crc" "^0.0.3"
+    heap-js "^2.1.6"
+    tslib "^2"
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
@@ -2091,6 +2105,11 @@ has@^1.0.3:
   integrity sha512-f2dvO0VU6Oej7RkWJGrehjbzMAjFp5/VKPp5tTpWIV4JHHZK1/BxbFRtf/siA2SWTe09caDmVtYYzWEIbBS4zw==
   dependencies:
     function-bind "^1.1.1"
+
+heap-js@^2.1.6:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/heap-js/-/heap-js-2.2.0.tgz#f4418874cd2aedc2cf3a7492d579afe23b627c5d"
+  integrity sha512-G3uM72G9F/zo9Hph/T7m4ZZVlVu5bx2f5CiCS78TBHz2mNIXnB5KRdEEYssXZJ7ldLDqID29bZ1D5ezCKQD2Zw==
 
 html-encoding-sniffer@^2.0.1:
   version "2.0.1"
@@ -3867,6 +3886,11 @@ walker@^1.0.7:
   dependencies:
     makeerror "1.0.12"
 
+wasm-lz4@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/wasm-lz4/-/wasm-lz4-2.0.0.tgz#f0e8cab698c8037f7259a66c8fc698ad87e01933"
+  integrity sha512-eXm4WpHRuS2O1yOOLGTyDDit+gBJ5wV6/VhR4b0p289pQDABu03eBfGvzua5YJN6teiIskH3eE4SyQTG4/HV9w==
+
 webidl-conversions@^5.0.0:
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/webidl-conversions/-/webidl-conversions-5.0.0.tgz#ae59c8a00b121543a2acc65c0434f57b0fc11aff"
@@ -4018,3 +4042,8 @@ yocto-queue@^0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/yocto-queue/-/yocto-queue-0.1.0.tgz#0294eb3dee05028d31ee1a5fa2c556a6aaf10a1b"
   integrity sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==
+
+zstd-codec@^0.1.4:
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/zstd-codec/-/zstd-codec-0.1.4.tgz#6abb311b63cfacbd06e72797ee6c6e1c7c65248c"
+  integrity sha512-KYnWoFWgGtWyQEKNnUcb3u8ZtKO8dn5d8u+oGpxPlopqsPyv60U8suDyfk7Z7UtAO6Sk5i1aVcAs9RbaB1n36A==

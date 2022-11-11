@@ -22,6 +22,12 @@ Run the `image-server` example server, which uses JSON-encoded data to transmit 
 $ npx @foxglove/ws-protocol-examples@latest image-server
 ```
 
+Run the `mcap-play` example server, which plays back recorded data from a local [MCAP](https://mcap.dev) file:
+
+```
+$ npx @foxglove/ws-protocol-examples@latest mcap-play <file> [--rate 1.0] [--loop]
+```
+
 _Note:_ You must exit each server (<kbd>control</kbd> + <kbd>c</kbd>) before starting up another.
 
 To see data from any server, open [Foxglove Studio](https://studio.foxglove.dev?ds=foxglove-websocket&ds.url=ws://localhost:8765/) with a Foxglove WebSocket connection to `ws://localhost:8765/`:
