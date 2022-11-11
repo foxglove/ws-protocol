@@ -60,6 +60,7 @@
   "dependencies": {
     "@foxglove/rostime": "^1.1.2",
     "@foxglove/ws-protocol": "^0.0.8",
+    "@mcap/core": "^0.2.2",
     "boxen": "^7.0.0",
     "commander": "^9.4.1",
     "debug": "^4",
@@ -67,6 +68,8 @@
     "protobufjs": "^7.1.2",
     "pureimage": "0.3.14",
     "tslib": "^2",
-    "ws": "8.11.0"
+    "wasm-lz4": "^2.0.0",
+    "ws": "8.11.0",
+    "zstd-codec": "^0.1.4"
   }
 }

@@ -6,7 +6,7 @@
   "prettier.prettierPath": "./node_modules/prettier",
   "eslint.packageManager": "yarn",
   "eslint.options": {
-    "reportUnusedDisableDirectives": true
+    "reportUnusedDisableDirectives": "error"
   },
 
   "python.analysis.diagnosticSeverityOverrides": {
