@@ -3,6 +3,7 @@ build
 dist
 node_modules
 *.hdf5
+yarn-error.log
 
 # Python
 __pycache__
