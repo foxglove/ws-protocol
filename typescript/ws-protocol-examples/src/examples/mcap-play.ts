@@ -1,5 +1,5 @@
 import { FoxgloveServer } from "@foxglove/ws-protocol";
-import { Mcap0IndexedReader, Mcap0Types } from "@mcap/core";
+import { McapIndexedReader, McapTypes } from "@mcap/core";
 import { Command } from "commander";
 import Debug from "debug";
 import fs from "fs/promises";
@@ -17,8 +17,8 @@ function delay(durationMs: number) {
   return new Promise((resolve) => setTimeout(resolve, durationMs));
 }
 
-let cachedDecompressHandlers: Mcap0Types.DecompressHandlers | undefined;
-async function getDecompressHandlers(): Promise<Mcap0Types.DecompressHandlers> {
+let cachedDecompressHandlers: McapTypes.DecompressHandlers | undefined;
+async function getDecompressHandlers(): Promise<McapTypes.DecompressHandlers> {
   if (cachedDecompressHandlers) {
     return cachedDecompressHandlers;
   }
@@ -57,7 +57,7 @@ async function getDecompressHandlers(): Promise<Mcap0Types.DecompressHandlers> {
   return cachedDecompressHandlers;
 }
 
-function readableFromFileHandle(handle: fs.FileHandle): Mcap0Types.IReadable {
+function readableFromFileHandle(handle: fs.FileHandle): McapTypes.IReadable {
   let buffer = new ArrayBuffer(4096);
   return {
     async size() {
@@ -84,11 +84,11 @@ function readableFromFileHandle(handle: fs.FileHandle): Mcap0Types.IReadable {
   };
 }
 
-async function* readMcapFile(filePath: string): AsyncIterable<Mcap0Types.TypedMcapRecord> {
+async function* readMcapFile(filePath: string): AsyncIterable<McapTypes.TypedMcapRecord> {
   const decompressHandlers = await getDecompressHandlers();
   const handle = await fs.open(filePath, "r");
   try {
-    const reader = await Mcap0IndexedReader.Initialize({
+    const reader = await McapIndexedReader.Initialize({
       readable: readableFromFileHandle(handle),
       decompressHandlers,
     });
@@ -119,7 +119,7 @@ async function main(file: string, options: { loop: boolean; rate: number }): Pro
     handleProtocols: (protocols) => server.handleProtocols(protocols),
   });
 
-  const schemasById = new Map<number, Mcap0Types.Schema>();
+  const schemasById = new Map<number, McapTypes.Schema>();
   const mcapChannelsByWsChannel = new Map<WsChannelId, McapChannelId>();
   const wsChannelsByMcapChannel = new Map<McapChannelId, WsChannelId>();
   const subscribedChannels = new Set<WsChannelId>();
