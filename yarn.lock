@@ -569,10 +569,10 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
-"@mcap/core@^0.2.2":
-  version "0.2.2"
-  resolved "https://registry.yarnpkg.com/@mcap/core/-/core-0.2.2.tgz#f1510cb4f2078b06d6ef80e56ec7014c23f648d4"
-  integrity sha512-5a+Y2kj3uIj4ABcmr4N7oPnWRIii3bSoAVfiKoEaxe/dkgajL3GAuY9IbCSiAR6HlN8k1siObQaNu7QhxN+DuA==
+"@mcap/core@^0.3.0":
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/@mcap/core/-/core-0.3.0.tgz#f716ff48f8c361bead772023e50b6989466cadba"
+  integrity sha512-7mdmII6RSMHKIn3h+SuwrbKSLqtbsSWdQKRqsov1bQ0JZTu3VkjV33nqLwWDkLMau01f3kMTtwgK31//Wm1NFg==
   dependencies:
     "@foxglove/crc" "^0.0.3"
     heap-js "^2.1.6"
