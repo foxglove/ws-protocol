@@ -221,7 +221,7 @@ Informs the client that channels are no longer available.
 }
 ```
 
-### Client Message Data
+### Client Publish
 
 - Sends a JSON message from the client to the server. Note that the client is only allowed to publish messages if the server previously declared that it has the `clientPublish` [capability](#server-info).
 
