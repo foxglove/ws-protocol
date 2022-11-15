@@ -184,7 +184,7 @@ Informs the client that channels are no longer available.
 - `channels`: array of:
   - `id`: number chosen by the client. The client may reuse ids that have previously been unadvertised.
   - `topic`: string
-  - `encoding`: string, must be `"json"`
+  - `encoding`: string
   - `schemaName`: string
 
 #### Example
@@ -196,7 +196,7 @@ Informs the client that channels are no longer available.
     {
       "id": 1,
       "topic": "foo",
-      "encoding": "json",
+      "encoding": "protobuf",
       "schemaName": "ExampleMsg"
     }
   ]
@@ -223,15 +223,17 @@ Informs the client that channels are no longer available.
 
 ### Client Publish
 
-- Sends a binary websocket message that contains the JSON encoded messsage from the client to the server. Note that the client is only allowed to publish messages if the server previously declared that it has the `clientPublish` [capability](#server-info).
+- Sends a binary websocket message containing the raw messsage payload to the server. Note that the client is only allowed to publish messages if the server previously declared that it has the `clientPublish` [capability](#server-info).
 
-#### Fields
+#### Message Data
 
-| Bytes           | Type    | Description                     |
-| --------------- | ------- | ------------------------------- |
-| 1               | opcode  | 0x01                            |
-| 4               | uint32  | channel id                      |
-| remaining bytes | uint8[] | message payload (JSON enconded) |
+- Provides a raw message payload, encoded as advertised in the [Client Advertise](#client-advertise) operation.
+
+| Bytes           | Type    | Description     |
+| --------------- | ------- | --------------- |
+| 1               | opcode  | 0x01            |
+| 4               | uint32  | channel id      |
+| remaining bytes | uint8[] | message payload |
 
 ## Binary messages
 
