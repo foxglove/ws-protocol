@@ -35,7 +35,7 @@
 - [Unsubscribe](#unsubscribe) (json)
 - [Client Advertise](#client-advertise) (json)
 - [Client Unadvertise](#client-unadvertise) (json)
-- [Client Message Data](#client-message-data) (json)
+- [Client Message Data](#client-message-data) (binary)
 
 ## JSON messages
 
@@ -223,32 +223,15 @@ Informs the client that channels are no longer available.
 
 ### Client Publish
 
-- Sends a JSON message from the client to the server. Note that the client is only allowed to publish messages if the server previously declared that it has the `clientPublish` [capability](#server-info).
+- Sends a binary websocket message that contains the JSON encoded messsage from the client to the server. Note that the client is only allowed to publish messages if the server previously declared that it has the `clientPublish` [capability](#server-info).
 
 #### Fields
 
-- `op`: string `"publish"`
-- `channelId`: number. Channel ID corresponding to previous [Client Advertise](#client-advertise)
-- `data`: object. JSON object
-
-#### Example
-
-```json
-{
-  "op": "publish",
-  "channelId": 1,
-  "data": {
-    "header": {
-      "frame_id": "/map"
-    },
-    "point": {
-      "x": 1.0,
-      "y": 2.0,
-      "z": 0.0
-    }
-  }
-}
-```
+| Bytes           | Type    | Description                     |
+| --------------- | ------- | ------------------------------- |
+| 1               | opcode  | 0x01                            |
+| 4               | uint32  | channel id                      |
+| remaining bytes | uint8[] | message payload (JSON enconded) |
 
 ## Binary messages
 
