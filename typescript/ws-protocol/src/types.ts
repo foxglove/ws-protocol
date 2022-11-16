@@ -6,6 +6,9 @@ export enum StatusLevel {
   WARNING = 1,
   ERROR = 2,
 }
+export enum ServerCapability {
+  clientPublish = "clientPublish",
+}
 
 export type ChannelId = number;
 export type Channel = {
@@ -29,7 +32,22 @@ export type Unsubscribe = {
   subscriptionIds: SubscriptionId[];
 };
 
-export type ClientMessage = Subscribe | Unsubscribe;
+export type ClientChannel = {
+  id: ChannelId;
+  topic: string;
+  encoding: string;
+  schemaName: string;
+};
+export type ClientAdvertise = {
+  op: "advertise";
+  channels: ClientChannel[];
+};
+export type ClientUnadvertise = {
+  op: "unadvertise";
+  channelIds: ChannelId[];
+};
+
+export type ClientMessage = Subscribe | Unsubscribe | ClientAdvertise | ClientUnadvertise;
 
 export type ServerInfo = {
   op: "serverInfo";
@@ -53,6 +71,10 @@ export type MessageData = {
   op: BinaryOpcode.MESSAGE_DATA;
   subscriptionId: SubscriptionId;
   timestamp: bigint;
+  data: DataView;
+};
+export type ClientPublish = {
+  channel: ClientChannel;
   data: DataView;
 };
 

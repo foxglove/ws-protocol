@@ -9,6 +9,7 @@ import {
   ServerMessage,
   BinaryOpcode,
   IWebSocket,
+  ClientChannel,
 } from "./types";
 
 type EventTypes = {
@@ -29,6 +30,7 @@ export default class FoxgloveClient {
   private emitter = new EventEmitter<EventTypes>();
   private ws: IWebSocket;
   private nextSubscriptionId = 0;
+  private nextAdvertisementId = 0;
 
   constructor({ ws }: { ws: IWebSocket }) {
     this.ws = ws;
@@ -112,6 +114,26 @@ export default class FoxgloveClient {
 
   unsubscribe(subscriptionId: SubscriptionId): void {
     this.send({ op: "unsubscribe", subscriptionIds: [subscriptionId] });
+  }
+
+  advertise(topic: string, encoding: string, schemaName: string): ChannelId {
+    const id = ++this.nextAdvertisementId;
+    const channels: ClientChannel[] = [{ id, topic, encoding, schemaName }];
+    this.send({ op: "advertise", channels });
+    return id;
+  }
+
+  unadvertise(channelId: ChannelId): void {
+    this.send({ op: "unadvertise", channelIds: [channelId] });
+  }
+
+  sendMessage(channelId: ChannelId, data: Uint8Array): void {
+    const payload = new Uint8Array(5 + data.byteLength);
+    const view = new DataView(payload.buffer, payload.byteOffset, payload.byteLength);
+    view.setUint8(0, BinaryOpcode.MESSAGE_DATA);
+    view.setUint32(1, channelId, true);
+    payload.set(data, 5);
+    this.ws.send(payload);
   }
 
   private send(message: ClientMessage) {
