@@ -33,6 +33,9 @@
 
 - [Subscribe](#subscribe) (json)
 - [Unsubscribe](#unsubscribe) (json)
+- [Client Advertise](#client-advertise) (json)
+- [Client Unadvertise](#client-unadvertise) (json)
+- [Client Message Data](#client-message-data) (binary)
 
 ## JSON messages
 
@@ -46,7 +49,8 @@ Each JSON message must be an object containing a field called `op` which identif
 
 - `op`: string `"serverInfo"`
 - `name`: free-form information about the server which the client may optionally display or use for debugging purposes
-- `capabilities`: array of strings (reserved for future expansions to the spec)
+- `capabilities`: array of strings, informing the client about which optional features are supported
+  - `clientPublish`: Allow clients to advertise channels to send data messages to the server
 
 #### Example
 
@@ -54,7 +58,7 @@ Each JSON message must be an object containing a field called `op` which identif
 {
   "op": "serverInfo",
   "name": "example server",
-  "capabilities": []
+  "capabilities": ["clientPublish"]
 }
 ```
 
@@ -169,6 +173,67 @@ Informs the client that channels are no longer available.
   "subscriptionIds": [0, 1]
 }
 ```
+
+### Client Advertise
+
+- Informs the server about available client channels. Note that the client is only allowed to advertise channels if the server previously declared that it has the `clientPublish` [capability](#server-info).
+
+#### Fields
+
+- `op`: string `"advertise"`
+- `channels`: array of:
+  - `id`: number chosen by the client. The client may reuse ids that have previously been unadvertised.
+  - `topic`: string
+  - `encoding`: string
+  - `schemaName`: string
+
+#### Example
+
+```json
+{
+  "op": "advertise",
+  "channels": [
+    {
+      "id": 1,
+      "topic": "foo",
+      "encoding": "protobuf",
+      "schemaName": "ExampleMsg"
+    }
+  ]
+}
+```
+
+### Client Unadvertise
+
+- Informs the server that client channels are no longer available. Note that the client is only allowed to unadvertise channels if the server previously declared that it has the `clientPublish` [capability](#server-info).
+
+#### Fields
+
+- `op`: string `"unadvertise"`
+- `channelIds`: array of number, corresponding to previous [Client Advertise](#client-advertise)
+
+#### Example
+
+```json
+{
+  "op": "unadvertise",
+  "channelIds": [1, 2]
+}
+```
+
+### Client Publish
+
+- Sends a binary websocket message containing the raw messsage payload to the server. Note that the client is only allowed to publish messages if the server previously declared that it has the `clientPublish` [capability](#server-info).
+
+#### Message Data
+
+- Provides a raw message payload, encoded as advertised in the [Client Advertise](#client-advertise) operation.
+
+| Bytes           | Type    | Description     |
+| --------------- | ------- | --------------- |
+| 1               | opcode  | 0x01            |
+| 4               | uint32  | channel id      |
+| remaining bytes | uint8[] | message payload |
 
 ## Binary messages
 
