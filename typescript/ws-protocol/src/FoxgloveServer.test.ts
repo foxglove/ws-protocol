@@ -49,8 +49,8 @@ async function setupServerAndClient(server: FoxgloveServer) {
   server.on("subscribe", (chanId) => eventQueue.push(["subscribe", chanId]));
   server.on("unsubscribe", (chanId) => eventQueue.push(["unsubscribe", chanId]));
   server.on("error", (err) => eventQueue.push(["error", err]));
-  server.on("advertise", (channels) => eventQueue.push(["advertise", channels]));
-  server.on("unadvertise", (channelIds) => eventQueue.push(["unadvertise", channelIds]));
+  server.on("advertise", (event) => eventQueue.push(["advertise", event]));
+  server.on("unadvertise", (event) => eventQueue.push(["unadvertise", event]));
   server.on("message", (event) => eventQueue.push(["message", event]));
 
   const nextEvent = async () => await eventQueue.pop();
@@ -59,11 +59,11 @@ async function setupServerAndClient(server: FoxgloveServer) {
   const close = () => {
     msgQueue.cancelWait(new Error("Server was closed"));
     void msgQueue.pop().then((_msg) => {
-      throw new Error("Unexpected message");
+      throw new Error("Unexpected message on close");
     });
     eventQueue.cancelWait(new Error("Server was closed"));
     void eventQueue.pop().then((event) => {
-      throw new Error(`Unexpected event: ${event[0] as string}`);
+      throw new Error(`Unexpected event on close: ${event[0] as string}`);
     });
     ws.close();
     wss.close();
@@ -220,14 +220,14 @@ describe("FoxgloveServer", () => {
         new Error("Client sent message data for unknown channel 42"),
       ]);
 
-      await expect(nextEvent()).resolves.toEqual([
+      await expect(nextEvent()).resolves.toMatchObject([
         "advertise",
         { id: 42, topic: "foo", encoding: "bar", schemaName: "baz" },
       ]);
 
       const expectedPayload = new Uint8Array([2, 3, 4]);
       const msgEvent = await nextEvent();
-      expect(msgEvent).toEqual([
+      expect(msgEvent).toMatchObject([
         "message",
         {
           channel: { id: 42, topic: "foo", encoding: "bar", schemaName: "baz" },
@@ -240,10 +240,11 @@ describe("FoxgloveServer", () => {
         expect(msg.data.getUint8(i)).toEqual(expectedPayload[i]);
       }
 
-      await expect(nextEvent()).resolves.toEqual(["unadvertise", 1]);
-      await expect(nextEvent()).resolves.toEqual(["unadvertise", 42]);
-    } finally {
+      await expect(nextEvent()).resolves.toMatchObject(["unadvertise", { channelId: 42 }]);
+    } catch (ex) {
       close();
+      throw ex;
     }
+    close();
   });
 });

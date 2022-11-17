@@ -14,22 +14,29 @@ import {
   SubscriptionId,
 } from "./types";
 
-type EventTypes = {
-  error: (error: Error) => void;
-
-  subscribe: (channel: ChannelId) => void;
-  unsubscribe: (channel: ChannelId) => void;
-  message: (event: ClientPublish) => void;
-  advertise: (channel: ClientChannel) => void;
-  unadvertise: (channel: ChannelId) => void;
-};
-
 type ClientInfo = {
   name: string;
   connection: IWebSocket;
   subscriptions: Map<SubscriptionId, ChannelId>;
   subscriptionsByChannel: Map<ChannelId, Set<SubscriptionId>>;
   advertisements: Map<ChannelId, ClientChannel>;
+};
+
+type SingleClient = { client: ClientInfo };
+
+type EventTypes = {
+  error: (error: Error) => void;
+
+  /** The first subscription to this channel has been created. This channel should begin sending messages to subscribed clients. */
+  subscribe: (channel: ChannelId) => void;
+  /** The last subscription to this channel has been removed. This channel should stop sending messages. */
+  unsubscribe: (channel: ChannelId) => void;
+  /** A client-published message has been received. */
+  message: (event: ClientPublish & SingleClient) => void;
+  /** A client advertised a channel. */
+  advertise: (channel: ClientChannel & SingleClient) => void;
+  /** A client stopped advertising a channel. */
+  unadvertise: (channel: { channelId: ChannelId } & SingleClient) => void;
 };
 
 const log = createDebug("foxglove:server");
@@ -266,16 +273,34 @@ export default class FoxgloveServer {
 
       case "advertise":
         for (const channel of message.channels) {
+          if (client.advertisements.has(channel.id)) {
+            log(
+              "client %s tried to advertise channel %d, but it was already advertised",
+              client.name,
+              channel.id,
+            );
+            this.send(client.connection, {
+              op: "status",
+              level: StatusLevel.ERROR,
+              message: `Channel id ${channel.id} was already advertised; ignoring advertisement`,
+            });
+            continue;
+          }
+
           client.advertisements.set(channel.id, channel);
-          this.emitter.emit("advertise", channel);
+          this.emitter.emit("advertise", { client, ...channel });
         }
 
         break;
 
       case "unadvertise":
         for (const channelId of message.channelIds) {
-          client.advertisements.delete(channelId);
-          this.emitter.emit("unadvertise", channelId);
+          if (client.advertisements.has(channelId)) {
+            client.advertisements.delete(channelId);
+            this.emitter.emit("unadvertise", { client, channelId });
+          } else {
+            log("client %s unadvertised unknown channel %d", client.name, channelId);
+          }
         }
 
         break;
@@ -296,7 +321,7 @@ export default class FoxgloveServer {
         }
 
         const data = new DataView(message.buffer, message.byteOffset + 5, message.byteLength - 5);
-        this.emitter.emit("message", { channel, data });
+        this.emitter.emit("message", { client, channel, data });
         break;
       }
 
