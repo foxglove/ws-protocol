@@ -1,7 +1,7 @@
 import ConsumerQueue from "consumer-queue";
 import { AddressInfo, Data, WebSocket, WebSocketServer } from "ws";
 
-import { BinaryOpcode } from ".";
+import { BinaryOpcode, ClientPublish } from ".";
 import FoxgloveServer from "./FoxgloveServer";
 
 function uint32LE(n: number): Uint8Array {
@@ -49,17 +49,21 @@ async function setupServerAndClient(server: FoxgloveServer) {
   server.on("subscribe", (chanId) => eventQueue.push(["subscribe", chanId]));
   server.on("unsubscribe", (chanId) => eventQueue.push(["unsubscribe", chanId]));
   server.on("error", (err) => eventQueue.push(["error", err]));
+  server.on("advertise", (event) => eventQueue.push(["advertise", event]));
+  server.on("unadvertise", (event) => eventQueue.push(["unadvertise", event]));
+  server.on("message", (event) => eventQueue.push(["message", event]));
+
   const nextEvent = async () => await eventQueue.pop();
 
   const send = (data: Data) => ws.send(data);
   const close = () => {
     msgQueue.cancelWait(new Error("Server was closed"));
     void msgQueue.pop().then((_msg) => {
-      throw new Error("Unexpected message");
+      throw new Error("Unexpected message on close");
     });
     eventQueue.cancelWait(new Error("Server was closed"));
     void eventQueue.pop().then((event) => {
-      throw new Error(`Unexpected event: ${event[0] as string}`);
+      throw new Error(`Unexpected event on close: ${event[0] as string}`);
     });
     ws.close();
     wss.close();
@@ -75,7 +79,7 @@ describe("FoxgloveServer", () => {
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "serverInfo",
         name: "foo",
-        capabilities: [],
+        capabilities: ["clientPublish"],
       });
     } finally {
       close();
@@ -96,7 +100,7 @@ describe("FoxgloveServer", () => {
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "serverInfo",
         name: "foo",
-        capabilities: [],
+        capabilities: ["clientPublish"],
       });
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "advertise",
@@ -114,7 +118,7 @@ describe("FoxgloveServer", () => {
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "serverInfo",
         name: "foo",
-        capabilities: [],
+        capabilities: ["clientPublish"],
       });
 
       const chan = {
@@ -150,7 +154,7 @@ describe("FoxgloveServer", () => {
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "serverInfo",
         name: "foo",
-        capabilities: [],
+        capabilities: ["clientPublish"],
       });
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "advertise",
@@ -179,5 +183,68 @@ describe("FoxgloveServer", () => {
     } finally {
       close();
     }
+  });
+
+  it("receives advertisements and messages from clients", async () => {
+    const server = new FoxgloveServer({ name: "foo" });
+    const { send, nextJsonMessage, nextEvent, close } = await setupServerAndClient(server);
+
+    try {
+      await expect(nextJsonMessage()).resolves.toEqual({
+        op: "serverInfo",
+        name: "foo",
+        capabilities: ["clientPublish"],
+      });
+
+      // client message, this will be ignored since it is not preceded by an "advertise"
+      const msg1 = new Uint8Array([1, 42, 0, 0, 0, 1, 2, 3]);
+      send(msg1);
+
+      // client advertisement
+      send(
+        JSON.stringify({
+          op: "advertise",
+          channels: [{ id: 42, topic: "foo", encoding: "bar", schemaName: "baz" }],
+        }),
+      );
+
+      // client message
+      const msg2 = new Uint8Array([1, 42, 0, 0, 0, 2, 3, 4]);
+      send(msg2);
+
+      // client unadvertisement
+      send(JSON.stringify({ op: "unadvertise", channelIds: [1, 42] }));
+
+      await expect(nextEvent()).resolves.toEqual([
+        "error",
+        new Error("Client sent message data for unknown channel 42"),
+      ]);
+
+      await expect(nextEvent()).resolves.toMatchObject([
+        "advertise",
+        { id: 42, topic: "foo", encoding: "bar", schemaName: "baz" },
+      ]);
+
+      const expectedPayload = new Uint8Array([2, 3, 4]);
+      const msgEvent = await nextEvent();
+      expect(msgEvent).toMatchObject([
+        "message",
+        {
+          channel: { id: 42, topic: "foo", encoding: "bar", schemaName: "baz" },
+          data: new DataView(expectedPayload.buffer),
+        },
+      ]);
+      const msg = msgEvent[1] as ClientPublish;
+      expect(msg.data.byteLength).toEqual(expectedPayload.byteLength);
+      for (let i = 0; i < expectedPayload.byteLength; i++) {
+        expect(msg.data.getUint8(i)).toEqual(expectedPayload[i]);
+      }
+
+      await expect(nextEvent()).resolves.toMatchObject(["unadvertise", { channelId: 42 }]);
+    } catch (ex) {
+      close();
+      throw ex;
+    }
+    close();
   });
 });

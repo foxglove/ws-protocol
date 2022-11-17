@@ -1,5 +1,9 @@
 // -*- jsonc -*-
 {
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
 
   "typescript.tsdk": "node_modules/typescript/lib",
@@ -23,7 +27,9 @@
   "search.exclude": {
     "**/*_pb2.py*": true,
     "**/*.pb.cc": true,
-    "**/*.pb.h": true
+    "**/*.pb.h": true,
+    "**/node_modules/": true,
+    "**/dist/": true
   },
 
   // https://github.com/microsoft/vscode-cpptools/issues/722

@@ -3,25 +3,42 @@ import { EventEmitter, EventNames, EventListener } from "eventemitter3";
 
 import { ChannelId, StatusLevel } from ".";
 import {
-  Channel,
-  ClientMessage,
-  SubscriptionId,
-  ServerMessage,
   BinaryOpcode,
+  Channel,
+  ClientBinaryOpcode,
+  ClientChannel,
+  ClientChannelId,
+  ClientMessage,
+  ClientPublish,
   IWebSocket,
+  ServerCapability,
+  ServerMessage,
+  SubscriptionId,
 } from "./types";
-
-type EventTypes = {
-  subscribe: (channel: ChannelId) => void;
-  unsubscribe: (channel: ChannelId) => void;
-  error: (error: Error) => void;
-};
 
 type ClientInfo = {
   name: string;
   connection: IWebSocket;
   subscriptions: Map<SubscriptionId, ChannelId>;
   subscriptionsByChannel: Map<ChannelId, Set<SubscriptionId>>;
+  advertisements: Map<ClientChannelId, ClientChannel>;
+};
+
+type SingleClient = { client: ClientInfo };
+
+type EventTypes = {
+  error: (error: Error) => void;
+
+  /** The first subscription to this channel has been created. This channel should begin sending messages to subscribed clients. */
+  subscribe: (channel: ChannelId) => void;
+  /** The last subscription to this channel has been removed. This channel should stop sending messages. */
+  unsubscribe: (channel: ChannelId) => void;
+  /** A client-published message has been received. */
+  message: (event: ClientPublish & SingleClient) => void;
+  /** A client advertised a channel. */
+  advertise: (channel: ClientChannel & SingleClient) => void;
+  /** A client stopped advertising a channel. */
+  unadvertise: (channel: { channelId: ChannelId } & SingleClient) => void;
 };
 
 const log = createDebug("foxglove:server");
@@ -114,15 +131,22 @@ export default class FoxgloveServer {
    */
   handleConnection(connection: IWebSocket, name: string): void {
     log("client %s connected", name);
+    connection.binaryType = "arraybuffer";
+
     const client: ClientInfo = {
       name,
       connection,
       subscriptions: new Map(),
       subscriptionsByChannel: new Map(),
+      advertisements: new Map(),
     };
     this.clients.set(connection, client);
 
-    this.send(connection, { op: "serverInfo", name: this.name, capabilities: [] });
+    this.send(connection, {
+      op: "serverInfo",
+      name: this.name,
+      capabilities: [ServerCapability.clientPublish],
+    });
     if (this.channels.size > 0) {
       this.send(connection, { op: "advertise", channels: Array.from(this.channels.values()) });
     }
@@ -145,17 +169,40 @@ export default class FoxgloveServer {
     };
 
     connection.onmessage = (event: MessageEvent<ArrayBuffer | string>) => {
-      if (typeof event.data !== "string") {
-        throw new Error(`Expected text message, got ${typeof event.data}`);
-      }
-      const message = JSON.parse(event.data) as unknown;
-      if (typeof message !== "object" || message == undefined) {
-        throw new Error(`Expected JSON object, got ${typeof message}`);
-      }
-      try {
-        this.handleClientMessage(client, message as ClientMessage);
-      } catch (error) {
-        this.emitter.emit("error", error as Error);
+      if (typeof event.data === "string") {
+        // TEXT (JSON) message handling
+        let message: unknown;
+        try {
+          message = JSON.parse(event.data) as unknown;
+        } catch (error) {
+          this.emitter.emit(
+            "error",
+            new Error(`Invalid JSON message from ${name}: ${(error as Error).message}`),
+          );
+          return;
+        }
+
+        if (typeof message !== "object" || message == undefined) {
+          this.emitter.emit("error", new Error(`Expected JSON object, got ${typeof message}`));
+          return;
+        }
+
+        try {
+          this.handleClientMessage(client, message as ClientMessage);
+        } catch (error) {
+          this.emitter.emit("error", error as Error);
+        }
+      } else if (event.data instanceof ArrayBuffer) {
+        // BINARY message handling
+        const message = new DataView(event.data);
+
+        try {
+          this.handleClientBinaryMessage(client, message);
+        } catch (error) {
+          this.emitter.emit("error", error as Error);
+        }
+      } else {
+        this.emitter.emit("error", new Error(`Unexpected message type ${typeof event.data}`));
       }
     };
   }
@@ -236,8 +283,66 @@ export default class FoxgloveServer {
 
         break;
 
+      case "advertise":
+        for (const channel of message.channels) {
+          if (client.advertisements.has(channel.id)) {
+            log(
+              "client %s tried to advertise channel %d, but it was already advertised",
+              client.name,
+              channel.id,
+            );
+            this.send(client.connection, {
+              op: "status",
+              level: StatusLevel.ERROR,
+              message: `Channel id ${channel.id} was already advertised; ignoring advertisement`,
+            });
+            continue;
+          }
+
+          client.advertisements.set(channel.id, channel);
+          this.emitter.emit("advertise", { client, ...channel });
+        }
+
+        break;
+
+      case "unadvertise":
+        for (const channelId of message.channelIds) {
+          if (client.advertisements.has(channelId)) {
+            client.advertisements.delete(channelId);
+            this.emitter.emit("unadvertise", { client, channelId });
+          } else {
+            log("client %s unadvertised unknown channel %d", client.name, channelId);
+          }
+        }
+
+        break;
+
       default:
         throw new Error(`Unrecognized client opcode: ${(message as { op: string }).op}`);
+    }
+  }
+
+  private handleClientBinaryMessage(client: ClientInfo, message: DataView): void {
+    if (message.byteLength < 5) {
+      throw new Error(`Invalid binary message length ${message.byteLength}`);
+    }
+
+    const opcode = message.getUint8(0);
+    switch (opcode) {
+      case ClientBinaryOpcode.MESSAGE_DATA: {
+        const channelId = message.getUint32(1, true);
+        const channel = client.advertisements.get(channelId);
+        if (!channel) {
+          throw new Error(`Client sent message data for unknown channel ${channelId}`);
+        }
+
+        const data = new DataView(message.buffer, message.byteOffset + 5, message.byteLength - 5);
+        this.emitter.emit("message", { client, channel, data });
+        break;
+      }
+
+      default:
+        throw new Error(`Unrecognized client binary opcode: ${opcode}`);
     }
   }
 
