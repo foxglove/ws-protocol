@@ -3,13 +3,14 @@ import { EventEmitter, EventNames, EventListener } from "eventemitter3";
 import { ChannelId, MessageData, ServerInfo, StatusMessage } from ".";
 import { parseServerMessage } from "./parse";
 import {
-  Channel,
-  ClientMessage,
-  SubscriptionId,
-  ServerMessage,
   BinaryOpcode,
-  IWebSocket,
+  Channel,
+  ClientBinaryOpcode,
   ClientChannel,
+  ClientMessage,
+  IWebSocket,
+  ServerMessage,
+  SubscriptionId,
 } from "./types";
 
 type EventTypes = {
@@ -130,7 +131,7 @@ export default class FoxgloveClient {
   sendMessage(channelId: ChannelId, data: Uint8Array): void {
     const payload = new Uint8Array(5 + data.byteLength);
     const view = new DataView(payload.buffer, payload.byteOffset, payload.byteLength);
-    view.setUint8(0, BinaryOpcode.MESSAGE_DATA);
+    view.setUint8(0, ClientBinaryOpcode.MESSAGE_DATA);
     view.setUint32(1, channelId, true);
     payload.set(data, 5);
     this.ws.send(payload);

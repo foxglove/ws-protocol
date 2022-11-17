@@ -1,6 +1,9 @@
 export enum BinaryOpcode {
   MESSAGE_DATA = 1,
 }
+export enum ClientBinaryOpcode {
+  MESSAGE_DATA = 1,
+}
 export enum StatusLevel {
   INFO = 0,
   WARNING = 1,
@@ -11,6 +14,9 @@ export enum ServerCapability {
 }
 
 export type ChannelId = number;
+export type ClientChannelId = number;
+export type SubscriptionId = number;
+
 export type Channel = {
   id: ChannelId;
   topic: string;
@@ -18,7 +24,6 @@ export type Channel = {
   schemaName: string;
   schema: string;
 };
-export type SubscriptionId = number;
 
 export type Subscribe = {
   op: "subscribe";
@@ -33,7 +38,7 @@ export type Unsubscribe = {
 };
 
 export type ClientChannel = {
-  id: ChannelId;
+  id: ClientChannelId;
   topic: string;
   encoding: string;
   schemaName: string;
@@ -44,7 +49,7 @@ export type ClientAdvertise = {
 };
 export type ClientUnadvertise = {
   op: "unadvertise";
-  channelIds: ChannelId[];
+  channelIds: ClientChannelId[];
 };
 
 export type ClientMessage = Subscribe | Unsubscribe | ClientAdvertise | ClientUnadvertise;

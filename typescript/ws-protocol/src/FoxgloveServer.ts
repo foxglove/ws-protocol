@@ -5,7 +5,9 @@ import { ChannelId, StatusLevel } from ".";
 import {
   BinaryOpcode,
   Channel,
+  ClientBinaryOpcode,
   ClientChannel,
+  ClientChannelId,
   ClientMessage,
   ClientPublish,
   IWebSocket,
@@ -19,7 +21,7 @@ type ClientInfo = {
   connection: IWebSocket;
   subscriptions: Map<SubscriptionId, ChannelId>;
   subscriptionsByChannel: Map<ChannelId, Set<SubscriptionId>>;
-  advertisements: Map<ChannelId, ClientChannel>;
+  advertisements: Map<ClientChannelId, ClientChannel>;
 };
 
 type SingleClient = { client: ClientInfo };
@@ -169,7 +171,17 @@ export default class FoxgloveServer {
     connection.onmessage = (event: MessageEvent<ArrayBuffer | string>) => {
       if (typeof event.data === "string") {
         // TEXT (JSON) message handling
-        const message = JSON.parse(event.data) as unknown;
+        let message: unknown;
+        try {
+          message = JSON.parse(event.data) as unknown;
+        } catch (error) {
+          this.emitter.emit(
+            "error",
+            new Error(`Invalid JSON message from ${name}: ${(error as Error).message}`),
+          );
+          return;
+        }
+
         if (typeof message !== "object" || message == undefined) {
           this.emitter.emit("error", new Error(`Expected JSON object, got ${typeof message}`));
           return;
@@ -311,9 +323,13 @@ export default class FoxgloveServer {
   }
 
   private handleClientBinaryMessage(client: ClientInfo, message: DataView): void {
+    if (message.byteLength < 5) {
+      throw new Error(`Invalid binary message length ${message.byteLength}`);
+    }
+
     const opcode = message.getUint8(0);
     switch (opcode) {
-      case BinaryOpcode.MESSAGE_DATA: {
+      case ClientBinaryOpcode.MESSAGE_DATA: {
         const channelId = message.getUint32(1, true);
         const channel = client.advertisements.get(channelId);
         if (!channel) {
