@@ -13,7 +13,7 @@ $ pip install foxglove-websocket
 This package includes example servers demonstrating how to use JSON and Protobuf data. To install additional dependencies required for the examples, run:
 
 ```
-$ pip install foxglove-websocket[examples]
+$ pip install 'foxglove-websocket[examples]'
 ```
 
 Run a simple example server that publishes messages on a single `example_msg` topic:
