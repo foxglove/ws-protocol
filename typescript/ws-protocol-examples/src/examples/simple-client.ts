@@ -8,10 +8,11 @@ import WebSocket from "ws";
 const log = Debug("foxglove:simple-client");
 Debug.enable("foxglove:*");
 
-async function main(host: string) {
-  log(`Client connecting to ws://${host}`);
+async function main(url: string) {
+  const address = url.startsWith("ws://") || url.startsWith("wss://") ? url : `ws://${url}`;
+  log(`Client connecting to ${address}`);
   const client = new FoxgloveClient({
-    ws: new WebSocket(`ws://${host}`, [FoxgloveClient.SUPPORTED_SUBPROTOCOL]),
+    ws: new WebSocket(address, [FoxgloveClient.SUPPORTED_SUBPROTOCOL]),
   });
   const deserializers = new Map<SubscriptionId, (data: DataView) => unknown>();
   client.on("error", (error) => {
@@ -50,5 +51,5 @@ async function main(host: string) {
 
 export default new Command("simple-client")
   .description("connect to a server and subscribe to all messages")
-  .argument("[host]", "host:port", "localhost:8765")
+  .argument("[url]", "ws(s)://host:port", "ws://localhost:8765")
   .action(main);
