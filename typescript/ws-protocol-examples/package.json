@@ -19,7 +19,7 @@
     "email": "support@foxglove.dev"
   },
   "engines": {
-    "node": ">= 14"
+    "node": ">= 14 <18"
   },
   "homepage": "https://foxglove.dev/",
   "module": "dist/esm/ws-protocol-examples/src/index.js",
