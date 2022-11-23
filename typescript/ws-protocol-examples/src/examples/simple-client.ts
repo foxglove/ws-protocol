@@ -24,7 +24,7 @@ async function main(url: string) {
       if (channel.encoding === "json") {
         const textDecoder = new TextDecoder();
         const subId = client.subscribe(channel.id);
-        deserializers.set(subId, (data) => JSON.parse(textDecoder.decode(data)));
+        deserializers.set(subId, (data) => JSON.parse(textDecoder.decode(data)) as unknown);
       } else if (channel.encoding === "protobuf") {
         const root = protobufjs.Root.fromDescriptor(
           FileDescriptorSet.decode(Buffer.from(channel.schema, "base64")),
