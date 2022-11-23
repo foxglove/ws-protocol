@@ -4,7 +4,7 @@ import { Command, Option } from "commander";
 import Debug from "debug";
 import WebSocket from "ws";
 
-const log = Debug("foxglove:simple-client");
+const log = Debug("foxglove:publish-client");
 Debug.enable("foxglove:*");
 
 let running = true;
@@ -13,7 +13,7 @@ process.on("SIGINT", () => {
   running = false;
 });
 
-async function main(url: string, format: "json" | "ros1") {
+async function main(url: string, args: { encoding: "json" | "ros1" }) {
   const address = url.startsWith("ws://") || url.startsWith("wss://") ? url : `ws://${url}`;
   log(`Client connecting to ${address}`);
   const client = new FoxgloveClient({
@@ -24,9 +24,9 @@ async function main(url: string, format: "json" | "ros1") {
     throw error;
   });
 
-  if (format === "json") {
+  if (args.encoding === "json") {
     await sendJsonMessages(client);
-  } else if (format === "ros1") {
+  } else if (args.encoding === "ros1") {
     await sendRos1Messages(client);
   }
 
@@ -62,7 +62,7 @@ function delay(durationMs: number) {
 export default new Command("publish-client")
   .description("connect to a server, advertise a channel, and publish to it")
   .addOption(
-    new Option("-f, --format <format>", "message encoding format")
+    new Option("-e, --encoding <encoding>", "message encoding")
       .choices(["json", "ros1"])
       .default("json"),
   )

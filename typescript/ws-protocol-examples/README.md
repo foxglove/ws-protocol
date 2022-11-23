@@ -35,12 +35,18 @@ To see data from any server, open [Foxglove Studio](https://studio.foxglove.dev?
 <img width="500" alt="Foxglove Studio displaying memory and CPU usage from the system monitor example" src="https://user-images.githubusercontent.com/14237/145313065-85c05645-6b29-4eb2-a498-849c83f8792d.png">
 <img width="500" alt="Foxglove Studio displaying images from the image server example" src="https://user-images.githubusercontent.com/14237/146500927-4a1408c7-0725-49e7-8185-71b0280c0a8b.png">
 
-## Example client
+## Example clients
 
 Run a simple example client that subscribes to messages with the `protobuf` or `json` encoding:
 
 ```
-$ npx @foxglove/ws-protocol-examples@latest simple-client localhost:8765
+$ npx @foxglove/ws-protocol-examples@latest simple-client ws://localhost:8765
+```
+
+Run a client that advertises the `/chatter` topic and publishes messages to it with `json` or `ros1` encoding:
+
+```
+$ npx @foxglove/ws-protocol-examples@latest publish-client -e json ws://localhost:8765
 ```
 
 ## Development
