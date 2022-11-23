@@ -1,6 +1,6 @@
 {
   "name": "@foxglove/ws-protocol-examples",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "Foxglove WebSocket protocol examples",
   "keywords": [
     "foxglove",
@@ -19,7 +19,7 @@
     "email": "support@foxglove.dev"
   },
   "engines": {
-    "node": ">= 14"
+    "node": ">= 14 <18"
   },
   "homepage": "https://foxglove.dev/",
   "module": "dist/esm/ws-protocol-examples/src/index.js",
