@@ -1,4 +1,5 @@
 import { MessageWriter as Ros1MessageWriter } from "@foxglove/rosmsg-serialization";
+import { MessageWriter as Ros2MessageWriter } from "@foxglove/rosmsg2-serialization";
 import { FoxgloveClient } from "@foxglove/ws-protocol";
 import { Command, Option } from "commander";
 import Debug from "debug";
@@ -13,7 +14,7 @@ process.on("SIGINT", () => {
   running = false;
 });
 
-async function main(url: string, args: { encoding: "json" | "ros1" }) {
+async function main(url: string, args: { encoding: "json" | "ros1" | "cdr" }) {
   const address = url.startsWith("ws://") || url.startsWith("wss://") ? url : `ws://${url}`;
   log(`Client connecting to ${address}`);
   const client = new FoxgloveClient({
@@ -28,6 +29,8 @@ async function main(url: string, args: { encoding: "json" | "ros1" }) {
     await sendJsonMessages(client);
   } else if (args.encoding === "ros1") {
     await sendRos1Messages(client);
+  } else if (args.encoding === "cdr") {
+    await sendRos2Messages(client);
   }
 
   client.close();
@@ -54,6 +57,17 @@ async function sendRos1Messages(client: FoxgloveClient) {
   }
 }
 
+async function sendRos2Messages(client: FoxgloveClient) {
+  const channelId = client.advertise("/chatter", "cdr", "std_msgs/msg/String");
+  const writer = new Ros2MessageWriter([{ definitions: [{ name: "data", type: "string" }] }]);
+  while (running) {
+    const data = `hello world ${Date.now()}`;
+    const message = writer.writeMessage({ data });
+    client.sendMessage(channelId, message);
+    await delay(1000);
+  }
+}
+
 // eslint-disable-next-line @typescript-eslint/promise-function-async
 function delay(durationMs: number) {
   return new Promise((resolve) => setTimeout(resolve, durationMs));
@@ -63,7 +77,7 @@ export default new Command("publish-client")
   .description("connect to a server, advertise a channel, and publish to it")
   .addOption(
     new Option("-e, --encoding <encoding>", "message encoding")
-      .choices(["json", "ros1"])
+      .choices(["json", "ros1", "cdr"])
       .default("json"),
   )
   .argument("[url]", "ws(s)://host:port", "ws://localhost:8765")
