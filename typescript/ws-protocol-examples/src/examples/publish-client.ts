@@ -25,16 +25,18 @@ async function main(url: string, args: { encoding: "json" | "ros1" | "cdr" }) {
     throw error;
   });
 
-  client.on("open", async () => {
-    if (args.encoding === "json") {
-      await sendJsonMessages(client);
-    } else if (args.encoding === "ros1") {
-      await sendRos1Messages(client);
-    } else if (args.encoding === "cdr") {
-      await sendRos2Messages(client);
-    }
+  client.on("open", () => {
+    (async () => {
+      if (args.encoding === "json") {
+        await sendJsonMessages(client);
+      } else if (args.encoding === "ros1") {
+        await sendRos1Messages(client);
+      } else if (args.encoding === "cdr") {
+        await sendRos2Messages(client);
+      }
 
-    client.close();
+      client.close();
+    })();
   });
 }
 
