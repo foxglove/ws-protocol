@@ -14,6 +14,11 @@
 #include <unordered_set>
 #include <vector>
 
+// Windows badly defines a lot of stuff we'll never use. Undefine it.
+#ifdef _WIN32
+#undef ERROR  // override (really stupid) wingdi.h standard definition
+#endif
+
 namespace foxglove::websocket {
 
 using json = nlohmann::json;
@@ -174,10 +179,7 @@ inline void Server::handleConnectionOpened(ConnHandle hdl) {
   _server.get_alog().write(
     websocketpp::log::alevel::app,
     "Client " + con->get_remote_endpoint() + " connected via " + con->get_resource());
-  _clients.emplace(hdl, ClientInfo{
-                          .name = con->get_remote_endpoint(),
-                          .handle = hdl,
-                        });
+  _clients.emplace(hdl, ClientInfo{con->get_remote_endpoint(), hdl});
 
   con->send(json({
                    {"op", "serverInfo"},
