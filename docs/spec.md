@@ -28,6 +28,8 @@
 - [Advertise](#advertise) (json)
 - [Unadvertise](#unadvertise) (json)
 - [Message Data](#message-data) (binary)
+- [Parameter Values](#parameter-values) (json)
+- [Parameter Updates](#parameter-updates) (json)
 
 ### Sent by client
 
@@ -36,6 +38,10 @@
 - [Client Advertise](#client-advertise) (json)
 - [Client Unadvertise](#client-unadvertise) (json)
 - [Client Message Data](#client-message-data) (binary)
+- [Get Parameters](#get-parameters) (json)
+- [Set Parameters](#set-parameters) (json)
+- [Subscribe Parameter Update](#subscribe-parameter-update) (json)
+- [Unsubscribe Parameter Update](#unsubscribe-parameter-update) (json)
 
 ## JSON messages
 
@@ -51,6 +57,7 @@ Each JSON message must be an object containing a field called `op` which identif
 - `name`: free-form information about the server which the client may optionally display or use for debugging purposes
 - `capabilities`: array of strings, informing the client about which optional features are supported
   - `clientPublish`: Allow clients to advertise channels to send data messages to the server
+  - `parameters`: Allow clients to get & set parameters
 
 #### Example
 
@@ -129,6 +136,66 @@ Informs the client that channels are no longer available.
 {
   "op": "unadvertise",
   "channelIds": [1, 2]
+}
+```
+
+### Parameter Values
+
+This message is sent as a response to the client's [Get Parameters request](#get-parameters). Only supported if the server declares the `parameters` [capability](#server-info).
+
+#### Fields
+
+- `op`: string `"parameterValues"`
+- `parameters`: array of:
+  - `name`: string, name of the parameter
+  - `value`: number | boolean | string | number[] | boolean[] | string[]
+  - `meta`: object, only given if requested with `includeMetaInfo: true`
+    - `type`: bool | int64 | float64 | string | byte[] | bool[] | int64[] | float64[] | string[]
+
+#### Example
+
+```json
+{
+  "op": "parameterValues",
+  "parameters": [
+    { "name": "/int_param", "value": 2, "meta": { "type": "int64" } },
+    { "name": "/float_param", "value": 1.2, "meta": { "type": "float64" } },
+    { "name": "/string_param", "value": "foo", "meta": { "type": "string" } },
+    {
+      "name": "/node/nested_ints_param",
+      "value": [1, 2, 3],
+      "meta": { "type": "int64[]" }
+    }
+  ]
+}
+```
+
+### Parameter Updates
+
+Informs the client about updates of parameters that the client previously [subscribed](#subscribe-parameter-update) to. Only supported if the server declares the `parameters` [capability](#server-info).
+
+#### Fields
+
+- `op`: string `"parameterUpdates"`
+- `parameters`: array of:
+  - `name`: string
+  - `newValue`: number | boolean | string | number[] | boolean[] | string[]
+  - `oldValue`: number | boolean | string | number[] | boolean[] | string[]
+
+#### Example
+
+```json
+{
+  "op": "parameterUpdates",
+  "parameters": [
+    { "name": "int_param", "newValue": 3, "oldValue": 2 },
+    { "name": "float_param", "newValue": 1.0, "oldValue": 1.2 },
+    {
+      "name": "/node/nested_ints_param",
+      "newValue": [1, 2],
+      "oldValue": [1, 2, 3]
+    }
+  ]
 }
 ```
 
@@ -234,6 +301,101 @@ Informs the client that channels are no longer available.
 | 1               | opcode  | 0x01            |
 | 4               | uint32  | channel id      |
 | remaining bytes | uint8[] | message payload |
+
+### Get Parameters
+
+Request one or more parameters. Only supported if the server previously declared that it has the `parameters` [capability](#server-info).
+
+#### Fields
+
+- `op`: string `"getParameters"`
+- `parameterNames`: string[], leave empty to retrieve all currently set parameters
+- `includeMetaInfo`: boolean, set to true to retrieve additional meta information for each parameter
+<!-- - `subscribe`: boolean, set to true to subscribe to parameter updates -->
+
+#### Example
+
+```json
+{
+  "op": "getParameters",
+  "parameterNames": [
+    "/int_param",
+    "/float_param",
+    "/string_param",
+    "/node/nested_ints_param"
+  ],
+  "includeMetaInfo": true
+}
+```
+
+### Set Parameters
+
+Set one or more parameters. Only supported if the server previously declared that it has the `parameters` [capability](#server-info).
+
+#### Fields
+
+- `op`: string `"setParameters"`
+- `parameters`: array of:
+  - `name`: string
+  - `value`: number | boolean | string | number[] | boolean[] | string[]
+
+#### Example
+
+```json
+{
+  "op": "setParameters",
+  "parameters": [
+    { "name": "/int_param", "value": 3 },
+    { "name": "/float_param", "value": 4.1 }
+  ]
+}
+```
+
+### Subscribe Parameter Update
+
+Subscribe to parameter updates. Only supported if the server previously declared that it has the `parameters` [capability](#server-info).
+
+#### Fields
+
+- `op`: string `"subscribeParameterUdpates"`
+- `parameterNames`: string[], leave empty to subscribe to all currently known parameters
+
+#### Example
+
+```json
+{
+  "op": "subscribeParameterUdpates",
+  "parameterNames": [
+    "/int_param",
+    "/float_param",
+    "/string_param",
+    "/node/nested_ints_param"
+  ]
+}
+```
+
+### Unsubscribe Parameter Update
+
+Unsubscribe from parameter updates. Only supported if the server previously declared that it has the `parameters` [capability](#server-info).
+
+#### Fields
+
+- `op`: string `"unsubscribeParameterUdpates"`
+- `parameterNames`: string[], leave empty to unsubscribe from all parameter updates
+
+#### Example
+
+```json
+{
+  "op": "unsubscribeParameterUdpates",
+  "parameterNames": [
+    "/int_param",
+    "/float_param",
+    "/string_param",
+    "/node/nested_ints_param"
+  ]
+}
+```
 
 ## Binary messages
 
