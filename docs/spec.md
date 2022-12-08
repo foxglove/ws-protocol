@@ -58,6 +58,7 @@ Each JSON message must be an object containing a field called `op` which identif
 - `capabilities`: array of strings, informing the client about which optional features are supported
   - `clientPublish`: Allow clients to advertise channels to send data messages to the server
   - `parameters`: Allow clients to get & set parameters
+  - `parameterSubscribe`: Allow clients to subscribe to parameter changes
 
 #### Example
 
@@ -141,7 +142,7 @@ Informs the client that channels are no longer available.
 
 ### Parameter Values
 
-This message is sent as a response to the client's [Get Parameters request](#get-parameters). Only supported if the server declares the `parameters` [capability](#server-info).
+Informs the client about parameters. The server may send this message arbitrarily or as a response to the client's [Get Parameters request](#get-parameters). Only supported if the server declares the `parameters` [capability](#server-info).
 
 #### Fields
 
@@ -149,8 +150,6 @@ This message is sent as a response to the client's [Get Parameters request](#get
 - `parameters`: array of:
   - `name`: string, name of the parameter
   - `value`: number | boolean | string | number[] | boolean[] | string[]
-  - `meta`: object, only given if requested with `includeMetaInfo: true`
-    - `type`: bool | int64 | float64 | string | byte[] | bool[] | int64[] | float64[] | string[]
 
 #### Example
 
@@ -158,29 +157,24 @@ This message is sent as a response to the client's [Get Parameters request](#get
 {
   "op": "parameterValues",
   "parameters": [
-    { "name": "/int_param", "value": 2, "meta": { "type": "int64" } },
-    { "name": "/float_param", "value": 1.2, "meta": { "type": "float64" } },
-    { "name": "/string_param", "value": "foo", "meta": { "type": "string" } },
-    {
-      "name": "/node/nested_ints_param",
-      "value": [1, 2, 3],
-      "meta": { "type": "int64[]" }
-    }
+    { "name": "/int_param", "value": 2 },
+    { "name": "/float_param", "value": 1.2 },
+    { "name": "/string_param", "value": "foo" },
+    { "name": "/node/nested_ints_param", "value": [1, 2, 3] }
   ]
 }
 ```
 
 ### Parameter Updates
 
-Informs the client about updates of parameters that the client previously [subscribed](#subscribe-parameter-update) to. Only supported if the server declares the `parameters` [capability](#server-info).
+Informs the client about updates of parameters that the client previously [subscribed](#subscribe-parameter-update) to. Only supported if the server declares the `parameterSubscribe` [capability](#server-info).
 
 #### Fields
 
 - `op`: string `"parameterUpdates"`
 - `parameters`: array of:
   - `name`: string
-  - `newValue`: number | boolean | string | number[] | boolean[] | string[]
-  - `oldValue`: number | boolean | string | number[] | boolean[] | string[]
+  - `value`: number | boolean | string | number[] | boolean[] | string[]
 
 #### Example
 
@@ -188,13 +182,8 @@ Informs the client about updates of parameters that the client previously [subsc
 {
   "op": "parameterUpdates",
   "parameters": [
-    { "name": "int_param", "newValue": 3, "oldValue": 2 },
-    { "name": "float_param", "newValue": 1.0, "oldValue": 1.2 },
-    {
-      "name": "/node/nested_ints_param",
-      "newValue": [1, 2],
-      "oldValue": [1, 2, 3]
-    }
+    { "name": "/int_param", "value": 3 },
+    { "name": "/float_param", "value": 3.1 }
   ]
 }
 ```
@@ -310,8 +299,6 @@ Request one or more parameters. Only supported if the server previously declared
 
 - `op`: string `"getParameters"`
 - `parameterNames`: string[], leave empty to retrieve all currently set parameters
-- `includeMetaInfo`: boolean, set to true to retrieve additional meta information for each parameter
-<!-- - `subscribe`: boolean, set to true to subscribe to parameter updates -->
 
 #### Example
 
@@ -323,8 +310,7 @@ Request one or more parameters. Only supported if the server previously declared
     "/float_param",
     "/string_param",
     "/node/nested_ints_param"
-  ],
-  "includeMetaInfo": true
+  ]
 }
 ```
 
@@ -353,7 +339,9 @@ Set one or more parameters. Only supported if the server previously declared tha
 
 ### Subscribe Parameter Update
 
-Subscribe to parameter updates. Only supported if the server previously declared that it has the `parameters` [capability](#server-info).
+Subscribe to parameter updates. Only supported if the server previously declared that it has the `parameterSubscribe` [capability](#server-info).
+
+Note that parameters can be subscribed at most once. Hence, this operation will ignore parameters that are already subscribed. Use [unsubscribeParameterUdpates](#unsubscribe-parameter-update) to unsubscribe from existing parameter subscriptions.
 
 #### Fields
 
@@ -376,7 +364,7 @@ Subscribe to parameter updates. Only supported if the server previously declared
 
 ### Unsubscribe Parameter Update
 
-Unsubscribe from parameter updates. Only supported if the server previously declared that it has the `parameters` [capability](#server-info).
+Unsubscribe from parameter updates. Only supported if the server previously declared that it has the `parameterSubscribe` [capability](#server-info).
 
 #### Fields
 
