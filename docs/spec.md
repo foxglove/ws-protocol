@@ -29,7 +29,6 @@
 - [Unadvertise](#unadvertise) (json)
 - [Message Data](#message-data) (binary)
 - [Parameter Values](#parameter-values) (json)
-- [Parameter Updates](#parameter-updates) (json)
 
 ### Sent by client
 
@@ -58,7 +57,7 @@ Each JSON message must be an object containing a field called `op` which identif
 - `capabilities`: array of strings, informing the client about which optional features are supported
   - `clientPublish`: Allow clients to advertise channels to send data messages to the server
   - `parameters`: Allow clients to get & set parameters
-  - `parameterSubscribe`: Allow clients to subscribe to parameter changes
+  - `parametersSubscribe`: Allow clients to subscribe to parameter changes
 
 #### Example
 
@@ -161,29 +160,6 @@ Informs the client about parameters. The server may send this message arbitraril
     { "name": "/float_param", "value": 1.2 },
     { "name": "/string_param", "value": "foo" },
     { "name": "/node/nested_ints_param", "value": [1, 2, 3] }
-  ]
-}
-```
-
-### Parameter Updates
-
-Informs the client about updates of parameters that the client previously [subscribed](#subscribe-parameter-update) to. Only supported if the server declares the `parameterSubscribe` [capability](#server-info).
-
-#### Fields
-
-- `op`: string `"parameterUpdates"`
-- `parameters`: array of:
-  - `name`: string
-  - `value`: number | boolean | string | number[] | boolean[] | string[]
-
-#### Example
-
-```json
-{
-  "op": "parameterUpdates",
-  "parameters": [
-    { "name": "/int_param", "value": 3 },
-    { "name": "/float_param", "value": 3.1 }
   ]
 }
 ```
@@ -339,7 +315,7 @@ Set one or more parameters. Only supported if the server previously declared tha
 
 ### Subscribe Parameter Update
 
-Subscribe to parameter updates. Only supported if the server previously declared that it has the `parameterSubscribe` [capability](#server-info).
+Subscribe to parameter updates. Only supported if the server previously declared that it has the `parametersSubscribe` [capability](#server-info).
 
 Sending `subscribeParameterUpdates` multiple times will append the list of parameter subscriptions, not replace them. Note that parameters can be subscribed at most once. Hence, this operation will ignore parameters that are already subscribed. Use [unsubscribeParameterUdpates](#unsubscribe-parameter-update) to unsubscribe from existing parameter subscriptions.
 
@@ -364,7 +340,7 @@ Sending `subscribeParameterUpdates` multiple times will append the list of param
 
 ### Unsubscribe Parameter Update
 
-Unsubscribe from parameter updates. Only supported if the server previously declared that it has the `parameterSubscribe` [capability](#server-info).
+Unsubscribe from parameter updates. Only supported if the server previously declared that it has the `parametersSubscribe` [capability](#server-info).
 
 #### Fields
 
