@@ -323,7 +323,7 @@ Set one or more parameters. Only supported if the server previously declared tha
 
 Subscribe to parameter updates. Only supported if the server previously declared that it has the `parametersSubscribe` [capability](#server-info).
 
-Sending `subscribeParameterUpdates` multiple times will append the list of parameter subscriptions, not replace them. Note that parameters can be subscribed at most once. Hence, this operation will ignore parameters that are already subscribed. Use [unsubscribeParameterUdpates](#unsubscribe-parameter-update) to unsubscribe from existing parameter subscriptions.
+Sending `subscribeParameterUpdates` multiple times will append the list of parameter subscriptions, not replace them. Note that parameters can be subscribed at most once. Hence, this operation will ignore parameters that are already subscribed. Use [unsubscribeParameterUpdates](#unsubscribe-parameter-update) to unsubscribe from existing parameter subscriptions.
 
 #### Fields
 
@@ -334,7 +334,7 @@ Sending `subscribeParameterUpdates` multiple times will append the list of param
 
 ```json
 {
-  "op": "subscribeParameterUdpates",
+  "op": "subscribeParameterUpdates",
   "parameterNames": [
     "/int_param",
     "/float_param",
@@ -357,7 +357,7 @@ Unsubscribe from parameter updates. Only supported if the server previously decl
 
 ```json
 {
-  "op": "unsubscribeParameterUdpates",
+  "op": "unsubscribeParameterUpdates",
   "parameterNames": [
     "/int_param",
     "/float_param",
