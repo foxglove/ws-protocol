@@ -341,11 +341,11 @@ Set one or more parameters. Only supported if the server previously declared tha
 
 Subscribe to parameter updates. Only supported if the server previously declared that it has the `parameterSubscribe` [capability](#server-info).
 
-Note that parameters can be subscribed at most once. Hence, this operation will ignore parameters that are already subscribed. Use [unsubscribeParameterUdpates](#unsubscribe-parameter-update) to unsubscribe from existing parameter subscriptions.
+Sending `subscribeParameterUpdates` multiple times will append the list of parameter subscriptions, not replace them. Note that parameters can be subscribed at most once. Hence, this operation will ignore parameters that are already subscribed. Use [unsubscribeParameterUdpates](#unsubscribe-parameter-update) to unsubscribe from existing parameter subscriptions.
 
 #### Fields
 
-- `op`: string `"subscribeParameterUdpates"`
+- `op`: string `"subscribeParameterUpdates"`
 - `parameterNames`: string[], leave empty to subscribe to all currently known parameters
 
 #### Example
@@ -368,7 +368,7 @@ Unsubscribe from parameter updates. Only supported if the server previously decl
 
 #### Fields
 
-- `op`: string `"unsubscribeParameterUdpates"`
+- `op`: string `"unsubscribeParameterUpdates"`
 - `parameterNames`: string[], leave empty to unsubscribe from all parameter updates
 
 #### Example
