@@ -141,7 +141,13 @@ Informs the client that channels are no longer available.
 
 ### Parameter Values
 
-Informs the client about parameters. The server may send this message arbitrarily or as a response to the client's [Get Parameters request](#get-parameters). Only supported if the server declares the `parameters` [capability](#server-info).
+Informs the client about parameters. Only supported if the server declares the `parameters` [capability](#server-info).
+
+The server may send this message
+
+- at arbitrary points in time
+- as a response to the client's [Get Parameters request](#get-parameters)
+- when parameters have changed which were [subscribed](#subscribe-parameter-update) by the client
 
 #### Fields
 
