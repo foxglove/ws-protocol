@@ -2,7 +2,7 @@
 
 This repository provides a [protocol specification](docs/spec.md) and reference implementations enabling [Foxglove Studio](https://github.com/foxglove/studio) to ingest arbitrary “live” streamed data.
 
-A Foxglove WebSocket server can provide multiple data streams, called _channels_. When a client subscribes to a channel, it begins receiving _messages_ on that channel. This protocol does not prescribe the messages' data format. Instead, the server specifies each channel's _encoding_, and the client uses this information to determine whether it can decode that channel's messages. Read the [Foxglove Studio documentation](https://foxglove.dev/docs/connection/foxglove-websocket) for more information on which encodings Studio supports.
+A Foxglove WebSocket server can provide multiple data streams, called _channels_. When a client subscribes to a channel, it begins receiving _messages_ on that channel. This protocol does not prescribe the messages' data format. Instead, the server specifies each channel's _encoding_, and the client uses this information to determine whether it can decode that channel's messages. Read the [Foxglove Studio documentation](https://foxglove.dev/docs/studio/connection/custom#live-connection) for more information on which encodings Studio supports.
 
 Implementations are available in the following languages:
 
