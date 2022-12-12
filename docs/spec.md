@@ -51,6 +51,7 @@ Each JSON message must be an object containing a field called `op` which identif
 - `name`: free-form information about the server which the client may optionally display or use for debugging purposes
 - `capabilities`: array of strings, informing the client about which optional features are supported
   - `clientPublish`: Allow clients to advertise channels to send data messages to the server
+- `clockTopic`: string | undefined, the topic name of the channel on which clock messages are published. If present, clients may subscribe to this channel to receive updates of the server's current time.
 
 #### Example
 
