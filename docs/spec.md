@@ -143,18 +143,17 @@ Informs the client that channels are no longer available.
 
 Informs the client about parameters. Only supported if the server declares the `parameters` [capability](#server-info).
 
-The server may send this message
-
-- at arbitrary points in time
-- as a response to the client's [Get Parameters request](#get-parameters)
-- when parameters have changed which were [subscribed](#subscribe-parameter-update) by the client
-
 #### Fields
 
 - `op`: string `"parameterValues"`
 - `parameters`: array of:
   - `name`: string, name of the parameter
   - `value`: number | boolean | string | number[] | boolean[] | string[]
+- `type`: string, one of
+  - `"serverInitiated"` - The message was sent by the server without being previously requested
+  - `"getParametersResponse"` - The message was sent as a response to the client's [Get Parameters request](#get-parameters)
+  - `"valueUpdate"` - The message was sent because one or more [subscribed](#subscribe-parameter-update) parameters have changed their value
+- `id`: string | undefined. Only set when `type` is `"getParametersResponse"` and the [request's](#get-parameters) `id` field was set
 
 #### Example
 
@@ -166,7 +165,9 @@ The server may send this message
     { "name": "/float_param", "value": 1.2 },
     { "name": "/string_param", "value": "foo" },
     { "name": "/node/nested_ints_param", "value": [1, 2, 3] }
-  ]
+  ],
+  "type": "getParametersResponse",
+  "id": "request-123"
 }
 ```
 
@@ -281,6 +282,7 @@ Request one or more parameters. Only supported if the server previously declared
 
 - `op`: string `"getParameters"`
 - `parameterNames`: string[], leave empty to retrieve all currently set parameters
+- `id`: string | undefined, arbitrary string used for identifying the corresponding server [response](#parameter-values)
 
 #### Example
 
@@ -292,7 +294,8 @@ Request one or more parameters. Only supported if the server previously declared
     "/float_param",
     "/string_param",
     "/node/nested_ints_param"
-  ]
+  ],
+  "id": "request-123"
 }
 ```
 
