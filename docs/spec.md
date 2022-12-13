@@ -149,11 +149,7 @@ Informs the client about parameters. Only supported if the server declares the `
 - `parameters`: array of:
   - `name`: string, name of the parameter
   - `value`: number | boolean | string | number[] | boolean[] | string[]
-- `type`: string, one of
-  - `"serverInitiated"` - The message was sent by the server without being previously requested
-  - `"getParametersResponse"` - The message was sent as a response to the client's [Get Parameters request](#get-parameters)
-  - `"valueUpdate"` - The message was sent because one or more [subscribed](#subscribe-parameter-update) parameters have changed their value
-- `id`: string | undefined. Only set when `type` is `"getParametersResponse"` and the [request's](#get-parameters) `id` field was set
+- `id`: string | undefined. Only set when the [request's](#get-parameters) `id` field was set
 
 #### Example
 
@@ -166,7 +162,6 @@ Informs the client about parameters. Only supported if the server declares the `
     { "name": "/string_param", "value": "foo" },
     { "name": "/node/nested_ints_param", "value": [1, 2, 3] }
   ],
-  "type": "getParametersResponse",
   "id": "request-123"
 }
 ```
