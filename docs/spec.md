@@ -28,6 +28,7 @@
 - [Advertise](#advertise) (json)
 - [Unadvertise](#unadvertise) (json)
 - [Message Data](#message-data) (binary)
+- [Time](#time) (binary)
 - [Parameter Values](#parameter-values) (json)
 
 ### Sent by client
@@ -382,3 +383,13 @@ All integer types explicitly specified (uint32, uint64, etc.) in this section ar
 | 4               | uint32  | subscription id                 |
 | 8               | uint64  | receive timestamp (nanoseconds) |
 | remaining bytes | uint8[] | message payload                 |
+
+### Time
+
+- Inform clients about the latest server time. This allows accelerated, slowed, or stepped control over the progress of time.
+- If the server publishes time data, then timestamps of [published messages](#message-data) must originate from the same time source
+
+| Bytes | Type   | Description             |
+| ----- | ------ | ----------------------- |
+| 1     | opcode | 0x02                    |
+| 8     | uint64 | timestamp (nanoseconds) |
