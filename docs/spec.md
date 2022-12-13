@@ -28,6 +28,7 @@
 - [Advertise](#advertise) (json)
 - [Unadvertise](#unadvertise) (json)
 - [Message Data](#message-data) (binary)
+- [Parameter Values](#parameter-values) (json)
 
 ### Sent by client
 
@@ -36,6 +37,10 @@
 - [Client Advertise](#client-advertise) (json)
 - [Client Unadvertise](#client-unadvertise) (json)
 - [Client Message Data](#client-message-data) (binary)
+- [Get Parameters](#get-parameters) (json)
+- [Set Parameters](#set-parameters) (json)
+- [Subscribe Parameter Update](#subscribe-parameter-update) (json)
+- [Unsubscribe Parameter Update](#unsubscribe-parameter-update) (json)
 
 ## JSON messages
 
@@ -51,6 +56,8 @@ Each JSON message must be an object containing a field called `op` which identif
 - `name`: free-form information about the server which the client may optionally display or use for debugging purposes
 - `capabilities`: array of strings, informing the client about which optional features are supported
   - `clientPublish`: Allow clients to advertise channels to send data messages to the server
+  - `parameters`: Allow clients to get & set parameters
+  - `parametersSubscribe`: Allow clients to subscribe to parameter changes
 
 #### Example
 
@@ -129,6 +136,33 @@ Informs the client that channels are no longer available.
 {
   "op": "unadvertise",
   "channelIds": [1, 2]
+}
+```
+
+### Parameter Values
+
+Informs the client about parameters. Only supported if the server declares the `parameters` [capability](#server-info).
+
+#### Fields
+
+- `op`: string `"parameterValues"`
+- `parameters`: array of:
+  - `name`: string, name of the parameter
+  - `value`: number | boolean | string | number[] | boolean[] | string[]
+- `id`: string | undefined. Only set when the [request's](#get-parameters) `id` field was set
+
+#### Example
+
+```json
+{
+  "op": "parameterValues",
+  "parameters": [
+    { "name": "/int_param", "value": 2 },
+    { "name": "/float_param", "value": 1.2 },
+    { "name": "/string_param", "value": "foo" },
+    { "name": "/node/nested_ints_param", "value": [1, 2, 3] }
+  ],
+  "id": "request-123"
 }
 ```
 
@@ -234,6 +268,102 @@ Informs the client that channels are no longer available.
 | 1               | opcode  | 0x01            |
 | 4               | uint32  | channel id      |
 | remaining bytes | uint8[] | message payload |
+
+### Get Parameters
+
+Request one or more parameters. Only supported if the server previously declared that it has the `parameters` [capability](#server-info).
+
+#### Fields
+
+- `op`: string `"getParameters"`
+- `parameterNames`: string[], leave empty to retrieve all currently set parameters
+- `id`: string | undefined, arbitrary string used for identifying the corresponding server [response](#parameter-values)
+
+#### Example
+
+```json
+{
+  "op": "getParameters",
+  "parameterNames": [
+    "/int_param",
+    "/float_param",
+    "/string_param",
+    "/node/nested_ints_param"
+  ],
+  "id": "request-123"
+}
+```
+
+### Set Parameters
+
+Set one or more parameters. Only supported if the server previously declared that it has the `parameters` [capability](#server-info).
+
+#### Fields
+
+- `op`: string `"setParameters"`
+- `parameters`: array of:
+  - `name`: string
+  - `value`: number | boolean | string | number[] | boolean[] | string[]
+
+#### Example
+
+```json
+{
+  "op": "setParameters",
+  "parameters": [
+    { "name": "/int_param", "value": 3 },
+    { "name": "/float_param", "value": 4.1 }
+  ]
+}
+```
+
+### Subscribe Parameter Update
+
+Subscribe to parameter updates. Only supported if the server previously declared that it has the `parametersSubscribe` [capability](#server-info).
+
+Sending `subscribeParameterUpdates` multiple times will append the list of parameter subscriptions, not replace them. Note that parameters can be subscribed at most once. Hence, this operation will ignore parameters that are already subscribed. Use [unsubscribeParameterUpdates](#unsubscribe-parameter-update) to unsubscribe from existing parameter subscriptions.
+
+#### Fields
+
+- `op`: string `"subscribeParameterUpdates"`
+- `parameterNames`: string[], leave empty to subscribe to all currently known parameters
+
+#### Example
+
+```json
+{
+  "op": "subscribeParameterUpdates",
+  "parameterNames": [
+    "/int_param",
+    "/float_param",
+    "/string_param",
+    "/node/nested_ints_param"
+  ]
+}
+```
+
+### Unsubscribe Parameter Update
+
+Unsubscribe from parameter updates. Only supported if the server previously declared that it has the `parametersSubscribe` [capability](#server-info).
+
+#### Fields
+
+- `op`: string `"unsubscribeParameterUpdates"`
+- `parameterNames`: string[], leave empty to unsubscribe from all parameter updates
+
+#### Example
+
+```json
+{
+  "op": "unsubscribeParameterUpdates",
+  "parameterNames": [
+    "/int_param",
+    "/float_param",
+    "/string_param",
+    "/node/nested_ints_param"
+  ]
+}
+```
 
 ## Binary messages
 
