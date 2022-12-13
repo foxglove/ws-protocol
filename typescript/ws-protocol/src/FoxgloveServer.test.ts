@@ -79,7 +79,7 @@ describe("FoxgloveServer", () => {
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "serverInfo",
         name: "foo",
-        capabilities: ["clientPublish"],
+        capabilities: ["clientPublish", "time"],
       });
     } finally {
       close();
@@ -100,7 +100,7 @@ describe("FoxgloveServer", () => {
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "serverInfo",
         name: "foo",
-        capabilities: ["clientPublish"],
+        capabilities: ["clientPublish", "time"],
       });
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "advertise",
@@ -118,7 +118,7 @@ describe("FoxgloveServer", () => {
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "serverInfo",
         name: "foo",
-        capabilities: ["clientPublish"],
+        capabilities: ["clientPublish", "time"],
       });
 
       const chan = {
@@ -154,7 +154,7 @@ describe("FoxgloveServer", () => {
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "serverInfo",
         name: "foo",
-        capabilities: ["clientPublish"],
+        capabilities: ["clientPublish", "time"],
       });
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "advertise",
@@ -193,7 +193,7 @@ describe("FoxgloveServer", () => {
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "serverInfo",
         name: "foo",
-        capabilities: ["clientPublish"],
+        capabilities: ["clientPublish", "time"],
       });
 
       // client message, this will be ignored since it is not preceded by an "advertise"
@@ -246,5 +246,25 @@ describe("FoxgloveServer", () => {
       throw ex;
     }
     close();
+  });
+
+  it("sends time messages to clients", async () => {
+    const server = new FoxgloveServer({ name: "foo" });
+    const { nextJsonMessage, nextBinaryMessage, close } = await setupServerAndClient(server);
+    try {
+      await expect(nextJsonMessage()).resolves.toEqual({
+        op: "serverInfo",
+        name: "foo",
+        capabilities: ["clientPublish", "time"],
+      });
+
+      server.broadcastTime(42n);
+
+      await expect(nextBinaryMessage()).resolves.toEqual(
+        new Uint8Array([BinaryOpcode.TIME, ...uint64LE(42n)]),
+      );
+    } finally {
+      close();
+    }
   });
 });
