@@ -125,7 +125,7 @@ export default class FoxgloveServer {
   }
 
   /**
-   * Emit a time udpate to clients.
+   * Emit a time update to clients.
    */
   broadcastTime(timestamp: bigint): void {
     for (const client of this.clients.values()) {
@@ -390,15 +390,6 @@ export default class FoxgloveServer {
     msg.setUint8(0, BinaryOpcode.TIME);
     msg.setBigUint64(1, timestamp, true);
 
-    // attempt to detect support for {fin: false}
-    if (connection.send.length > 1) {
-      connection.send(msg, { fin: true });
-    } else if (typeof Blob === "function") {
-      connection.send(new Blob([msg]));
-    } else {
-      const buffer = new Uint8Array(msg.byteLength);
-      buffer.set(new Uint8Array(msg.buffer), 0);
-      connection.send(buffer);
-    }
+    connection.send(msg);
   }
 }

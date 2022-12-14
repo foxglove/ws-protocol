@@ -80,7 +80,7 @@ export type MessageData = {
   timestamp: bigint;
   data: DataView;
 };
-export type TimeData = {
+export type Time = {
   op: BinaryOpcode.TIME;
   timestamp: bigint;
 };
@@ -95,7 +95,7 @@ export type ServerMessage =
   | Advertise
   | Unadvertise
   | MessageData
-  | TimeData;
+  | Time;
 
 /**
  * Abstraction that supports both browser and Node WebSocket clients.

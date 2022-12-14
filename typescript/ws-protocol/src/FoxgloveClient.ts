@@ -11,7 +11,7 @@ import {
   IWebSocket,
   ServerMessage,
   SubscriptionId,
-  TimeData,
+  Time,
 } from "./types";
 
 type EventTypes = {
@@ -22,7 +22,7 @@ type EventTypes = {
   serverInfo: (event: ServerInfo) => void;
   status: (event: StatusMessage) => void;
   message: (event: MessageData) => void;
-  time: (event: TimeData) => void;
+  time: (event: Time) => void;
   advertise: (newChannels: Channel[]) => void;
   unadvertise: (removedChannels: ChannelId[]) => void;
 };
