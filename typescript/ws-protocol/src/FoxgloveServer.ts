@@ -125,6 +125,15 @@ export default class FoxgloveServer {
   }
 
   /**
+   * Emit a time update to clients.
+   */
+  broadcastTime(timestamp: bigint): void {
+    for (const client of this.clients.values()) {
+      this.sendTimeData(client.connection, timestamp);
+    }
+  }
+
+  /**
    * Track a new client connection.
    * @param connection WebSocket used to communicate with the client
    * @param name Human-readable name for the client in log messages
@@ -145,7 +154,7 @@ export default class FoxgloveServer {
     this.send(connection, {
       op: "serverInfo",
       name: this.name,
-      capabilities: [ServerCapability.clientPublish],
+      capabilities: [ServerCapability.clientPublish, ServerCapability.time],
     });
     if (this.channels.size > 0) {
       this.send(connection, { op: "advertise", channels: Array.from(this.channels.values()) });
@@ -374,5 +383,13 @@ export default class FoxgloveServer {
       );
       connection.send(buffer);
     }
+  }
+
+  private sendTimeData(connection: IWebSocket, timestamp: bigint): void {
+    const msg = new DataView(new ArrayBuffer(1 + 8));
+    msg.setUint8(0, BinaryOpcode.TIME);
+    msg.setBigUint64(1, timestamp, true);
+
+    connection.send(msg);
   }
 }

@@ -16,6 +16,10 @@ export function parseServerMessage(buffer: ArrayBuffer): ServerMessage {
       const data = new DataView(buffer, offset);
       return { op, subscriptionId, timestamp, data };
     }
+    case BinaryOpcode.TIME: {
+      const timestamp = view.getBigUint64(offset, true);
+      return { op, timestamp };
+    }
   }
   throw new Error(`Unrecognized server opcode in binary message: ${op.toString(16)}`);
 }

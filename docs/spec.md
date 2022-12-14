@@ -28,6 +28,7 @@
 - [Advertise](#advertise) (json)
 - [Unadvertise](#unadvertise) (json)
 - [Message Data](#message-data) (binary)
+- [Time](#time) (binary)
 - [Parameter Values](#parameter-values) (json)
 
 ### Sent by client
@@ -58,6 +59,7 @@ Each JSON message must be an object containing a field called `op` which identif
   - `clientPublish`: Allow clients to advertise channels to send data messages to the server
   - `parameters`: Allow clients to get & set parameters
   - `parametersSubscribe`: Allow clients to subscribe to parameter changes
+  - `time`: The server may publish binary [time](#time) messages
 
 #### Example
 
@@ -65,7 +67,7 @@ Each JSON message must be an object containing a field called `op` which identif
 {
   "op": "serverInfo",
   "name": "example server",
-  "capabilities": ["clientPublish"]
+  "capabilities": ["clientPublish", "time"]
 }
 ```
 
@@ -382,3 +384,14 @@ All integer types explicitly specified (uint32, uint64, etc.) in this section ar
 | 4               | uint32  | subscription id                 |
 | 8               | uint64  | receive timestamp (nanoseconds) |
 | remaining bytes | uint8[] | message payload                 |
+
+### Time
+
+- Inform clients about the latest server time. This allows accelerated, slowed, or stepped control over the progress of time.
+- If the server publishes time data, then timestamps of [published messages](#message-data) must originate from the same time source
+- The server may only publish time data if it previously declared support for it via the `time` [capability](#server-info)
+
+| Bytes | Type   | Description             |
+| ----- | ------ | ----------------------- |
+| 1     | opcode | 0x02                    |
+| 8     | uint64 | timestamp (nanoseconds) |

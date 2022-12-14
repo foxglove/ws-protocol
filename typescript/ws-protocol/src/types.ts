@@ -1,5 +1,6 @@
 export enum BinaryOpcode {
   MESSAGE_DATA = 1,
+  TIME = 2,
 }
 export enum ClientBinaryOpcode {
   MESSAGE_DATA = 1,
@@ -11,6 +12,7 @@ export enum StatusLevel {
 }
 export enum ServerCapability {
   clientPublish = "clientPublish",
+  time = "time",
 }
 
 export type ChannelId = number;
@@ -78,12 +80,22 @@ export type MessageData = {
   timestamp: bigint;
   data: DataView;
 };
+export type Time = {
+  op: BinaryOpcode.TIME;
+  timestamp: bigint;
+};
 export type ClientPublish = {
   channel: ClientChannel;
   data: DataView;
 };
 
-export type ServerMessage = ServerInfo | StatusMessage | Advertise | Unadvertise | MessageData;
+export type ServerMessage =
+  | ServerInfo
+  | StatusMessage
+  | Advertise
+  | Unadvertise
+  | MessageData
+  | Time;
 
 /**
  * Abstraction that supports both browser and Node WebSocket clients.

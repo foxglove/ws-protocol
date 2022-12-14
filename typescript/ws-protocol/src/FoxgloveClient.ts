@@ -11,6 +11,7 @@ import {
   IWebSocket,
   ServerMessage,
   SubscriptionId,
+  Time,
 } from "./types";
 
 type EventTypes = {
@@ -21,6 +22,7 @@ type EventTypes = {
   serverInfo: (event: ServerInfo) => void;
   status: (event: StatusMessage) => void;
   message: (event: MessageData) => void;
+  time: (event: Time) => void;
   advertise: (newChannels: Channel[]) => void;
   unadvertise: (removedChannels: ChannelId[]) => void;
 };
@@ -90,6 +92,10 @@ export default class FoxgloveClient {
 
         case BinaryOpcode.MESSAGE_DATA:
           this.emitter.emit("message", message);
+          return;
+
+        case BinaryOpcode.TIME:
+          this.emitter.emit("time", message);
           return;
       }
       this.emitter.emit(
