@@ -1,4 +1,4 @@
-import { EventEmitter, EventNames, EventListener } from "eventemitter3";
+import EventEmitter from "eventemitter3";
 
 import { ChannelId, MessageData, ServerInfo, StatusMessage } from ".";
 import { parseServerMessage } from "./parse";
@@ -40,10 +40,16 @@ export default class FoxgloveClient {
     this.reconnect();
   }
 
-  on<E extends EventNames<EventTypes>>(name: E, listener: EventListener<EventTypes, E>): void {
+  on<E extends EventEmitter.EventNames<EventTypes>>(
+    name: E,
+    listener: EventEmitter.EventListener<EventTypes, E>,
+  ): void {
     this.emitter.on(name, listener);
   }
-  off<E extends EventNames<EventTypes>>(name: E, listener: EventListener<EventTypes, E>): void {
+  off<E extends EventEmitter.EventNames<EventTypes>>(
+    name: E,
+    listener: EventEmitter.EventListener<EventTypes, E>,
+  ): void {
     this.emitter.off(name, listener);
   }
 
