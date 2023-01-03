@@ -59,7 +59,7 @@
   },
   "dependencies": {
     "debug": "^4",
-    "eventemitter3": "^4.0.7",
+    "eventemitter3": "^5.0.0",
     "tslib": "^2"
   }
 }
