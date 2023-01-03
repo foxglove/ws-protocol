@@ -1,5 +1,5 @@
 import createDebug from "debug";
-import { EventEmitter, EventNames, EventListener } from "eventemitter3";
+import EventEmitter from "eventemitter3";
 
 import { ChannelId, StatusLevel } from ".";
 import {
@@ -56,10 +56,16 @@ export default class FoxgloveServer {
     this.name = name;
   }
 
-  on<E extends EventNames<EventTypes>>(name: E, listener: EventListener<EventTypes, E>): void {
+  on<E extends EventEmitter.EventNames<EventTypes>>(
+    name: E,
+    listener: EventEmitter.EventListener<EventTypes, E>,
+  ): void {
     this.emitter.on(name, listener);
   }
-  off<E extends EventNames<EventTypes>>(name: E, listener: EventListener<EventTypes, E>): void {
+  off<E extends EventEmitter.EventNames<EventTypes>>(
+    name: E,
+    listener: EventEmitter.EventListener<EventTypes, E>,
+  ): void {
     this.emitter.off(name, listener);
   }
 
