@@ -13,6 +13,8 @@ export enum StatusLevel {
 export enum ServerCapability {
   clientPublish = "clientPublish",
   time = "time",
+  parameters = "parameters",
+  parametersSubscribe = "parametersSubscribe",
 }
 
 export type ChannelId = number;
@@ -54,7 +56,15 @@ export type ClientUnadvertise = {
   channelIds: ClientChannelId[];
 };
 
-export type ClientMessage = Subscribe | Unsubscribe | ClientAdvertise | ClientUnadvertise;
+export type ClientMessage =
+  | Subscribe
+  | Unsubscribe
+  | ClientAdvertise
+  | ClientUnadvertise
+  | GetParameters
+  | SetParameters
+  | SubscribeParameterUpdates
+  | UnsubscribeParameterUpdates;
 
 export type ServerInfo = {
   op: "serverInfo";
@@ -74,6 +84,28 @@ export type Unadvertise = {
   op: "unadvertise";
   channelIds: ChannelId[];
 };
+export type ParameterValues = {
+  op: "parameterValues";
+  parameters: Parameter[];
+  id?: string;
+};
+export type GetParameters = {
+  op: "getParameters";
+  parameterNames: string[];
+  id?: string;
+};
+export type SetParameters = {
+  op: "setParameters";
+  parameters: Parameter[];
+};
+export type SubscribeParameterUpdates = {
+  op: "subscribeParameterUpdates";
+  parameterNames: string[];
+};
+export type UnsubscribeParameterUpdates = {
+  op: "unsubscribeParameterUpdates";
+  parameterNames: string[];
+};
 export type MessageData = {
   op: BinaryOpcode.MESSAGE_DATA;
   subscriptionId: SubscriptionId;
@@ -88,6 +120,10 @@ export type ClientPublish = {
   channel: ClientChannel;
   data: DataView;
 };
+export type Parameter = {
+  name: string;
+  value: number | boolean | string | number[] | boolean[] | string[];
+};
 
 export type ServerMessage =
   | ServerInfo
@@ -95,7 +131,8 @@ export type ServerMessage =
   | Advertise
   | Unadvertise
   | MessageData
-  | Time;
+  | Time
+  | ParameterValues;
 
 /**
  * Abstraction that supports both browser and Node WebSocket clients.

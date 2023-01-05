@@ -1,8 +1,8 @@
 import ConsumerQueue from "consumer-queue";
 import { AddressInfo, Data, WebSocket, WebSocketServer } from "ws";
 
-import { BinaryOpcode, ClientPublish } from ".";
-import FoxgloveServer from "./FoxgloveServer";
+import { BinaryOpcode, ClientPublish, GetParameters, Parameter } from ".";
+import FoxgloveServer, { SingleClient } from "./FoxgloveServer";
 
 function uint32LE(n: number): Uint8Array {
   const result = new Uint8Array(4);
@@ -52,6 +52,14 @@ async function setupServerAndClient(server: FoxgloveServer) {
   server.on("advertise", (event) => eventQueue.push(["advertise", event]));
   server.on("unadvertise", (event) => eventQueue.push(["unadvertise", event]));
   server.on("message", (event) => eventQueue.push(["message", event]));
+  server.on("getParameters", (event) => eventQueue.push(["getParameters", event]));
+  server.on("setParameters", (event) => eventQueue.push(["setParameters", event]));
+  server.on("subscribeParameterUpdates", (event) =>
+    eventQueue.push(["subscribeParameterUpdates", event]),
+  );
+  server.on("unsubscribeParameterUpdates", (event) =>
+    eventQueue.push(["unsubscribeParameterUpdates", event]),
+  );
 
   const nextEvent = async () => await eventQueue.pop();
 
@@ -79,7 +87,7 @@ describe("FoxgloveServer", () => {
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "serverInfo",
         name: "foo",
-        capabilities: ["clientPublish", "time"],
+        capabilities: ["clientPublish", "time", "parameters", "parametersSubscribe"],
       });
     } finally {
       close();
@@ -100,7 +108,7 @@ describe("FoxgloveServer", () => {
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "serverInfo",
         name: "foo",
-        capabilities: ["clientPublish", "time"],
+        capabilities: ["clientPublish", "time", "parameters", "parametersSubscribe"],
       });
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "advertise",
@@ -118,7 +126,7 @@ describe("FoxgloveServer", () => {
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "serverInfo",
         name: "foo",
-        capabilities: ["clientPublish", "time"],
+        capabilities: ["clientPublish", "time", "parameters", "parametersSubscribe"],
       });
 
       const chan = {
@@ -154,7 +162,7 @@ describe("FoxgloveServer", () => {
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "serverInfo",
         name: "foo",
-        capabilities: ["clientPublish", "time"],
+        capabilities: ["clientPublish", "time", "parameters", "parametersSubscribe"],
       });
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "advertise",
@@ -193,7 +201,7 @@ describe("FoxgloveServer", () => {
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "serverInfo",
         name: "foo",
-        capabilities: ["clientPublish", "time"],
+        capabilities: ["clientPublish", "time", "parameters", "parametersSubscribe"],
       });
 
       // client message, this will be ignored since it is not preceded by an "advertise"
@@ -255,7 +263,7 @@ describe("FoxgloveServer", () => {
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "serverInfo",
         name: "foo",
-        capabilities: ["clientPublish", "time"],
+        capabilities: ["clientPublish", "time", "parameters", "parametersSubscribe"],
       });
 
       server.broadcastTime(42n);
@@ -266,5 +274,112 @@ describe("FoxgloveServer", () => {
     } finally {
       close();
     }
+  });
+
+  it("receives parameter set & get request from client", async () => {
+    const server = new FoxgloveServer({ name: "foo" });
+    const { send, nextJsonMessage, nextEvent, close } = await setupServerAndClient(server);
+
+    try {
+      await expect(nextJsonMessage()).resolves.toEqual({
+        op: "serverInfo",
+        name: "foo",
+        capabilities: ["clientPublish", "time", "parameters", "parametersSubscribe"],
+      });
+
+      let paramStore: Parameter[] = [
+        { name: "/foo/bool_param", value: true },
+        { name: "/foo/int_param", value: 123 },
+      ];
+
+      // client set parameter request
+      send(
+        JSON.stringify({
+          op: "setParameters",
+          parameters: [{ name: "/foo/bool_param", value: false }],
+        }),
+      );
+
+      const setParameters = await nextEvent();
+      expect(setParameters).toMatchObject([
+        "setParameters",
+        [{ name: "/foo/bool_param", value: false }],
+      ]);
+      const parameters = setParameters[1] as Parameter[];
+      paramStore = paramStore.map((p) => parameters.find((p2) => p2.name === p.name) ?? p);
+
+      // client get parameter request
+      const paramNames = paramStore.map((p) => p.name);
+      send(
+        JSON.stringify({
+          op: "getParameters",
+          parameterNames: paramNames,
+          id: "req-456",
+        }),
+      );
+
+      const getParameters = await nextEvent();
+      expect(getParameters).toMatchObject([
+        "getParameters",
+        { parameterNames: paramNames, id: "req-456" },
+      ]);
+      const request = getParameters[1] as GetParameters & SingleClient;
+      server.publishParameterValues(paramStore, "req-456", request.client.connection);
+
+      await expect(nextJsonMessage()).resolves.toEqual({
+        op: "parameterValues",
+        parameters: [
+          { name: "/foo/bool_param", value: false },
+          { name: "/foo/int_param", value: 123 },
+        ],
+        id: "req-456",
+      });
+    } catch (ex) {
+      close();
+      throw ex;
+    }
+    close();
+  });
+
+  it("subscribes to parameter updates", async () => {
+    const server = new FoxgloveServer({ name: "foo" });
+    const { send, nextJsonMessage, nextEvent, close } = await setupServerAndClient(server);
+
+    try {
+      await expect(nextJsonMessage()).resolves.toEqual({
+        op: "serverInfo",
+        name: "foo",
+        capabilities: ["clientPublish", "time", "parameters", "parametersSubscribe"],
+      });
+
+      // client subscribe parameter request
+      send(
+        JSON.stringify({
+          op: "subscribeParameterUpdates",
+          parameterNames: ["/foo/bool_param"],
+        }),
+      );
+
+      await expect(nextEvent()).resolves.toMatchObject([
+        "subscribeParameterUpdates",
+        ["/foo/bool_param"],
+      ]);
+
+      // trigger parameter updates to be sent to clients
+      server.updateParameterValues([
+        { name: "/foo/bool_param", value: false },
+        { name: "/foo/int_param", value: 123 },
+      ]);
+
+      // only expect the subscribed parameter to be communicated to the client
+      await expect(nextJsonMessage()).resolves.toEqual({
+        op: "parameterValues",
+        parameters: [{ name: "/foo/bool_param", value: false }],
+      });
+    } catch (ex) {
+      close();
+      throw ex;
+    }
+    close();
   });
 });
