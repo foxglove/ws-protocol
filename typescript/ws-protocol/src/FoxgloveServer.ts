@@ -26,7 +26,7 @@ type ClientInfo = {
   parameterSubscriptions: Set<string>;
 };
 
-export type SingleClient = { client: ClientInfo };
+type SingleClient = { client: ClientInfo };
 
 type EventTypes = {
   error: (error: Error) => void;
@@ -42,7 +42,10 @@ type EventTypes = {
   /** A client stopped advertising a channel. */
   unadvertise: (channel: { channelId: ChannelId } & SingleClient) => void;
   /** Request to retrieve parameter values has been received. */
-  getParameters: (request: { parameterNames: string[]; id?: string } & SingleClient) => void;
+  getParameters: (
+    request: { parameterNames: string[]; id?: string },
+    clientConnection: IWebSocket | undefined,
+  ) => void;
   /** Request to set parameter values has been received. */
   setParameters: (parameters: Parameter[]) => void;
   /** Request to subscribe to parameter value updates has been received. */
@@ -378,7 +381,7 @@ export default class FoxgloveServer {
         break;
 
       case "getParameters":
-        this.emitter.emit("getParameters", { ...message, client });
+        this.emitter.emit("getParameters", { ...message }, client.connection);
         break;
 
       case "setParameters":

@@ -1,8 +1,8 @@
 import ConsumerQueue from "consumer-queue";
 import { AddressInfo, Data, WebSocket, WebSocketServer } from "ws";
 
-import { BinaryOpcode, ClientPublish, GetParameters, Parameter } from ".";
-import FoxgloveServer, { SingleClient } from "./FoxgloveServer";
+import { BinaryOpcode, ClientPublish, IWebSocket, Parameter } from ".";
+import FoxgloveServer from "./FoxgloveServer";
 
 function uint32LE(n: number): Uint8Array {
   const result = new Uint8Array(4);
@@ -323,8 +323,8 @@ describe("FoxgloveServer", () => {
         "getParameters",
         { parameterNames: paramNames, id: "req-456" },
       ]);
-      const request = getParameters[1] as GetParameters & SingleClient;
-      server.publishParameterValues(paramStore, "req-456", request.client.connection);
+      const clientConnection = getParameters[2] as IWebSocket | undefined;
+      server.publishParameterValues(paramStore, "req-456", clientConnection);
 
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "parameterValues",
