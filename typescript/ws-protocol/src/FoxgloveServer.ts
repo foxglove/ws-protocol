@@ -165,7 +165,7 @@ export default class FoxgloveServer {
   broadcastTime(timestamp: bigint): void {
     if (!this.capabilities.includes(ServerCapability.time)) {
       log(
-        "Sending time data is only supported if the server has declared the '%s' capability before.",
+        "Sending time data is only supported if the server has declared the '%s' capability.",
         ServerCapability.time,
       );
       return;
@@ -185,7 +185,7 @@ export default class FoxgloveServer {
   publishParameterValues(parameters: Parameter[], id?: string, connection?: IWebSocket): void {
     if (!this.capabilities.includes(ServerCapability.parameters)) {
       log(
-        "Publishing parameter values is only supported if the server has declared the '%s' capability before.",
+        "Publishing parameter values is only supported if the server has declared the '%s' capability.",
         ServerCapability.parameters,
       );
       return;
@@ -207,7 +207,7 @@ export default class FoxgloveServer {
   updateParameterValues(parameters: Parameter[]): void {
     if (!this.capabilities.includes(ServerCapability.parametersSubscribe)) {
       log(
-        "Publishing parameter value updates is only supported if the server has declared the '%s' capability before.",
+        "Publishing parameter value updates is only supported if the server has declared the '%s' capability.",
         ServerCapability.parametersSubscribe,
       );
       return;
