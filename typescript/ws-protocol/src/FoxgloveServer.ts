@@ -56,17 +56,33 @@ type EventTypes = {
 
 const log = createDebug("foxglove:server");
 
+const REQUIRED_CAPABILITY_BY_OPERATION: Record<
+  ClientMessage["op"],
+  keyof typeof ServerCapability | undefined
+> = {
+  subscribe: undefined,
+  unsubscribe: undefined,
+  advertise: ServerCapability.clientPublish,
+  unadvertise: ServerCapability.clientPublish,
+  getParameters: ServerCapability.parameters,
+  setParameters: ServerCapability.parameters,
+  subscribeParameterUpdates: ServerCapability.parametersSubscribe,
+  unsubscribeParameterUpdates: ServerCapability.parametersSubscribe,
+};
+
 export default class FoxgloveServer {
   static SUPPORTED_SUBPROTOCOL = "foxglove.websocket.v1";
 
   readonly name: string;
+  readonly capabilities: string[];
   private emitter = new EventEmitter<EventTypes>();
   private clients = new Map<IWebSocket, ClientInfo>();
   private nextChannelId: ChannelId = 0;
   private channels = new Map<ChannelId, Channel>();
 
-  constructor({ name }: { name: string }) {
+  constructor({ name, capabilities }: { name: string; capabilities?: string[] }) {
     this.name = name;
+    this.capabilities = capabilities ?? [];
   }
 
   on<E extends EventEmitter.EventNames<EventTypes>>(
@@ -147,6 +163,14 @@ export default class FoxgloveServer {
    * Emit a time update to clients.
    */
   broadcastTime(timestamp: bigint): void {
+    if (!this.capabilities.includes(ServerCapability.time)) {
+      log(
+        "Sending time data is only supported if the server has declared the '%s' capability.",
+        ServerCapability.time,
+      );
+      return;
+    }
+
     for (const client of this.clients.values()) {
       this.sendTimeData(client.connection, timestamp);
     }
@@ -159,6 +183,14 @@ export default class FoxgloveServer {
    * @param connection Optional connection when parameter values are to be sent to a single client
    */
   publishParameterValues(parameters: Parameter[], id?: string, connection?: IWebSocket): void {
+    if (!this.capabilities.includes(ServerCapability.parameters)) {
+      log(
+        "Publishing parameter values is only supported if the server has declared the '%s' capability.",
+        ServerCapability.parameters,
+      );
+      return;
+    }
+
     if (connection) {
       this.send(connection, { op: "parameterValues", parameters, id });
     } else {
@@ -173,6 +205,14 @@ export default class FoxgloveServer {
    * @param parameters Parameter values
    */
   updateParameterValues(parameters: Parameter[]): void {
+    if (!this.capabilities.includes(ServerCapability.parametersSubscribe)) {
+      log(
+        "Publishing parameter value updates is only supported if the server has declared the '%s' capability.",
+        ServerCapability.parametersSubscribe,
+      );
+      return;
+    }
+
     for (const client of this.clients.values()) {
       const parametersOfInterest = parameters.filter((p) =>
         client.parameterSubscriptions.has(p.name),
@@ -203,12 +243,7 @@ export default class FoxgloveServer {
     this.send(connection, {
       op: "serverInfo",
       name: this.name,
-      capabilities: [
-        ServerCapability.clientPublish,
-        ServerCapability.time,
-        ServerCapability.parameters,
-        ServerCapability.parametersSubscribe,
-      ],
+      capabilities: this.capabilities,
     });
     if (this.channels.size > 0) {
       this.send(connection, { op: "advertise", channels: Array.from(this.channels.values()) });
@@ -284,6 +319,16 @@ export default class FoxgloveServer {
   }
 
   private handleClientMessage(client: ClientInfo, message: ClientMessage): void {
+    const requiredCapability = REQUIRED_CAPABILITY_BY_OPERATION[message.op];
+    if (requiredCapability && !this.capabilities.includes(requiredCapability)) {
+      log(
+        "Operation '%s' is not supported, as the server has not declared the capability '%s'.",
+        message.op,
+        requiredCapability,
+      );
+      return;
+    }
+
     switch (message.op) {
       case "subscribe":
         for (const { channelId, id: subId } of message.subscriptions) {

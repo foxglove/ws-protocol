@@ -1,4 +1,4 @@
-import { FoxgloveServer, Parameter } from "@foxglove/ws-protocol";
+import { FoxgloveServer, Parameter, ServerCapability } from "@foxglove/ws-protocol";
 import { Command } from "commander";
 import Debug from "debug";
 import { WebSocketServer } from "ws";
@@ -9,7 +9,10 @@ const log = Debug("foxglove:param-server");
 Debug.enable("foxglove:*");
 
 async function main(): Promise<void> {
-  const server = new FoxgloveServer({ name: "param-server" });
+  const server = new FoxgloveServer({
+    name: "param-server",
+    capabilities: [ServerCapability.parameters, ServerCapability.parametersSubscribe],
+  });
   const port = 8765;
   const ws = new WebSocketServer({
     port,

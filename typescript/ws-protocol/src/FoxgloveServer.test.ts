@@ -1,7 +1,7 @@
 import ConsumerQueue from "consumer-queue";
 import { AddressInfo, Data, WebSocket, WebSocketServer } from "ws";
 
-import { BinaryOpcode, ClientPublish, IWebSocket, Parameter } from ".";
+import { BinaryOpcode, ClientPublish, IWebSocket, Parameter, ServerCapability } from ".";
 import FoxgloveServer from "./FoxgloveServer";
 
 function uint32LE(n: number): Uint8Array {
@@ -87,7 +87,7 @@ describe("FoxgloveServer", () => {
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "serverInfo",
         name: "foo",
-        capabilities: ["clientPublish", "time", "parameters", "parametersSubscribe"],
+        capabilities: [],
       });
     } finally {
       close();
@@ -108,7 +108,7 @@ describe("FoxgloveServer", () => {
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "serverInfo",
         name: "foo",
-        capabilities: ["clientPublish", "time", "parameters", "parametersSubscribe"],
+        capabilities: [],
       });
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "advertise",
@@ -126,7 +126,7 @@ describe("FoxgloveServer", () => {
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "serverInfo",
         name: "foo",
-        capabilities: ["clientPublish", "time", "parameters", "parametersSubscribe"],
+        capabilities: [],
       });
 
       const chan = {
@@ -162,7 +162,7 @@ describe("FoxgloveServer", () => {
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "serverInfo",
         name: "foo",
-        capabilities: ["clientPublish", "time", "parameters", "parametersSubscribe"],
+        capabilities: [],
       });
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "advertise",
@@ -194,14 +194,17 @@ describe("FoxgloveServer", () => {
   });
 
   it("receives advertisements and messages from clients", async () => {
-    const server = new FoxgloveServer({ name: "foo" });
+    const server = new FoxgloveServer({
+      name: "foo",
+      capabilities: [ServerCapability.clientPublish],
+    });
     const { send, nextJsonMessage, nextEvent, close } = await setupServerAndClient(server);
 
     try {
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "serverInfo",
         name: "foo",
-        capabilities: ["clientPublish", "time", "parameters", "parametersSubscribe"],
+        capabilities: ["clientPublish"],
       });
 
       // client message, this will be ignored since it is not preceded by an "advertise"
@@ -257,13 +260,13 @@ describe("FoxgloveServer", () => {
   });
 
   it("sends time messages to clients", async () => {
-    const server = new FoxgloveServer({ name: "foo" });
+    const server = new FoxgloveServer({ name: "foo", capabilities: [ServerCapability.time] });
     const { nextJsonMessage, nextBinaryMessage, close } = await setupServerAndClient(server);
     try {
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "serverInfo",
         name: "foo",
-        capabilities: ["clientPublish", "time", "parameters", "parametersSubscribe"],
+        capabilities: ["time"],
       });
 
       server.broadcastTime(42n);
@@ -277,14 +280,17 @@ describe("FoxgloveServer", () => {
   });
 
   it("receives parameter set & get request from client", async () => {
-    const server = new FoxgloveServer({ name: "foo" });
+    const server = new FoxgloveServer({
+      name: "foo",
+      capabilities: [ServerCapability.parameters],
+    });
     const { send, nextJsonMessage, nextEvent, close } = await setupServerAndClient(server);
 
     try {
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "serverInfo",
         name: "foo",
-        capabilities: ["clientPublish", "time", "parameters", "parametersSubscribe"],
+        capabilities: ["parameters"],
       });
 
       let paramStore: Parameter[] = [
@@ -342,14 +348,17 @@ describe("FoxgloveServer", () => {
   });
 
   it("subscribes to parameter updates", async () => {
-    const server = new FoxgloveServer({ name: "foo" });
+    const server = new FoxgloveServer({
+      name: "foo",
+      capabilities: [ServerCapability.parameters, ServerCapability.parametersSubscribe],
+    });
     const { send, nextJsonMessage, nextEvent, close } = await setupServerAndClient(server);
 
     try {
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "serverInfo",
         name: "foo",
-        capabilities: ["clientPublish", "time", "parameters", "parametersSubscribe"],
+        capabilities: ["parameters", "parametersSubscribe"],
       });
 
       // client subscribe parameter request
