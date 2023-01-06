@@ -11,6 +11,7 @@ import {
   ClientMessage,
   ClientPublish,
   IWebSocket,
+  Parameter,
   ServerCapability,
   ServerMessage,
   SubscriptionId,
@@ -22,6 +23,7 @@ type ClientInfo = {
   subscriptions: Map<SubscriptionId, ChannelId>;
   subscriptionsByChannel: Map<ChannelId, Set<SubscriptionId>>;
   advertisements: Map<ClientChannelId, ClientChannel>;
+  parameterSubscriptions: Set<string>;
 };
 
 type SingleClient = { client: ClientInfo };
@@ -39,6 +41,17 @@ type EventTypes = {
   advertise: (channel: ClientChannel & SingleClient) => void;
   /** A client stopped advertising a channel. */
   unadvertise: (channel: { channelId: ChannelId } & SingleClient) => void;
+  /** Request to retrieve parameter values has been received. */
+  getParameters: (
+    request: { parameterNames: string[]; id?: string },
+    clientConnection: IWebSocket | undefined,
+  ) => void;
+  /** Request to set parameter values has been received. */
+  setParameters: (parameters: Parameter[]) => void;
+  /** Request to subscribe to parameter value updates has been received. */
+  subscribeParameterUpdates: (parameterNames: string[]) => void;
+  /** Request to unsubscribe from parameter value updates has been received. */
+  unsubscribeParameterUpdates: (parameterNames: string[]) => void;
 };
 
 const log = createDebug("foxglove:server");
@@ -140,6 +153,35 @@ export default class FoxgloveServer {
   }
 
   /**
+   * Publish parameter values.
+   * @param parameters Parameter values
+   * @param id Optional request ID coming from a "getParameters" request
+   * @param connection Optional connection when parameter values are to be sent to a single client
+   */
+  publishParameterValues(parameters: Parameter[], id?: string, connection?: IWebSocket): void {
+    if (connection) {
+      this.send(connection, { op: "parameterValues", parameters, id });
+    } else {
+      for (const client of this.clients.values()) {
+        this.send(client.connection, { op: "parameterValues", parameters, id });
+      }
+    }
+  }
+
+  /**
+   * Inform clients about parameter value changes.
+   * @param parameters Parameter values
+   */
+  updateParameterValues(parameters: Parameter[]): void {
+    for (const client of this.clients.values()) {
+      const parametersOfInterest = parameters.filter((p) =>
+        client.parameterSubscriptions.has(p.name),
+      );
+      this.send(client.connection, { op: "parameterValues", parameters: parametersOfInterest });
+    }
+  }
+
+  /**
    * Track a new client connection.
    * @param connection WebSocket used to communicate with the client
    * @param name Human-readable name for the client in log messages
@@ -154,13 +196,19 @@ export default class FoxgloveServer {
       subscriptions: new Map(),
       subscriptionsByChannel: new Map(),
       advertisements: new Map(),
+      parameterSubscriptions: new Set<string>(),
     };
     this.clients.set(connection, client);
 
     this.send(connection, {
       op: "serverInfo",
       name: this.name,
-      capabilities: [ServerCapability.clientPublish, ServerCapability.time],
+      capabilities: [
+        ServerCapability.clientPublish,
+        ServerCapability.time,
+        ServerCapability.parameters,
+        ServerCapability.parametersSubscribe,
+      ],
     });
     if (this.channels.size > 0) {
       this.send(connection, { op: "advertise", channels: Array.from(this.channels.values()) });
@@ -330,6 +378,49 @@ export default class FoxgloveServer {
           }
         }
 
+        break;
+
+      case "getParameters":
+        this.emitter.emit("getParameters", { ...message }, client.connection);
+        break;
+
+      case "setParameters":
+        this.emitter.emit("setParameters", message.parameters);
+        break;
+
+      case "subscribeParameterUpdates":
+        {
+          const alreadySubscribedParameters = Array.from(this.clients.values()).reduce(
+            (acc, c) => new Set<string>([...acc, ...c.parameterSubscriptions]),
+            new Set<string>(),
+          );
+          const parametersToSubscribe = message.parameterNames.filter(
+            (p) => !alreadySubscribedParameters.has(p),
+          );
+
+          message.parameterNames.forEach((p) => client.parameterSubscriptions.add(p));
+
+          if (parametersToSubscribe.length > 0) {
+            this.emitter.emit("subscribeParameterUpdates", parametersToSubscribe);
+          }
+        }
+        break;
+
+      case "unsubscribeParameterUpdates":
+        {
+          message.parameterNames.forEach((p) => client.parameterSubscriptions.delete(p));
+          const subscribedParameters = Array.from(this.clients.values()).reduce(
+            (acc, c) => new Set<string>([...acc, ...c.parameterSubscriptions]),
+            new Set<string>(),
+          );
+          const parametersToUnsubscribe = message.parameterNames.filter(
+            (p) => !subscribedParameters.has(p),
+          );
+
+          if (parametersToUnsubscribe.length > 0) {
+            this.emitter.emit("unsubscribeParameterUpdates", parametersToUnsubscribe);
+          }
+        }
         break;
 
       default:

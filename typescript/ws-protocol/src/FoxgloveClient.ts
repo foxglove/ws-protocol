@@ -9,6 +9,8 @@ import {
   ClientChannel,
   ClientMessage,
   IWebSocket,
+  Parameter,
+  ParameterValues,
   ServerMessage,
   SubscriptionId,
   Time,
@@ -25,6 +27,7 @@ type EventTypes = {
   time: (event: Time) => void;
   advertise: (newChannels: Channel[]) => void;
   unadvertise: (removedChannels: ChannelId[]) => void;
+  parameterValues: (event: ParameterValues) => void;
 };
 
 export default class FoxgloveClient {
@@ -96,6 +99,10 @@ export default class FoxgloveClient {
           this.emitter.emit("unadvertise", message.channelIds);
           return;
 
+        case "parameterValues":
+          this.emitter.emit("parameterValues", message);
+          return;
+
         case BinaryOpcode.MESSAGE_DATA:
           this.emitter.emit("message", message);
           return;
@@ -138,6 +145,22 @@ export default class FoxgloveClient {
 
   unadvertise(channelId: ChannelId): void {
     this.send({ op: "unadvertise", channelIds: [channelId] });
+  }
+
+  getParameters(parameterNames: string[], id?: string): void {
+    this.send({ op: "getParameters", parameterNames, id });
+  }
+
+  setParameters(parameters: Parameter[]): void {
+    this.send({ op: "setParameters", parameters });
+  }
+
+  subscribeParameterUpdates(parameterNames: string[]): void {
+    this.send({ op: "subscribeParameterUpdates", parameterNames });
+  }
+
+  unsubscribeParameterUpdates(parameterNames: string[]): void {
+    this.send({ op: "unsubscribeParameterUpdates", parameterNames });
   }
 
   sendMessage(channelId: ChannelId, data: Uint8Array): void {
