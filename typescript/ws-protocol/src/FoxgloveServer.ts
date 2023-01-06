@@ -163,6 +163,14 @@ export default class FoxgloveServer {
    * Emit a time update to clients.
    */
   broadcastTime(timestamp: bigint): void {
+    if (!this.capabilities.includes(ServerCapability.time)) {
+      log(
+        "Sending time data is only supported if the server has declared the '%s' capability before.",
+        ServerCapability.time,
+      );
+      return;
+    }
+
     for (const client of this.clients.values()) {
       this.sendTimeData(client.connection, timestamp);
     }
@@ -175,6 +183,14 @@ export default class FoxgloveServer {
    * @param connection Optional connection when parameter values are to be sent to a single client
    */
   publishParameterValues(parameters: Parameter[], id?: string, connection?: IWebSocket): void {
+    if (!this.capabilities.includes(ServerCapability.parameters)) {
+      log(
+        "Publishing parameter values is only supported if the server has declared the '%s' capability before.",
+        ServerCapability.parameters,
+      );
+      return;
+    }
+
     if (connection) {
       this.send(connection, { op: "parameterValues", parameters, id });
     } else {
@@ -189,6 +205,14 @@ export default class FoxgloveServer {
    * @param parameters Parameter values
    */
   updateParameterValues(parameters: Parameter[]): void {
+    if (!this.capabilities.includes(ServerCapability.parametersSubscribe)) {
+      log(
+        "Publishing parameter value updates is only supported if the server has declared the '%s' capability before.",
+        ServerCapability.parametersSubscribe,
+      );
+      return;
+    }
+
     for (const client of this.clients.values()) {
       const parametersOfInterest = parameters.filter((p) =>
         client.parameterSubscriptions.has(p.name),
