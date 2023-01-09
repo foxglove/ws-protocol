@@ -60,7 +60,7 @@ Each JSON message must be an object containing a field called `op` which identif
   - `parameters`: Allow clients to get & set parameters
   - `parametersSubscribe`: Allow clients to subscribe to parameter changes
   - `time`: The server may publish binary [time](#time) messages
-- `supportedEncodings`: array of strings | undefined, informing the client about which encodings may be used for client side publishing
+- `supportedEncodings`: array of strings | informing the client about which encodings may be used for client-side publishing. Only set if client publishing is supported.
 
 #### Example
 
