@@ -152,8 +152,8 @@ export default class FoxgloveClient {
     this.send({ op: "getParameters", parameterNames, id });
   }
 
-  setParameters(parameters: Parameter[]): void {
-    this.send({ op: "setParameters", parameters });
+  setParameters(parameters: Parameter[], id?: string): void {
+    this.send({ op: "setParameters", parameters, id });
   }
 
   subscribeParameterUpdates(parameterNames: string[]): void {

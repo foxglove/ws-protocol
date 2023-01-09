@@ -47,7 +47,10 @@ type EventTypes = {
     clientConnection: IWebSocket | undefined,
   ) => void;
   /** Request to set parameter values has been received. */
-  setParameters: (parameters: Parameter[]) => void;
+  setParameters: (
+    request: { parameters: Parameter[]; id?: string },
+    clientConnection: IWebSocket | undefined,
+  ) => void;
   /** Request to subscribe to parameter value updates has been received. */
   subscribeParameterUpdates: (parameterNames: string[]) => void;
   /** Request to unsubscribe from parameter value updates has been received. */
@@ -430,7 +433,7 @@ export default class FoxgloveServer {
         break;
 
       case "setParameters":
-        this.emitter.emit("setParameters", message.parameters);
+        this.emitter.emit("setParameters", { ...message }, client.connection);
         break;
 
       case "subscribeParameterUpdates":

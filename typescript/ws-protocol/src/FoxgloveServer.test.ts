@@ -309,10 +309,10 @@ describe("FoxgloveServer", () => {
       const setParameters = await nextEvent();
       expect(setParameters).toMatchObject([
         "setParameters",
-        [{ name: "/foo/bool_param", value: false }],
+        { parameters: [{ name: "/foo/bool_param", value: false }] },
       ]);
-      const parameters = setParameters[1] as Parameter[];
-      paramStore = paramStore.map((p) => parameters.find((p2) => p2.name === p.name) ?? p);
+      const request = setParameters[1] as { parameters: Parameter[] };
+      paramStore = paramStore.map((p) => request.parameters.find((p2) => p2.name === p.name) ?? p);
 
       // client get parameter request
       const paramNames = paramStore.map((p) => p.name);
