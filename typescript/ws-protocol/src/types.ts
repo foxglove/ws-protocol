@@ -70,6 +70,7 @@ export type ServerInfo = {
   op: "serverInfo";
   name: string;
   capabilities: string[];
+  supportedEncodings?: string[];
 };
 export type StatusMessage = {
   op: "status";

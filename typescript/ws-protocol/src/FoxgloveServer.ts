@@ -75,14 +75,24 @@ export default class FoxgloveServer {
 
   readonly name: string;
   readonly capabilities: string[];
+  readonly supportedEncodings?: string[];
   private emitter = new EventEmitter<EventTypes>();
   private clients = new Map<IWebSocket, ClientInfo>();
   private nextChannelId: ChannelId = 0;
   private channels = new Map<ChannelId, Channel>();
 
-  constructor({ name, capabilities }: { name: string; capabilities?: string[] }) {
+  constructor({
+    name,
+    capabilities,
+    supportedEncodings,
+  }: {
+    name: string;
+    capabilities?: string[];
+    supportedEncodings?: string[];
+  }) {
     this.name = name;
     this.capabilities = capabilities ?? [];
+    this.supportedEncodings = supportedEncodings;
   }
 
   on<E extends EventEmitter.EventNames<EventTypes>>(
@@ -244,6 +254,7 @@ export default class FoxgloveServer {
       op: "serverInfo",
       name: this.name,
       capabilities: this.capabilities,
+      supportedEncodings: this.supportedEncodings,
     });
     if (this.channels.size > 0) {
       this.send(connection, { op: "advertise", channels: Array.from(this.channels.values()) });

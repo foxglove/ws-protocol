@@ -197,6 +197,7 @@ describe("FoxgloveServer", () => {
     const server = new FoxgloveServer({
       name: "foo",
       capabilities: [ServerCapability.clientPublish],
+      supportedEncodings: ["json"],
     });
     const { send, nextJsonMessage, nextEvent, close } = await setupServerAndClient(server);
 
@@ -205,6 +206,7 @@ describe("FoxgloveServer", () => {
         op: "serverInfo",
         name: "foo",
         capabilities: ["clientPublish"],
+        supportedEncodings: ["json"],
       });
 
       // client message, this will be ignored since it is not preceded by an "advertise"
@@ -215,7 +217,7 @@ describe("FoxgloveServer", () => {
       send(
         JSON.stringify({
           op: "advertise",
-          channels: [{ id: 42, topic: "foo", encoding: "bar", schemaName: "baz" }],
+          channels: [{ id: 42, topic: "foo", encoding: "json", schemaName: "baz" }],
         }),
       );
 
@@ -233,7 +235,7 @@ describe("FoxgloveServer", () => {
 
       await expect(nextEvent()).resolves.toMatchObject([
         "advertise",
-        { id: 42, topic: "foo", encoding: "bar", schemaName: "baz" },
+        { id: 42, topic: "foo", encoding: "json", schemaName: "baz" },
       ]);
 
       const expectedPayload = new Uint8Array([2, 3, 4]);
@@ -241,7 +243,7 @@ describe("FoxgloveServer", () => {
       expect(msgEvent).toMatchObject([
         "message",
         {
-          channel: { id: 42, topic: "foo", encoding: "bar", schemaName: "baz" },
+          channel: { id: 42, topic: "foo", encoding: "json", schemaName: "baz" },
           data: new DataView(expectedPayload.buffer),
         },
       ]);
