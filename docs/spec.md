@@ -151,7 +151,7 @@ Informs the client about parameters. Only supported if the server declares the `
 - `parameters`: array of:
   - `name`: string, name of the parameter
   - `value`: number | boolean | string | number[] | boolean[] | string[]
-- `id`: string | undefined. Only set when the [request's](#get-parameters) `id` field was set
+- `id`: string | undefined. Only set when the [getParameters](#get-parameters) or [setParameters](#set-parameters) request's `id` field was set
 
 #### Example
 
@@ -306,6 +306,7 @@ Set one or more parameters. Only supported if the server previously declared tha
 - `parameters`: array of:
   - `name`: string
   - `value`: number | boolean | string | number[] | boolean[] | string[]
+- `id`: string | undefined, arbitrary string used for identifying the corresponding server [response](#parameter-values). If this field is not set, the server may not send a response to the client.
 
 #### Example
 
@@ -315,7 +316,8 @@ Set one or more parameters. Only supported if the server previously declared tha
   "parameters": [
     { "name": "/int_param", "value": 3 },
     { "name": "/float_param", "value": 4.1 }
-  ]
+  ],
+  "id": "request-456"
 }
 ```
 

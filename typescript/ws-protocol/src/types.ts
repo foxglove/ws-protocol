@@ -97,6 +97,7 @@ export type GetParameters = {
 export type SetParameters = {
   op: "setParameters";
   parameters: Parameter[];
+  id?: string;
 };
 export type SubscribeParameterUpdates = {
   op: "subscribeParameterUpdates";

@@ -52,10 +52,18 @@ async function main(): Promise<void> {
       server.publishParameterValues(allParams, id, clientConnection);
     }
   });
-  server.on("setParameters", (parameters) => {
+  server.on("setParameters", ({ parameters, id }, clientConnection) => {
     log("Received a request to set %d parameters.", parameters.length);
     parameters.forEach((p) => paramStore.set(p.name, p.value));
     server.updateParameterValues(parameters);
+
+    if (id) {
+      // Send updated parameters to client
+      const params = Array.from(paramStore.entries())
+        .filter(([name]) => parameters.find((p) => p.name === name))
+        .map(([name, value]) => ({ name, value }));
+      server.publishParameterValues(params, id, clientConnection);
+    }
   });
   server.on("error", (err) => {
     log("server error: %o", err);
