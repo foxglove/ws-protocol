@@ -60,6 +60,7 @@ Each JSON message must be an object containing a field called `op` which identif
   - `parameters`: Allow clients to get & set parameters
   - `parametersSubscribe`: Allow clients to subscribe to parameter changes
   - `time`: The server may publish binary [time](#time) messages
+- `supportedEncodings`: array of strings | undefined, informing the client about which encodings may be used for client side publishing
 
 #### Example
 
@@ -67,7 +68,8 @@ Each JSON message must be an object containing a field called `op` which identif
 {
   "op": "serverInfo",
   "name": "example server",
-  "capabilities": ["clientPublish", "time"]
+  "capabilities": ["clientPublish", "time"],
+  "supportedEncodings": ["json"]
 }
 ```
 
@@ -220,7 +222,7 @@ Informs the client about parameters. Only supported if the server declares the `
 - `channels`: array of:
   - `id`: number chosen by the client. The client may reuse ids that have previously been unadvertised.
   - `topic`: string
-  - `encoding`: string
+  - `encoding`: string, one of the encodings [supported by the server](#server-info)
   - `schemaName`: string
 
 #### Example
