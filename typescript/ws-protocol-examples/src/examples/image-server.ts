@@ -1,4 +1,5 @@
 import { fromNanoSec } from "@foxglove/rostime";
+import { CompressedImage } from "@foxglove/schemas/jsonschema";
 import { FoxgloveServer } from "@foxglove/ws-protocol";
 import { Command } from "commander";
 import Debug from "debug";
@@ -7,6 +8,7 @@ import { Writable } from "stream";
 import { WebSocketServer } from "ws";
 
 import boxen from "../boxen";
+import { setupSigintHandler } from "./util/setupSigintHandler";
 
 const log = Debug("foxglove:image-server");
 Debug.enable("foxglove:*");
@@ -61,6 +63,7 @@ async function main(): Promise<void> {
     port,
     handleProtocols: (protocols) => server.handleProtocols(protocols),
   });
+  const signal = setupSigintHandler(log, ws);
   ws.on("listening", () => {
     void boxen(
       `📡 Server listening on localhost:${port}. To see data, visit:\n` +
@@ -86,30 +89,12 @@ async function main(): Promise<void> {
   const ch1 = server.addChannel({
     topic: "example_image",
     encoding: "json",
-    schemaName: "ros.sensor_msgs.CompressedImage",
-    schema: JSON.stringify({
-      type: "object",
-      properties: {
-        header: {
-          type: "object",
-          properties: {
-            stamp: {
-              type: "object",
-              properties: {
-                sec: { type: "integer" },
-                nsec: { type: "integer" },
-              },
-            },
-          },
-        },
-        encoding: { type: "string" },
-        data: { type: "string", contentEncoding: "base64" },
-      },
-    }),
+    schemaName: CompressedImage.title,
+    schema: JSON.stringify(CompressedImage),
   });
 
   const textEncoder = new TextEncoder();
-  for (;;) {
+  while (!signal.aborted) {
     await delay(50);
     const image = drawImage(Date.now());
     const chunks: Buffer[] = [];
@@ -126,7 +111,7 @@ async function main(): Promise<void> {
       now,
       textEncoder.encode(
         JSON.stringify({
-          header: { stamp: fromNanoSec(now) },
+          timestamp: fromNanoSec(now),
           encoding: "jpeg",
           data: Buffer.concat(chunks).toString("base64"),
         }),

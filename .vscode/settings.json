@@ -22,7 +22,7 @@
   "python.testing.pytestEnabled": true,
   "python.formatting.provider": "black",
   "python.analysis.typeCheckingMode": "strict",
-  "jest.rootPath": "typescript",
+  "jest.rootPath": "typescript/ws-protocol",
 
   "search.exclude": {
     "**/*_pb2.py*": true,

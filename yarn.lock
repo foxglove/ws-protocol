@@ -525,6 +525,13 @@
     tsutils "^3"
     typescript "^4"
 
+"@foxglove/rosmsg-msgs-common@^2.0.0":
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/@foxglove/rosmsg-msgs-common/-/rosmsg-msgs-common-2.1.0.tgz#8d348db60dc69670916ca9dc56999abb6de4134f"
+  integrity sha512-Lxu3CEb+Ko1hrLu1bIqvvoc8DvGW1FAA21sWW0MoTPTgoQ1Rnpke2Z4H6O78C8DwXPzXAqZIisgxfFM9NYiHPA==
+  dependencies:
+    "@foxglove/rosmsg" "^3.1.0"
+
 "@foxglove/rosmsg-serialization@^1.5.3":
   version "1.5.3"
   resolved "https://registry.yarnpkg.com/@foxglove/rosmsg-serialization/-/rosmsg-serialization-1.5.3.tgz#82c311d81c1aec4319880ecb37208a2a74b1164a"
@@ -552,6 +559,14 @@
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/@foxglove/rostime/-/rostime-1.1.2.tgz#f8e1f10bff115c22be8a3e06791c2ac800449ee8"
   integrity sha512-vWuTJCuGv0xvgwOlrZ1y2MevmNMVxWcUU/HwlmYXi/jUq/kRaACStU18uyuZ3LzdNKaffkti0rTcXWESaQjwQw==
+
+"@foxglove/schemas@^0.7.3":
+  version "0.7.3"
+  resolved "https://registry.yarnpkg.com/@foxglove/schemas/-/schemas-0.7.3.tgz#720b03d6af1d1c77354ca70e373e6e4b8a3115ba"
+  integrity sha512-386DwFdLML/BpalrgmD49k0E0rmpECPH6rfiERdIJu8R+mBCZw1YVoS2A+durjv83NZC945wK7t84Pvfb9NTyw==
+  dependencies:
+    "@foxglove/rosmsg-msgs-common" "^2.0.0"
+    tslib "^2"
 
 "@foxglove/tsconfig@1.1.0":
   version "1.1.0"
