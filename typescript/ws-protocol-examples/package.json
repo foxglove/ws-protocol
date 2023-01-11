@@ -64,7 +64,7 @@
     "@foxglove/rosmsg-serialization": "^1.5.3",
     "@foxglove/rosmsg2-serialization": "^1.1.1",
     "@foxglove/rostime": "^1.1.2",
-    "@foxglove/ws-protocol": "^0.0.8",
+    "@foxglove/ws-protocol": "^0.3.1",
     "@mcap/core": "^0.3.0",
     "boxen": "^7.0.0",
     "commander": "^9.4.1",
