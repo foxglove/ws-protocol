@@ -67,7 +67,7 @@
     "@foxglove/ws-protocol": "^0.0.8",
     "@mcap/core": "^0.3.0",
     "boxen": "^7.0.0",
-    "commander": "^9.4.1",
+    "commander": "^9.5.0",
     "debug": "^4",
     "eventemitter3": "^5.0.0",
     "protobufjs": "^7.1.2",
