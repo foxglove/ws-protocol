@@ -23,7 +23,7 @@ jobs:
           cache: yarn
 
       - name: Ensure examples use current version of ws-protocol package
-        run: ! grep '@foxglove/ws-protocol' yarn.lock
+        run: "! grep '@foxglove/ws-protocol' yarn.lock"
 
       - run: yarn install --frozen-lockfile
       - run: yarn workspace @foxglove/${{ matrix.package }} lint:ci
