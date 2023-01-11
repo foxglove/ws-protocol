@@ -14,7 +14,7 @@ from foxglove_websocket.server import FoxgloveServer, FoxgloveServerListener
 from foxglove_websocket.types import ChannelId
 
 try:
-    from foxglove_websocket.examples.proto.foxglove.SceneUpdate_pb2 import SceneUpdate
+    from foxglove_schemas_protobuf.SceneUpdate_pb2 import SceneUpdate
     import google.protobuf.message
     from google.protobuf.descriptor_pb2 import FileDescriptorSet
     from google.protobuf.descriptor import FileDescriptor
@@ -22,7 +22,7 @@ try:
 except ImportError as err:
     print_exception(*sys.exc_info())
     print(
-        "Unable to import protobuf definitions; did you forget to run `pip install foxglove-websocket[examples]`?",
+        "Unable to import protobuf schemas; did you forget to run `pip install 'foxglove-websocket[examples]'`?",
     )
     sys.exit(1)
 
