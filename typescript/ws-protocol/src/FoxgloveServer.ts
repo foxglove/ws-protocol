@@ -526,8 +526,6 @@ export default class FoxgloveServer {
     if (connection.send.length > 1) {
       connection.send(header.buffer, { fin: false });
       connection.send(payload, { fin: true });
-    } else if (typeof Blob === "function") {
-      connection.send(new Blob([header.buffer, payload]));
     } else {
       const buffer = new Uint8Array(header.buffer.byteLength + payload.byteLength);
       buffer.set(new Uint8Array(header.buffer), 0);
