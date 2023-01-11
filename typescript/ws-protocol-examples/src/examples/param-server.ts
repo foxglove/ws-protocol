@@ -4,6 +4,7 @@ import Debug from "debug";
 import { WebSocketServer } from "ws";
 
 import boxen from "../boxen";
+import { setupSigintHandler } from "./util/setupSigintHandler";
 
 const log = Debug("foxglove:param-server");
 Debug.enable("foxglove:*");
@@ -18,6 +19,7 @@ async function main(): Promise<void> {
     port,
     handleProtocols: (protocols) => server.handleProtocols(protocols),
   });
+  setupSigintHandler(log, ws);
 
   const paramStore = new Map<Parameter["name"], Parameter["value"]>([
     ["/foo/bool_param", true],

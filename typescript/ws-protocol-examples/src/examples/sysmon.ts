@@ -5,6 +5,7 @@ import os from "os";
 import { WebSocketServer } from "ws";
 
 import boxen from "../boxen";
+import { setupSigintHandler } from "./util/setupSigintHandler";
 
 const log = Debug("foxglove:sysmon");
 Debug.enable("foxglove:*");
@@ -78,6 +79,7 @@ async function main() {
     port,
     handleProtocols: (protocols) => server.handleProtocols(protocols),
   });
+  setupSigintHandler(log, ws);
   ws.on("listening", () => {
     void boxen(
       `📡 Server listening on localhost:${port}. To see data, visit:\n` +

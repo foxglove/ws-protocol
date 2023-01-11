@@ -8,6 +8,7 @@ import { WebSocketServer } from "ws";
 import { ZstdCodec, ZstdModule, ZstdStreaming } from "zstd-codec";
 
 import boxen from "../boxen";
+import { setupSigintHandler } from "./util/setupSigintHandler";
 
 const log = Debug("foxglove:mcap-play");
 Debug.enable("foxglove:*");
@@ -118,6 +119,7 @@ async function main(file: string, options: { loop: boolean; rate: number }): Pro
     port,
     handleProtocols: (protocols) => server.handleProtocols(protocols),
   });
+  const signal = setupSigintHandler(log, ws);
 
   const schemasById = new Map<number, McapTypes.Schema>();
   const mcapChannelsByWsChannel = new Map<WsChannelId, McapChannelId>();
@@ -131,7 +133,7 @@ async function main(file: string, options: { loop: boolean; rate: number }): Pro
       log("starting playback");
       let currentTime: bigint | undefined;
       for await (const record of readMcapFile(file)) {
-        if (!running) {
+        if (!running || signal.aborted) {
           break outer;
         }
         switch (record.type) {
