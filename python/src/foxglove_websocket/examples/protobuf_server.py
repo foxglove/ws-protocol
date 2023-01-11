@@ -22,7 +22,7 @@ try:
 except ImportError as err:
     print_exception(*sys.exc_info())
     print(
-        "Unable to import protobuf schemas; did you forget to run `pip install foxglove-websocket[examples]`?",
+        "Unable to import protobuf schemas; did you forget to run `pip install 'foxglove-websocket[examples]'`?",
     )
     sys.exit(1)
 
