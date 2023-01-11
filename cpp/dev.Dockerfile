@@ -1,5 +1,10 @@
 FROM conanio/clang13-ubuntu16.04 AS base
 
+RUN sudo apt-get update && \
+    sudo apt-get install -y --no-install-recommends --no-install-suggests \
+    clang-format-8
+RUN sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-8 100
+
 WORKDIR /src
 
 FROM base as build
