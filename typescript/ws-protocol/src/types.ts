@@ -71,7 +71,7 @@ export type ServerInfo = {
   name: string;
   capabilities: string[];
   supportedEncodings?: string[];
-  metadata?: Record<string, unknown>;
+  metadata?: Record<string, string>;
 };
 export type StatusMessage = {
   op: "status";
