@@ -61,7 +61,7 @@ Each JSON message must be an object containing a field called `op` which identif
   - `parametersSubscribe`: Allow clients to subscribe to parameter changes
   - `time`: The server may publish binary [time](#time) messages
 - `supportedEncodings`: array of strings | informing the client about which encodings may be used for client-side publishing. Only set if client publishing is supported.
-- `options`: optional map of key-value pairs
+- `metadata`: optional map of key-value pairs
 
 #### Example
 
@@ -71,7 +71,7 @@ Each JSON message must be an object containing a field called `op` which identif
   "name": "example server",
   "capabilities": ["clientPublish", "time"],
   "supportedEncodings": ["json"],
-  "options": {
+  "metadata": {
     "key": "value"
   }
 }
