@@ -109,8 +109,10 @@ Each JSON message must be an object containing a field called `op` which identif
   - `id`: number. The server may reuse ids when channels disappear and reappear, but only if the channel keeps the exact same topic, encoding, schemaName, and schema. Clients will use this unique id to cache schema info and deserialization routines.
   - `topic`: string
   - `encoding`: string
+    > Note: Encodings currently supported by Foxglove Studio are `json`, `protobuf`, `ros1`, and `cdr` (ROS 2). For more information, see the [Foxglove Studio documentation](https://foxglove.dev/docs/studio/connection/custom).
   - `schemaName`: string
   - `schema`: string
+    > Note: Foxglove Studio expects the schema to be in a format matching the `encoding`. For more information, see the [Foxglove Studio documentation](https://foxglove.dev/docs/studio/connection/custom).
 
 #### Example
 
