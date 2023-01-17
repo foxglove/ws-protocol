@@ -30,6 +30,9 @@
 - [Message Data](#message-data) (binary)
 - [Time](#time) (binary)
 - [Parameter Values](#parameter-values) (json)
+- [AdvertiseServices](#advertise-services) (json)
+- [UnadvertiseServices](#unadvertise-services) (json)
+- [Service Call Response](#service-call-response) (binary)
 
 ### Sent by client
 
@@ -42,6 +45,7 @@
 - [Set Parameters](#set-parameters) (json)
 - [Subscribe Parameter Update](#subscribe-parameter-update) (json)
 - [Unsubscribe Parameter Update](#unsubscribe-parameter-update) (json)
+- [Service Call Request](#service-call-request) (binary)
 
 ## JSON messages
 
@@ -60,6 +64,7 @@ Each JSON message must be an object containing a field called `op` which identif
   - `parameters`: Allow clients to get & set parameters
   - `parametersSubscribe`: Allow clients to subscribe to parameter changes
   - `time`: The server may publish binary [time](#time) messages
+  - `services`: Allow clients to call services
 - `supportedEncodings`: array of strings | informing the client about which encodings may be used for client-side publishing. Only set if client publishing is supported.
 - `metadata`: optional map of key-value pairs
 
@@ -173,6 +178,60 @@ Informs the client about parameters. Only supported if the server declares the `
     { "name": "/node/nested_ints_param", "value": [1, 2, 3] }
   ],
   "id": "request-123"
+}
+```
+
+### Advertise Services
+
+Informs the client about available services. Only supported if the server declares the `services` [capability](#server-info).
+
+#### Fields
+
+- `op`: string `"advertiseServices"`
+- `services`: array of:
+  - `id`: number. The server may reuse ids when services disappear and reappear, but only if the services keeps the exact same name, type, and schema. Clients will use this unique id to cache schema info and deserialization routines.
+  - `name`: string
+  - `type`: string
+  - `schema`: string
+  - `acceptedEncodings`: array of
+    - `id`: number
+    - `name`: string, name of an encoding which can be used to encode service call requests
+
+#### Example
+
+```json
+{
+  "op": "advertiseServices",
+  "services": [
+    {
+      "id": 1,
+      "name": "foo",
+      "type": "std_srvs/srv/Empty",
+      "schema": "---",
+      "acceptedEncodings": [
+        { "id": 1, "name": "cdr" },
+        { "id": 2, "name": "json" }
+      ]
+    }
+  ]
+}
+```
+
+### Unadvertise Services
+
+Informs the client about services that are no longer available. Only supported if the server declares the `services` [capability](#server-info).
+
+#### Fields
+
+- `op`: string `"unadvertiseServices"`
+- `serviceIds`: array of number, corresponding to previous [advertisement](#advertise-services)
+
+#### Example
+
+```json
+{
+  "op": "unadvertiseServices",
+  "serviceIds": [1, 2]
 }
 ```
 
@@ -405,3 +464,26 @@ All integer types explicitly specified (uint32, uint64, etc.) in this section ar
 | ----- | ------ | ----------------------- |
 | 1     | opcode | 0x02                    |
 | 8     | uint64 | timestamp (nanoseconds) |
+
+#### Service Call Request
+
+- Request to call a service that has been advertised by the server.
+- Only supported if the server previously declared the `services` [capability](#server-info).
+
+| Bytes           | Type    | Description                                                                                  |
+| --------------- | ------- | -------------------------------------------------------------------------------------------- |
+| 1               | opcode  | 0x02                                                                                         |
+| 4               | uint32  | service id                                                                                   |
+| 8               | uint64  | call id, a unique number to identify the corresponding service response                      |
+| 4               | uint32  | id of the request encoding, as specified in the [service advertisement](#advertise-services) |
+| remaining bytes | uint8[] | request payload                                                                              |
+
+### Service Call Response
+
+- Provides the response to a previous [service call](#service-call-request).
+
+| Bytes           | Type    | Description      |
+| --------------- | ------- | ---------------- |
+| 1               | opcode  | 0x03             |
+| 8               | uint64  | call id          |
+| remaining bytes | uint8[] | response payload |
