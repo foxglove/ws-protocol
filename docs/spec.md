@@ -192,10 +192,9 @@ Informs the client about available services. Only supported if the server declar
   - `id`: number. The server may reuse ids when services disappear and reappear, but only if the services keeps the exact same name, type, and schema. Clients will use this unique id to cache schema info and deserialization routines.
   - `name`: string
   - `type`: string
-  - `schema`: string
-  - `acceptedEncodings`: array of
-    - `id`: number
-    - `name`: string, name of an encoding which can be used to encode service call requests
+  - `requestSchema`: string
+  - `responseSchema`: string
+  - `acceptedEncodings`: array of string, encodings which can be used to encode service call requests
 
 #### Example
 
@@ -207,11 +206,9 @@ Informs the client about available services. Only supported if the server declar
       "id": 1,
       "name": "foo",
       "type": "std_srvs/srv/Empty",
-      "schema": "---",
-      "acceptedEncodings": [
-        { "id": 1, "name": "cdr" },
-        { "id": 2, "name": "json" }
-      ]
+      "requestSchema": "",
+      "responseSchema": "",
+      "acceptedEncodings": ["cdr", "json"]
     }
   ]
 }
@@ -470,20 +467,24 @@ All integer types explicitly specified (uint32, uint64, etc.) in this section ar
 - Request to call a service that has been advertised by the server.
 - Only supported if the server previously declared the `services` [capability](#server-info).
 
-| Bytes           | Type    | Description                                                                                  |
-| --------------- | ------- | -------------------------------------------------------------------------------------------- |
-| 1               | opcode  | 0x02                                                                                         |
-| 4               | uint32  | service id                                                                                   |
-| 8               | uint64  | call id, a unique number to identify the corresponding service response                      |
-| 4               | uint32  | id of the request encoding, as specified in the [service advertisement](#advertise-services) |
-| remaining bytes | uint8[] | request payload                                                                              |
+| Bytes             | Type    | Description                                                                |
+| ----------------- | ------- | -------------------------------------------------------------------------- |
+| 1                 | opcode  | 0x02                                                                       |
+| 4                 | uint32  | service id                                                                 |
+| 4                 | uint32  | call id, a unique number to identify the corresponding service response    |
+| 4                 | uint32  | encoding length                                                            |
+| _encoding length_ | char[]  | encoding, as specified in the [service advertisement](#advertise-services) |
+| remaining bytes   | uint8[] | request payload                                                            |
 
 ### Service Call Response
 
 - Provides the response to a previous [service call](#service-call-request).
 
-| Bytes           | Type    | Description      |
-| --------------- | ------- | ---------------- |
-| 1               | opcode  | 0x03             |
-| 8               | uint64  | call id          |
-| remaining bytes | uint8[] | response payload |
+| Bytes             | Type    | Description                                           |
+| ----------------- | ------- | ----------------------------------------------------- |
+| 1                 | opcode  | 0x03                                                  |
+| 4                 | uint32  | service id                                            |
+| 4                 | uint32  | call id                                               |
+| 4                 | uint32  | encoding length                                       |
+| _encoding length_ | char[]  | encoding, same encoding that was used for the request |
+| remaining bytes   | uint8[] | response payload                                      |
