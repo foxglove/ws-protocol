@@ -65,7 +65,7 @@ Each JSON message must be an object containing a field called `op` which identif
   - `parametersSubscribe`: Allow clients to subscribe to parameter changes
   - `time`: The server may publish binary [time](#time) messages
   - `services`: Allow clients to call services
-- `supportedEncodings`: array of strings | informing the client about which encodings may be used for client-side publishing. Only set if client publishing is supported.
+- `supportedEncodings`: array of strings | informing the client about which encodings may be used for client-side publishing or service call requests/responses. Only set if client publishing or services are supported.
 - `metadata`: optional map of key-value pairs
 
 #### Example
@@ -194,7 +194,6 @@ Informs the client about available services. Only supported if the server declar
   - `type`: string
   - `requestSchema`: string
   - `responseSchema`: string
-  - `acceptedEncodings`: array of string, encodings which can be used to encode service call requests
 
 #### Example
 
@@ -207,8 +206,7 @@ Informs the client about available services. Only supported if the server declar
       "name": "foo",
       "type": "std_srvs/srv/Empty",
       "requestSchema": "",
-      "responseSchema": "",
-      "acceptedEncodings": ["cdr", "json"]
+      "responseSchema": ""
     }
   ]
 }
@@ -467,18 +465,19 @@ All integer types explicitly specified (uint32, uint64, etc.) in this section ar
 - Request to call a service that has been advertised by the server.
 - Only supported if the server previously declared the `services` [capability](#server-info).
 
-| Bytes             | Type    | Description                                                                |
-| ----------------- | ------- | -------------------------------------------------------------------------- |
-| 1                 | opcode  | 0x02                                                                       |
-| 4                 | uint32  | service id                                                                 |
-| 4                 | uint32  | call id, a unique number to identify the corresponding service response    |
-| 4                 | uint32  | encoding length                                                            |
-| _encoding length_ | char[]  | encoding, as specified in the [service advertisement](#advertise-services) |
-| remaining bytes   | uint8[] | request payload                                                            |
+| Bytes             | Type    | Description                                                             |
+| ----------------- | ------- | ----------------------------------------------------------------------- |
+| 1                 | opcode  | 0x02                                                                    |
+| 4                 | uint32  | service id                                                              |
+| 4                 | uint32  | call id, a unique number to identify the corresponding service response |
+| 4                 | uint32  | encoding length                                                         |
+| _encoding length_ | char[]  | encoding, one of the encodings [supported by the server](#server-info)  |
+| remaining bytes   | uint8[] | request payload                                                         |
 
 ### Service Call Response
 
 - Provides the response to a previous [service call](#service-call-request).
+- Only supported if the server previously declared the `services` [capability](#server-info).
 
 | Bytes             | Type    | Description                                           |
 | ----------------- | ------- | ----------------------------------------------------- |
