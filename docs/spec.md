@@ -30,8 +30,8 @@
 - [Message Data](#message-data) (binary)
 - [Time](#time) (binary)
 - [Parameter Values](#parameter-values) (json)
-- [AdvertiseServices](#advertise-services) (json)
-- [UnadvertiseServices](#unadvertise-services) (json)
+- [Advertise Services](#advertise-services) (json)
+- [Unadvertise Services](#unadvertise-services) (json)
 - [Service Call Response](#service-call-response) (binary)
 
 ### Sent by client
