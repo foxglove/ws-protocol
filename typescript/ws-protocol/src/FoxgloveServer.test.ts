@@ -1,7 +1,15 @@
 import ConsumerQueue from "consumer-queue";
 import { AddressInfo, Data, WebSocket, WebSocketServer } from "ws";
 
-import { BinaryOpcode, ClientPublish, IWebSocket, Parameter, ServerCapability } from ".";
+import {
+  BinaryOpcode,
+  ClientBinaryOpcode,
+  ClientPublish,
+  IWebSocket,
+  Parameter,
+  ServerCapability,
+  ServiceCallPayload,
+} from ".";
 import FoxgloveServer from "./FoxgloveServer";
 
 function uint32LE(n: number): Uint8Array {
@@ -59,6 +67,9 @@ async function setupServerAndClient(server: FoxgloveServer) {
   );
   server.on("unsubscribeParameterUpdates", (event) =>
     eventQueue.push(["unsubscribeParameterUpdates", event]),
+  );
+  server.on("serviceCallRequest", (event, clientConnection) =>
+    eventQueue.push(["serviceCallRequest", event, clientConnection]),
   );
 
   const nextEvent = async () => await eventQueue.pop();
@@ -387,6 +398,82 @@ describe("FoxgloveServer", () => {
         op: "parameterValues",
         parameters: [{ name: "/foo/bool_param", value: false }],
       });
+    } catch (ex) {
+      close();
+      throw ex;
+    }
+    close();
+  });
+
+  it("receives service request from client and sends response back", async () => {
+    const server = new FoxgloveServer({
+      name: "foo",
+      capabilities: [ServerCapability.services],
+      supportedEncodings: ["json"],
+    });
+    const { send, nextJsonMessage, nextBinaryMessage, nextEvent, close } =
+      await setupServerAndClient(server);
+
+    try {
+      await expect(nextJsonMessage()).resolves.toEqual({
+        op: "serverInfo",
+        name: "foo",
+        capabilities: ["services"],
+        supportedEncodings: ["json"],
+      });
+
+      const service = {
+        name: "foo",
+        type: "bar",
+        requestSchema: "schema1",
+        responseSchema: "FooShcame",
+      };
+      const serviceId = server.addService(service);
+      await expect(nextJsonMessage()).resolves.toEqual({
+        op: "advertiseServices",
+        services: [{ ...service, id: serviceId }],
+      });
+
+      const request: ServiceCallPayload = {
+        serviceId,
+        callId: 123,
+        encoding: "json",
+        data: new DataView(new Uint8Array([1, 2, 3]).buffer),
+      };
+
+      const serializedRequest = new Uint8Array([
+        ClientBinaryOpcode.SERVICE_CALL_REQUEST,
+        ...uint32LE(serviceId),
+        ...uint32LE(request.callId),
+        ...uint32LE(request.encoding.length),
+        ...new TextEncoder().encode(request.encoding),
+        ...new Uint8Array(request.data.buffer, request.data.byteOffset, request.data.byteLength),
+      ]);
+      send(serializedRequest);
+
+      const [eventId, receivedRequest, connection] = await nextEvent();
+      expect(eventId).toEqual("serviceCallRequest");
+      expect(receivedRequest).toEqual({ op: ClientBinaryOpcode.SERVICE_CALL_REQUEST, ...request });
+
+      const response: ServiceCallPayload = {
+        ...request,
+        data: new DataView(new Uint8Array([4, 5, 6]).buffer),
+      };
+
+      server.sendServiceCallResponse(response, connection as IWebSocket);
+
+      await expect(nextBinaryMessage()).resolves.toEqual(
+        new Uint8Array([
+          BinaryOpcode.SERVICE_CALL_RESPONSE,
+          ...uint32LE(response.serviceId),
+          ...uint32LE(response.callId),
+          ...uint32LE("json".length),
+          ...new TextEncoder().encode("json"),
+          4,
+          5,
+          6,
+        ]),
+      );
     } catch (ex) {
       close();
       throw ex;

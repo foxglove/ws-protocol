@@ -13,6 +13,10 @@ import {
   Parameter,
   ParameterValues,
   ServerMessage,
+  Service,
+  ServiceCallPayload,
+  ServiceCallResponse,
+  ServiceId,
   SubscriptionId,
   Time,
 } from "./types";
@@ -28,8 +32,13 @@ type EventTypes = {
   time: (event: Time) => void;
   advertise: (newChannels: Channel[]) => void;
   unadvertise: (removedChannels: ChannelId[]) => void;
+  advertiseServices: (newServices: Service[]) => void;
+  unadvertiseServices: (removedServices: ServiceId[]) => void;
   parameterValues: (event: ParameterValues) => void;
+  serviceCallResponse: (event: ServiceCallResponse) => void;
 };
+
+const textEncoder = new TextEncoder();
 
 export default class FoxgloveClient {
   static SUPPORTED_SUBPROTOCOL = "foxglove.websocket.v1";
@@ -104,12 +113,24 @@ export default class FoxgloveClient {
           this.emitter.emit("parameterValues", message);
           return;
 
+        case "advertiseServices":
+          this.emitter.emit("advertiseServices", message.services);
+          return;
+
+        case "unadvertiseServices":
+          this.emitter.emit("unadvertiseServices", message.serviceIds);
+          return;
+
         case BinaryOpcode.MESSAGE_DATA:
           this.emitter.emit("message", message);
           return;
 
         case BinaryOpcode.TIME:
           this.emitter.emit("time", message);
+          return;
+
+        case BinaryOpcode.SERVICE_CALL_RESPONSE:
+          this.emitter.emit("serviceCallResponse", message);
           return;
       }
       this.emitter.emit(
@@ -170,6 +191,30 @@ export default class FoxgloveClient {
     view.setUint8(0, ClientBinaryOpcode.MESSAGE_DATA);
     view.setUint32(1, channelId, true);
     payload.set(data, 5);
+    this.ws.send(payload);
+  }
+
+  sendCallServiceRequest(request: ServiceCallPayload): void {
+    const encoding = textEncoder.encode(request.encoding);
+    const payload = new Uint8Array(1 + 4 + 4 + 4 + encoding.length + request.data.byteLength);
+    const view = new DataView(payload.buffer, payload.byteOffset, payload.byteLength);
+    let offset = 0;
+    view.setUint8(offset, ClientBinaryOpcode.SERVICE_CALL_REQUEST);
+    offset += 1;
+    view.setUint32(offset, request.serviceId, true);
+    offset += 4;
+    view.setUint32(offset, request.callId, true);
+    offset += 4;
+    view.setUint32(offset, request.encoding.length, true);
+    offset += 4;
+    payload.set(encoding, offset);
+    offset += encoding.length;
+    const data = new Uint8Array(
+      request.data.buffer,
+      request.data.byteOffset,
+      request.data.byteLength,
+    );
+    payload.set(data, offset);
     this.ws.send(payload);
   }
 
