@@ -16,8 +16,8 @@ import {
   ServerCapability,
   ServerMessage,
   Service,
+  ServiceCallPayload,
   ServiceCallRequest,
-  ServiceCallResponse,
   ServiceId,
   SubscriptionId,
 } from "./types";
@@ -227,11 +227,11 @@ export default class FoxgloveServer {
   }
 
   /**
-   * Send a service response to the client
+   * Send a service call response to the client
    * @param response Response to send to the client
    * @param connection Connection of the client that called the service
    */
-  sendServiceResponse(response: ServiceCallResponse, connection: IWebSocket): void {
+  sendServiceCallResponse(response: ServiceCallPayload, connection: IWebSocket): void {
     const utf8Encode = new TextEncoder();
     const encoding = utf8Encode.encode(response.encoding);
     const payload = new Uint8Array(1 + 4 + 4 + 4 + encoding.length + response.data.byteLength);

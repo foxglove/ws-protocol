@@ -1,5 +1,7 @@
 import { BinaryOpcode, ClientBinaryOpcode, ClientMessage, ServerMessage } from "./types";
 
+const textDecoder = new TextDecoder();
+
 export function parseServerMessage(buffer: ArrayBuffer): ServerMessage {
   const view = new DataView(buffer);
 
@@ -28,7 +30,7 @@ export function parseServerMessage(buffer: ArrayBuffer): ServerMessage {
       const encodingLength = view.getUint32(offset, true);
       offset += 4;
       const encodingBytes = new DataView(buffer, offset, encodingLength);
-      const encoding = new TextDecoder().decode(encodingBytes);
+      const encoding = textDecoder.decode(encodingBytes);
       offset += encodingLength;
       const data = new DataView(buffer, offset, buffer.byteLength - offset);
       return { op, serviceId, callId, encoding, data };
@@ -59,7 +61,7 @@ export function parseClientMessage(buffer: ArrayBuffer): ClientMessage {
       const encodingLength = view.getUint32(offset, true);
       offset += 4;
       const encodingBytes = new DataView(buffer, offset, encodingLength);
-      const encoding = new TextDecoder().decode(encodingBytes);
+      const encoding = textDecoder.decode(encodingBytes);
       offset += encodingLength;
       const data = new DataView(buffer, offset, buffer.byteLength - offset);
       return { op, serviceId, callId, encoding, data };

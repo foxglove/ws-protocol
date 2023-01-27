@@ -73,12 +73,15 @@ export type ClientMessageData = {
   data: DataView;
 };
 
-export type ServiceCallRequest = {
-  op: ClientBinaryOpcode.SERVICE_CALL_REQUEST;
+export type ServiceCallPayload = {
   serviceId: ServiceId;
   callId: number;
   encoding: string;
   data: DataView;
+};
+
+export type ServiceCallRequest = ServiceCallPayload & {
+  op: ClientBinaryOpcode.SERVICE_CALL_REQUEST;
 };
 
 export type ClientMessage =
@@ -154,12 +157,8 @@ export type Time = {
   op: BinaryOpcode.TIME;
   timestamp: bigint;
 };
-export type ServiceCallResponse = {
+export type ServiceCallResponse = ServiceCallPayload & {
   op: BinaryOpcode.SERVICE_CALL_RESPONSE;
-  serviceId: ServiceId;
-  callId: number;
-  encoding: string;
-  data: DataView;
 };
 export type ClientPublish = {
   channel: ClientChannel;

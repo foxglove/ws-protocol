@@ -13,12 +13,12 @@ import {
   Parameter,
   ParameterValues,
   ServerMessage,
+  Service,
+  ServiceCallPayload,
   ServiceCallResponse,
   ServiceId,
-  Service,
   SubscriptionId,
   Time,
-  ServiceCallRequest,
 } from "./types";
 
 type EventTypes = {
@@ -37,6 +37,8 @@ type EventTypes = {
   parameterValues: (event: ParameterValues) => void;
   serviceCallResponse: (event: ServiceCallResponse) => void;
 };
+
+const textEncoder = new TextEncoder();
 
 export default class FoxgloveClient {
   static SUPPORTED_SUBPROTOCOL = "foxglove.websocket.v1";
@@ -192,9 +194,8 @@ export default class FoxgloveClient {
     this.ws.send(payload);
   }
 
-  sendServiceRequest(request: ServiceCallRequest): void {
-    const utf8Encode = new TextEncoder();
-    const encoding = utf8Encode.encode(request.encoding);
+  sendCallServiceRequest(request: ServiceCallPayload): void {
+    const encoding = textEncoder.encode(request.encoding);
     const payload = new Uint8Array(1 + 4 + 4 + 4 + encoding.length + request.data.byteLength);
     const view = new DataView(payload.buffer, payload.byteOffset, payload.byteLength);
     let offset = 0;

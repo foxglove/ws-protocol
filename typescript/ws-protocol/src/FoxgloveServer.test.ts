@@ -8,8 +8,7 @@ import {
   IWebSocket,
   Parameter,
   ServerCapability,
-  ServiceCallRequest,
-  ServiceCallResponse,
+  ServiceCallPayload,
 } from ".";
 import FoxgloveServer from "./FoxgloveServer";
 
@@ -435,8 +434,7 @@ describe("FoxgloveServer", () => {
         services: [{ ...service, id: serviceId }],
       });
 
-      const request: ServiceCallRequest = {
-        op: ClientBinaryOpcode.SERVICE_CALL_REQUEST,
+      const request: ServiceCallPayload = {
         serviceId,
         callId: 123,
         encoding: "json",
@@ -455,15 +453,14 @@ describe("FoxgloveServer", () => {
 
       const [eventId, receivedRequest, connection] = await nextEvent();
       expect(eventId).toEqual("serviceCallRequest");
-      expect(receivedRequest).toEqual(request);
+      expect(receivedRequest).toEqual({ op: ClientBinaryOpcode.SERVICE_CALL_REQUEST, ...request });
 
-      const response: ServiceCallResponse = {
+      const response: ServiceCallPayload = {
         ...request,
-        op: BinaryOpcode.SERVICE_CALL_RESPONSE,
         data: new DataView(new Uint8Array([4, 5, 6]).buffer),
       };
 
-      server.sendServiceResponse(response, connection as IWebSocket);
+      server.sendServiceCallResponse(response, connection as IWebSocket);
 
       await expect(nextBinaryMessage()).resolves.toEqual(
         new Uint8Array([
