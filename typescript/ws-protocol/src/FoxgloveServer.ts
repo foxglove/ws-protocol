@@ -2,6 +2,7 @@ import createDebug from "debug";
 import EventEmitter from "eventemitter3";
 
 import { ChannelId, StatusLevel } from ".";
+import { parseClientMessage } from "./parse";
 import {
   BinaryOpcode,
   Channel,
@@ -14,6 +15,10 @@ import {
   Parameter,
   ServerCapability,
   ServerMessage,
+  Service,
+  ServiceCallRequest,
+  ServiceCallResponse,
+  ServiceId,
   SubscriptionId,
 } from "./types";
 
@@ -55,6 +60,8 @@ type EventTypes = {
   subscribeParameterUpdates: (parameterNames: string[]) => void;
   /** Request to unsubscribe from parameter value updates has been received. */
   unsubscribeParameterUpdates: (parameterNames: string[]) => void;
+  /** Service call request has been received. */
+  serviceCallRequest: (request: ServiceCallRequest, clientConnection: IWebSocket) => void;
 };
 
 const log = createDebug("foxglove:server");
@@ -67,10 +74,12 @@ const REQUIRED_CAPABILITY_BY_OPERATION: Record<
   unsubscribe: undefined,
   advertise: ServerCapability.clientPublish,
   unadvertise: ServerCapability.clientPublish,
+  [ClientBinaryOpcode.MESSAGE_DATA]: ServerCapability.clientPublish,
   getParameters: ServerCapability.parameters,
   setParameters: ServerCapability.parameters,
   subscribeParameterUpdates: ServerCapability.parametersSubscribe,
   unsubscribeParameterUpdates: ServerCapability.parametersSubscribe,
+  [ClientBinaryOpcode.SERVICE_CALL_REQUEST]: ServerCapability.services,
 };
 
 export default class FoxgloveServer {
@@ -83,6 +92,8 @@ export default class FoxgloveServer {
   private clients = new Map<IWebSocket, ClientInfo>();
   private nextChannelId: ChannelId = 0;
   private channels = new Map<ChannelId, Channel>();
+  private nextServiceId: ServiceId = 0;
+  private services = new Map<ServiceId, Service>();
 
   constructor({
     name,
@@ -158,6 +169,32 @@ export default class FoxgloveServer {
   }
 
   /**
+   * Advertise a new service and inform any connected clients.
+   * @returns The id of the new service
+   */
+  addService(service: Omit<Service, "id">): ServiceId {
+    const newId = ++this.nextServiceId;
+    const newService: Service = { ...service, id: newId };
+    this.services.set(newId, newService);
+    for (const client of this.clients.values()) {
+      this.send(client.connection, { op: "advertiseServices", services: [newService] });
+    }
+    return newId;
+  }
+
+  /**
+   * Remove a previously advertised service and inform any connected clients.
+   */
+  removeService(serviceId: ServiceId): void {
+    if (!this.services.delete(serviceId)) {
+      throw new Error(`Service ${serviceId} does not exist`);
+    }
+    for (const client of this.clients.values()) {
+      this.send(client.connection, { op: "unadvertiseServices", serviceIds: [serviceId] });
+    }
+  }
+
+  /**
    * Emit a message payload to any clients subscribed to `chanId`.
    */
   sendMessage(chanId: ChannelId, timestamp: bigint, payload: BufferSource): void {
@@ -187,6 +224,34 @@ export default class FoxgloveServer {
     for (const client of this.clients.values()) {
       this.sendTimeData(client.connection, timestamp);
     }
+  }
+
+  /**
+   * Send a service response to the client
+   * @param response Response to send to the client
+   * @param connection Connection of the client that called the service
+   */
+  sendServiceResponse(response: ServiceCallResponse, connection: IWebSocket): void {
+    const utf8Encode = new TextEncoder();
+    const encoding = utf8Encode.encode(response.encoding);
+    const payload = new Uint8Array(1 + 4 + 4 + 4 + encoding.length + response.data.byteLength);
+    const view = new DataView(payload.buffer, payload.byteOffset, payload.byteLength);
+    let offset = 0;
+    view.setUint8(offset, BinaryOpcode.SERVICE_CALL_RESPONSE);
+    offset += 1;
+    view.setUint32(offset, response.serviceId, true);
+    offset += 4;
+    view.setUint32(offset, response.callId, true);
+    offset += 4;
+    view.setUint32(offset, response.encoding.length, true);
+    offset += 4;
+    payload.set(encoding, offset);
+    offset += encoding.length;
+    payload.set(
+      new Uint8Array(response.data.buffer, response.data.byteOffset, response.data.byteLength),
+      offset,
+    );
+    connection.send(payload);
   }
 
   /**
@@ -262,6 +327,12 @@ export default class FoxgloveServer {
     if (this.channels.size > 0) {
       this.send(connection, { op: "advertise", channels: Array.from(this.channels.values()) });
     }
+    if (this.services.size > 0) {
+      this.send(connection, {
+        op: "advertiseServices",
+        services: Array.from(this.services.values()),
+      });
+    }
 
     connection.onclose = (event: CloseEvent) => {
       log(
@@ -281,40 +352,18 @@ export default class FoxgloveServer {
     };
 
     connection.onmessage = (event: MessageEvent<ArrayBuffer | string>) => {
-      if (typeof event.data === "string") {
-        // TEXT (JSON) message handling
-        let message: unknown;
-        try {
-          message = JSON.parse(event.data) as unknown;
-        } catch (error) {
-          this.emitter.emit(
-            "error",
-            new Error(`Invalid JSON message from ${name}: ${(error as Error).message}`),
-          );
-          return;
+      let message: ClientMessage;
+      try {
+        if (event.data instanceof ArrayBuffer) {
+          message = parseClientMessage(event.data);
+        } else {
+          message = JSON.parse(event.data) as ClientMessage;
         }
 
-        if (typeof message !== "object" || message == undefined) {
-          this.emitter.emit("error", new Error(`Expected JSON object, got ${typeof message}`));
-          return;
-        }
-
-        try {
-          this.handleClientMessage(client, message as ClientMessage);
-        } catch (error) {
-          this.emitter.emit("error", error as Error);
-        }
-      } else if (event.data instanceof ArrayBuffer) {
-        // BINARY message handling
-        const message = new DataView(event.data);
-
-        try {
-          this.handleClientBinaryMessage(client, message);
-        } catch (error) {
-          this.emitter.emit("error", error as Error);
-        }
-      } else {
-        this.emitter.emit("error", new Error(`Unexpected message type ${typeof event.data}`));
+        this.handleClientMessage(client, message);
+      } catch (error) {
+        this.emitter.emit("error", error as Error);
+        return;
       }
     };
   }
@@ -482,32 +531,29 @@ export default class FoxgloveServer {
         }
         break;
 
-      default:
-        throw new Error(`Unrecognized client opcode: ${(message as { op: string }).op}`);
-    }
-  }
-
-  private handleClientBinaryMessage(client: ClientInfo, message: DataView): void {
-    if (message.byteLength < 5) {
-      throw new Error(`Invalid binary message length ${message.byteLength}`);
-    }
-
-    const opcode = message.getUint8(0);
-    switch (opcode) {
       case ClientBinaryOpcode.MESSAGE_DATA: {
-        const channelId = message.getUint32(1, true);
-        const channel = client.advertisements.get(channelId);
+        const channel = client.advertisements.get(message.channelId);
         if (!channel) {
-          throw new Error(`Client sent message data for unknown channel ${channelId}`);
+          throw new Error(`Client sent message data for unknown channel ${message.channelId}`);
         }
-
-        const data = new DataView(message.buffer, message.byteOffset + 5, message.byteLength - 5);
+        const data = message.data;
         this.emitter.emit("message", { client, channel, data });
         break;
       }
 
+      case ClientBinaryOpcode.SERVICE_CALL_REQUEST: {
+        const service = this.services.get(message.serviceId);
+        if (!service) {
+          throw new Error(
+            `Client sent service call request for unknown service ${message.serviceId}`,
+          );
+        }
+        this.emitter.emit("serviceCallRequest", message, client.connection);
+        break;
+      }
+
       default:
-        throw new Error(`Unrecognized client binary opcode: ${opcode}`);
+        throw new Error(`Unrecognized client opcode: ${(message as { op: string }).op}`);
     }
   }
 

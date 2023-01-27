@@ -1,9 +1,11 @@
 export enum BinaryOpcode {
   MESSAGE_DATA = 1,
   TIME = 2,
+  SERVICE_CALL_RESPONSE = 3,
 }
 export enum ClientBinaryOpcode {
   MESSAGE_DATA = 1,
+  SERVICE_CALL_REQUEST = 2,
 }
 export enum StatusLevel {
   INFO = 0,
@@ -15,11 +17,13 @@ export enum ServerCapability {
   time = "time",
   parameters = "parameters",
   parametersSubscribe = "parametersSubscribe",
+  services = "services",
 }
 
 export type ChannelId = number;
 export type ClientChannelId = number;
 export type SubscriptionId = number;
+export type ServiceId = number;
 
 export type Channel = {
   id: ChannelId;
@@ -27,6 +31,13 @@ export type Channel = {
   encoding: string;
   schemaName: string;
   schema: string;
+};
+export type Service = {
+  id: number;
+  name: string;
+  type: string;
+  requestSchema: string;
+  responseSchema: string;
 };
 
 export type Subscribe = {
@@ -56,6 +67,20 @@ export type ClientUnadvertise = {
   channelIds: ClientChannelId[];
 };
 
+export type ClientMessageData = {
+  op: ClientBinaryOpcode.MESSAGE_DATA;
+  channelId: ClientChannelId;
+  data: DataView;
+};
+
+export type ServiceCallRequest = {
+  op: ClientBinaryOpcode.SERVICE_CALL_REQUEST;
+  serviceId: ServiceId;
+  callId: number;
+  encoding: string;
+  data: DataView;
+};
+
 export type ClientMessage =
   | Subscribe
   | Unsubscribe
@@ -64,7 +89,9 @@ export type ClientMessage =
   | GetParameters
   | SetParameters
   | SubscribeParameterUpdates
-  | UnsubscribeParameterUpdates;
+  | UnsubscribeParameterUpdates
+  | ClientMessageData
+  | ServiceCallRequest;
 
 export type ServerInfo = {
   op: "serverInfo";
@@ -109,6 +136,14 @@ export type UnsubscribeParameterUpdates = {
   op: "unsubscribeParameterUpdates";
   parameterNames: string[];
 };
+export type AdvertiseServices = {
+  op: "advertiseServices";
+  services: Service[];
+};
+export type UnadvertiseServices = {
+  op: "unadvertiseServices";
+  serviceIds: ServiceId[];
+};
 export type MessageData = {
   op: BinaryOpcode.MESSAGE_DATA;
   subscriptionId: SubscriptionId;
@@ -118,6 +153,13 @@ export type MessageData = {
 export type Time = {
   op: BinaryOpcode.TIME;
   timestamp: bigint;
+};
+export type ServiceCallResponse = {
+  op: BinaryOpcode.SERVICE_CALL_RESPONSE;
+  serviceId: ServiceId;
+  callId: number;
+  encoding: string;
+  data: DataView;
 };
 export type ClientPublish = {
   channel: ClientChannel;
@@ -133,8 +175,11 @@ export type ServerMessage =
   | StatusMessage
   | Advertise
   | Unadvertise
+  | AdvertiseServices
+  | UnadvertiseServices
   | MessageData
   | Time
+  | ServiceCallResponse
   | ParameterValues;
 
 /**
