@@ -194,7 +194,7 @@ export default class FoxgloveClient {
     this.ws.send(payload);
   }
 
-  sendCallServiceRequest(request: ServiceCallPayload): void {
+  sendServiceCallRequest(request: ServiceCallPayload): void {
     const encoding = textEncoder.encode(request.encoding);
     const payload = new Uint8Array(1 + 4 + 4 + 4 + encoding.length + request.data.byteLength);
     const view = new DataView(payload.buffer, payload.byteOffset, payload.byteLength);
@@ -216,6 +216,13 @@ export default class FoxgloveClient {
     );
     payload.set(data, offset);
     this.ws.send(payload);
+  }
+
+  /**
+   * @deprecated Use `sendServiceCallRequest` instead
+   */
+  sendCallServiceRequest(request: ServiceCallPayload): void {
+    this.sendServiceCallRequest(request);
   }
 
   private send(message: ClientMessage) {
