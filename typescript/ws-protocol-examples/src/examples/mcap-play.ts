@@ -7,8 +7,8 @@ import fs from "fs/promises";
 import { WebSocketServer } from "ws";
 import { ZstdCodec, ZstdModule, ZstdStreaming } from "zstd-codec";
 
-import boxen from "../boxen";
 import { setupSigintHandler } from "./util/setupSigintHandler";
+import boxen from "../boxen";
 
 const log = Debug("foxglove:mcap-play");
 Debug.enable("foxglove:*");

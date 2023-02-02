@@ -4,8 +4,8 @@ import Debug from "debug";
 import os from "os";
 import { WebSocketServer } from "ws";
 
-import boxen from "../boxen";
 import { setupSigintHandler } from "./util/setupSigintHandler";
+import boxen from "../boxen";
 
 const log = Debug("foxglove:sysmon");
 Debug.enable("foxglove:*");

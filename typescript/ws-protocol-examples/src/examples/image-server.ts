@@ -7,8 +7,8 @@ import * as PImage from "pureimage";
 import { Writable } from "stream";
 import { WebSocketServer } from "ws";
 
-import boxen from "../boxen";
 import { setupSigintHandler } from "./util/setupSigintHandler";
+import boxen from "../boxen";
 
 const log = Debug("foxglove:image-server");
 Debug.enable("foxglove:*");
