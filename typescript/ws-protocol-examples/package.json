@@ -19,7 +19,7 @@
     "email": "support@foxglove.dev"
   },
   "engines": {
-    "node": ">= 14 <18"
+    "node": ">= 16"
   },
   "homepage": "https://foxglove.dev/",
   "module": "dist/esm/ws-protocol-examples/src/index.js",
@@ -65,7 +65,8 @@
     "@foxglove/rosmsg2-serialization": "^1.1.1",
     "@foxglove/rostime": "^1.1.2",
     "@foxglove/schemas": "^0.7.3",
-    "@foxglove/ws-protocol": "^0.3.3",
+    "@foxglove/wasm-lz4": "^1.0.2",
+    "@foxglove/ws-protocol": "^0.4.0",
     "@mcap/core": "^0.3.0",
     "boxen": "^7.0.1",
     "commander": "^9.5.0",
@@ -74,7 +75,6 @@
     "protobufjs": "^7.1.2",
     "pureimage": "^0.3.15",
     "tslib": "^2",
-    "wasm-lz4": "^2.0.0",
     "ws": "^8.12.0",
     "zstd-codec": "^0.1.4"
   }
