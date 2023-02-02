@@ -3,7 +3,7 @@ import { McapIndexedReader, McapTypes } from "@mcap/core";
 import { Command } from "commander";
 import Debug from "debug";
 import fs from "fs/promises";
-import decompressLZ4 from "wasm-lz4";
+import decompressLZ4 from "@foxglove/wasm-lz4";
 import { WebSocketServer } from "ws";
 import { ZstdCodec, ZstdModule, ZstdStreaming } from "zstd-codec";
 

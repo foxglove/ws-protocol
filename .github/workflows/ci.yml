@@ -14,11 +14,12 @@ jobs:
       fail-fast: false
       matrix:
         package: [ws-protocol, ws-protocol-examples]
+        node-version: [16.x, 18.x]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: 16.x
+          node-version: ${{ matrix.node-version }}
           registry-url: https://registry.npmjs.org
           cache: yarn
 
