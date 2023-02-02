@@ -11,15 +11,15 @@ def test_add_subscription():
 
     state.add_subscription(SubscriptionId(0), ChannelId(100))
     assert state.subscriptions == {0: 100}
-    assert state.subscriptions_by_channel == {100: {0}}
+    assert state.subscriptions_by_channel == {100: 0}
 
     state.add_subscription(SubscriptionId(1), ChannelId(101))
     assert state.subscriptions == {0: 100, 1: 101}
-    assert state.subscriptions_by_channel == {100: {0}, 101: {1}}
+    assert state.subscriptions_by_channel == {100: 0, 101: 1}
 
     state.add_subscription(SubscriptionId(2), ChannelId(101))
-    assert state.subscriptions == {0: 100, 1: 101, 2: 101}
-    assert state.subscriptions_by_channel == {100: {0}, 101: {1, 2}}
+    assert state.subscriptions == {0: 100, 1: 101}
+    assert state.subscriptions_by_channel == {100: 0, 101: 1}
 
 
 def test_remove_subscription():
@@ -28,22 +28,22 @@ def test_remove_subscription():
     assert state.subscriptions_by_channel == {}
 
     state.add_subscription(SubscriptionId(0), ChannelId(100))
-    state.add_subscription(SubscriptionId(1), ChannelId(100))
-    state.add_subscription(SubscriptionId(2), ChannelId(100))
-    assert state.subscriptions == {0: 100, 1: 100, 2: 100}
-    assert state.subscriptions_by_channel == {100: {0, 1, 2}}
+    state.add_subscription(SubscriptionId(1), ChannelId(101))
+    state.add_subscription(SubscriptionId(2), ChannelId(102))
+    assert state.subscriptions == {0: 100, 1: 101, 2: 102}
+    assert state.subscriptions_by_channel == {100: 0, 101: 1, 102: 2}
 
     assert state.remove_subscription(SubscriptionId(99)) is None
 
-    assert state.remove_subscription(SubscriptionId(1)) == 100
-    assert state.subscriptions == {0: 100, 2: 100}
-    assert state.subscriptions_by_channel == {100: {0, 2}}
+    assert state.remove_subscription(SubscriptionId(1)) == 101
+    assert state.subscriptions == {0: 100, 2: 102}
+    assert state.subscriptions_by_channel == {100: 0, 102: 2}
 
     assert state.remove_subscription(SubscriptionId(0)) == 100
-    assert state.subscriptions == {2: 100}
-    assert state.subscriptions_by_channel == {100: {2}}
+    assert state.subscriptions == {2: 102}
+    assert state.subscriptions_by_channel == {102: 2}
 
-    assert state.remove_subscription(SubscriptionId(2)) == 100
+    assert state.remove_subscription(SubscriptionId(2)) == 102
     assert state.subscriptions == {}
     assert state.subscriptions_by_channel == {}
 
@@ -56,20 +56,18 @@ def test_remove_channel():
     assert state.subscriptions_by_channel == {}
 
     state.add_subscription(SubscriptionId(0), ChannelId(100))
-    state.add_subscription(SubscriptionId(1), ChannelId(100))
-    state.add_subscription(SubscriptionId(2), ChannelId(100))
-    state.add_subscription(SubscriptionId(3), ChannelId(101))
+    state.add_subscription(SubscriptionId(1), ChannelId(101))
 
-    assert state.subscriptions == {0: 100, 1: 100, 2: 100, 3: 101}
-    assert state.subscriptions_by_channel == {100: {0, 1, 2}, 101: {3}}
+    assert state.subscriptions == {0: 100, 1: 101}
+    assert state.subscriptions_by_channel == {100: 0, 101: 1}
 
     state.remove_channel(ChannelId(999))
-    assert state.subscriptions == {0: 100, 1: 100, 2: 100, 3: 101}
-    assert state.subscriptions_by_channel == {100: {0, 1, 2}, 101: {3}}
+    assert state.subscriptions == {0: 100, 1: 101}
+    assert state.subscriptions_by_channel == {100: 0, 101: 1}
 
     state.remove_channel(ChannelId(100))
-    assert state.subscriptions == {3: 101}
-    assert state.subscriptions_by_channel == {101: {3}}
+    assert state.subscriptions == {1: 101}
+    assert state.subscriptions_by_channel == {101: 1}
 
     state.remove_channel(ChannelId(101))
     assert state.subscriptions == {}

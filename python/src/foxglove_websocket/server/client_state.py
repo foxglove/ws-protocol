@@ -1,5 +1,5 @@
 from types import MappingProxyType
-from typing import Optional, Iterable
+from typing import Optional
 from dataclasses import field
 from websockets.server import WebSocketServerProtocol
 from dataclasses import dataclass
@@ -20,13 +20,13 @@ class ClientState:
     subscriptions: "MappingProxyType[SubscriptionId, ChannelId]" = field(
         default_factory=lambda: MappingProxyType({})
     )
-    subscriptions_by_channel: "MappingProxyType[ChannelId, Iterable[SubscriptionId]]" = field(
+    subscriptions_by_channel: "MappingProxyType[ChannelId, SubscriptionId]" = field(
         default_factory=lambda: MappingProxyType({})
     )
 
     def remove_channel(self, removed_chan_id: ChannelId):
-        subs = self.subscriptions_by_channel.get(removed_chan_id)
-        if subs is not None:
+        subId = self.subscriptions_by_channel.get(removed_chan_id)
+        if subId is not None:
             self.subscriptions = MappingProxyType(
                 {
                     sub: chan
@@ -42,14 +42,18 @@ class ClientState:
                 }
             )
 
-    def add_subscription(self, sub_id: SubscriptionId, chan_id: ChannelId):
+    def add_subscription(self, sub_id: SubscriptionId, chan_id: ChannelId) -> bool:
+        if chan_id in self.subscriptions_by_channel:
+            return False
+
         self.subscriptions = MappingProxyType({**self.subscriptions, sub_id: chan_id})
         self.subscriptions_by_channel = MappingProxyType(
             {
                 **self.subscriptions_by_channel,
-                chan_id: {*self.subscriptions_by_channel.get(chan_id, ()), sub_id},
+                chan_id: sub_id,
             }
         )
+        return True
 
     def remove_subscription(
         self, removed_sub_id: SubscriptionId
@@ -69,13 +73,6 @@ class ClientState:
             for chan, subs in self.subscriptions_by_channel.items()
             if chan != chan_id
         }
-        new_subs = {
-            sub_id
-            for sub_id in self.subscriptions_by_channel.get(chan_id, ())
-            if sub_id != removed_sub_id
-        }
-        if new_subs:
-            new_subscriptions_by_channel[chan_id] = new_subs
         self.subscriptions_by_channel = MappingProxyType(new_subscriptions_by_channel)
 
         return chan_id

@@ -163,8 +163,8 @@ class FoxgloveServer:
 
     async def send_message(self, chan_id: ChannelId, timestamp: int, payload: bytes):
         for client in self._clients:
-            subs = client.subscriptions_by_channel.get(chan_id, ())
-            for sub_id in subs:
+            sub_id = client.subscriptions_by_channel.get(chan_id, None)
+            if sub_id is not None:
                 await self._send_message_data(
                     client.connection,
                     subscription=sub_id,
@@ -295,15 +295,25 @@ class FoxgloveServer:
                         },
                     )
                     continue
-                self._logger.debug(
-                    "Client %s subscribed to channel %s",
-                    client.connection.remote_address,
-                    chan_id,
-                )
                 first_subscription = not self._any_subscribed(chan_id)
-                client.add_subscription(sub_id, chan_id)
-                if self._listener and first_subscription:
-                    self._listener.on_subscribe(self, chan_id)
+                if client.add_subscription(sub_id, chan_id):
+                    self._logger.debug(
+                        "Client %s subscribed to channel %s",
+                        client.connection.remote_address,
+                        chan_id,
+                    )
+                    if self._listener and first_subscription:
+                        self._listener.on_subscribe(self, chan_id)
+                else:
+                    await self._send_json(
+                        client.connection,
+                        {
+                            "op": "status",
+                            "level": StatusLevel.WARNING,
+                            "message": f"Client is already subscribed to channel {chan_id}; ignoring subscription",
+                        },
+                    )
+                    continue
 
         elif message["op"] == "unsubscribe":
             for sub_id in message["subscriptionIds"]:
