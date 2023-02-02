@@ -26,7 +26,7 @@ type ClientInfo = {
   name: string;
   connection: IWebSocket;
   subscriptions: Map<SubscriptionId, ChannelId>;
-  subscriptionsByChannel: Map<ChannelId, Set<SubscriptionId>>;
+  subscriptionsByChannel: Map<ChannelId, SubscriptionId>;
   advertisements: Map<ClientChannelId, ClientChannel>;
   parameterSubscriptions: Set<string>;
 };
@@ -157,11 +157,9 @@ export default class FoxgloveServer {
       throw new Error(`Channel ${channelId} does not exist`);
     }
     for (const client of this.clients.values()) {
-      const subs = client.subscriptionsByChannel.get(channelId);
-      if (subs) {
-        for (const subId of subs) {
-          client.subscriptions.delete(subId);
-        }
+      const subId = client.subscriptionsByChannel.get(channelId);
+      if (subId != undefined) {
+        client.subscriptions.delete(subId);
         client.subscriptionsByChannel.delete(channelId);
       }
       this.send(client.connection, { op: "unadvertise", channelIds: [channelId] });
@@ -199,13 +197,11 @@ export default class FoxgloveServer {
    */
   sendMessage(chanId: ChannelId, timestamp: bigint, payload: BufferSource): void {
     for (const client of this.clients.values()) {
-      const subs = client.subscriptionsByChannel.get(chanId);
-      if (!subs) {
+      const subId = client.subscriptionsByChannel.get(chanId);
+      if (subId == undefined) {
         continue;
       }
-      for (const subId of subs) {
-        this.sendMessageData(client.connection, subId, timestamp, payload);
-      }
+      this.sendMessageData(client.connection, subId, timestamp, payload);
     }
   }
 
@@ -415,12 +411,7 @@ export default class FoxgloveServer {
           log("client %s subscribed to channel %d", client.name, channelId);
           const firstSubscription = !this.anySubscribed(channelId);
           client.subscriptions.set(subId, channelId);
-          let subs = client.subscriptionsByChannel.get(channelId);
-          if (!subs) {
-            subs = new Set();
-            client.subscriptionsByChannel.set(channelId, subs);
-          }
-          subs.add(subId);
+          client.subscriptionsByChannel.set(channelId, subId);
           if (firstSubscription) {
             this.emitter.emit("subscribe", channelId);
           }
@@ -440,12 +431,8 @@ export default class FoxgloveServer {
           }
           log("client %s unsubscribed from channel %d", client.name, chanId);
           client.subscriptions.delete(subId);
-          const subs = client.subscriptionsByChannel.get(chanId);
-          if (subs) {
-            subs.delete(subId);
-            if (subs.size === 0) {
-              client.subscriptionsByChannel.delete(chanId);
-            }
+          if (client.subscriptionsByChannel.has(chanId)) {
+            client.subscriptionsByChannel.delete(chanId);
           }
           if (!this.anySubscribed(chanId)) {
             this.emitter.emit("unsubscribe", chanId);
