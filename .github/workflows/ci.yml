@@ -14,7 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         package: [ws-protocol, ws-protocol-examples]
-        node-version: [16.x, 18.x]
+        node-version: [14.x, 16.x, 18.x]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
