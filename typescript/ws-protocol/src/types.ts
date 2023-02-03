@@ -166,7 +166,7 @@ export type ClientPublish = {
 };
 export type Parameter = {
   name: string;
-  value: number | boolean | string | number[] | boolean[] | string[];
+  value: number | boolean | string | number[] | boolean[] | string[] | undefined;
 };
 
 export type ServerMessage =
