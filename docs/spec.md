@@ -67,6 +67,7 @@ Each JSON message must be an object containing a field called `op` which identif
   - `services`: Allow clients to call services
 - `supportedEncodings`: array of strings | informing the client about which encodings may be used for client-side publishing or service call requests/responses. Only set if client publishing or services are supported.
 - `metadata`: optional map of key-value pairs
+- `sessionId`: optional string. Allows the client to understand if the connection is a re-connection or if it is connecting to a new server instance. This can for example be a timestamp or a UUID.
 
 #### Example
 
@@ -78,7 +79,8 @@ Each JSON message must be an object containing a field called `op` which identif
   "supportedEncodings": ["json"],
   "metadata": {
     "key": "value"
-  }
+  },
+  "sessionId": "1675789422160"
 }
 ```
 
