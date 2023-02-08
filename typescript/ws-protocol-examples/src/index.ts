@@ -5,6 +5,7 @@ import ImageServer from "./examples/image-server";
 import McapPlay from "./examples/mcap-play";
 import ParamClient from "./examples/param-client";
 import ParamServer from "./examples/param-server";
+import PerfTestClient from "./examples/perf-test-client";
 import PublishClient from "./examples/publish-client";
 import SimpleClient from "./examples/simple-client";
 import Sysmon from "./examples/sysmon";
@@ -15,6 +16,7 @@ program.addCommand(McapPlay);
 program.addCommand(PublishClient);
 program.addCommand(SimpleClient);
 program.addCommand(Sysmon);
+program.addCommand(PerfTestClient);
 program.addCommand(ParamClient);
 program.addCommand(ParamServer);
 
