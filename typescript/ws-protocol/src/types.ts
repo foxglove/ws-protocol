@@ -102,6 +102,7 @@ export type ServerInfo = {
   capabilities: string[];
   supportedEncodings?: string[];
   metadata?: Record<string, string>;
+  sessionId?: string;
 };
 export type StatusMessage = {
   op: "status";
