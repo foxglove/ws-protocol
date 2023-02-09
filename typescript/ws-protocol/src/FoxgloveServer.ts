@@ -114,7 +114,7 @@ export default class FoxgloveServer {
     this.capabilities = capabilities ?? [];
     this.supportedEncodings = supportedEncodings;
     this.metadata = metadata;
-    this.sessionId = sessionId;
+    this.sessionId = sessionId ?? `${new Date().toUTCString()}`;
   }
 
   on<E extends EventEmitter.EventNames<EventTypes>>(
