@@ -51,6 +51,9 @@
 
 Each JSON message must be an object containing a field called `op` which identifies the type of message.
 
+Additionally, each JSON message must encode any binary data fields (e.g.,
+protobuf or flatbuffer schemas) with base64.
+
 ### Server Info
 
 - This message is always sent to new clients upon connection.
