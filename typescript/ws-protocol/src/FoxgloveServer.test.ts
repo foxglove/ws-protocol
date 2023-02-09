@@ -95,7 +95,7 @@ describe("FoxgloveServer", () => {
     const server = new FoxgloveServer({ name: "foo" });
     const { nextJsonMessage, close } = await setupServerAndClient(server);
     try {
-      await expect(nextJsonMessage()).resolves.toEqual({
+      await expect(nextJsonMessage()).resolves.toMatchObject({
         op: "serverInfo",
         name: "foo",
         capabilities: [],
@@ -116,7 +116,7 @@ describe("FoxgloveServer", () => {
     const id = server.addChannel(chan);
     const { nextJsonMessage, close } = await setupServerAndClient(server);
     try {
-      await expect(nextJsonMessage()).resolves.toEqual({
+      await expect(nextJsonMessage()).resolves.toMatchObject({
         op: "serverInfo",
         name: "foo",
         capabilities: [],
@@ -134,7 +134,7 @@ describe("FoxgloveServer", () => {
     const server = new FoxgloveServer({ name: "foo" });
     const { nextJsonMessage, close } = await setupServerAndClient(server);
     try {
-      await expect(nextJsonMessage()).resolves.toEqual({
+      await expect(nextJsonMessage()).resolves.toMatchObject({
         op: "serverInfo",
         name: "foo",
         capabilities: [],
@@ -170,7 +170,7 @@ describe("FoxgloveServer", () => {
       await setupServerAndClient(server);
 
     try {
-      await expect(nextJsonMessage()).resolves.toEqual({
+      await expect(nextJsonMessage()).resolves.toMatchObject({
         op: "serverInfo",
         name: "foo",
         capabilities: [],
@@ -213,7 +213,7 @@ describe("FoxgloveServer", () => {
     const { send, nextJsonMessage, nextEvent, close } = await setupServerAndClient(server);
 
     try {
-      await expect(nextJsonMessage()).resolves.toEqual({
+      await expect(nextJsonMessage()).resolves.toMatchObject({
         op: "serverInfo",
         name: "foo",
         capabilities: ["clientPublish"],
@@ -276,7 +276,7 @@ describe("FoxgloveServer", () => {
     const server = new FoxgloveServer({ name: "foo", capabilities: [ServerCapability.time] });
     const { nextJsonMessage, nextBinaryMessage, close } = await setupServerAndClient(server);
     try {
-      await expect(nextJsonMessage()).resolves.toEqual({
+      await expect(nextJsonMessage()).resolves.toMatchObject({
         op: "serverInfo",
         name: "foo",
         capabilities: ["time"],
@@ -300,7 +300,7 @@ describe("FoxgloveServer", () => {
     const { send, nextJsonMessage, nextEvent, close } = await setupServerAndClient(server);
 
     try {
-      await expect(nextJsonMessage()).resolves.toEqual({
+      await expect(nextJsonMessage()).resolves.toMatchObject({
         op: "serverInfo",
         name: "foo",
         capabilities: ["parameters"],
@@ -368,7 +368,7 @@ describe("FoxgloveServer", () => {
     const { send, nextJsonMessage, nextEvent, close } = await setupServerAndClient(server);
 
     try {
-      await expect(nextJsonMessage()).resolves.toEqual({
+      await expect(nextJsonMessage()).resolves.toMatchObject({
         op: "serverInfo",
         name: "foo",
         capabilities: ["parameters", "parametersSubscribe"],
@@ -415,7 +415,7 @@ describe("FoxgloveServer", () => {
       await setupServerAndClient(server);
 
     try {
-      await expect(nextJsonMessage()).resolves.toEqual({
+      await expect(nextJsonMessage()).resolves.toMatchObject({
         op: "serverInfo",
         name: "foo",
         capabilities: ["services"],
