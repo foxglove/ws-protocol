@@ -369,7 +369,7 @@ Set one or more parameters. Only supported if the server previously declared tha
 - `op`: string `"setParameters"`
 - `parameters`: array of:
   - `name`: string
-  - `value`: number | boolean | string | number[] | boolean[] | string[]
+  - `value`: number | boolean | string | number[] | boolean[] | string[] | undefined. If the value is not set (`undefined`), the parameter shall be unset (removed).
 - `id`: string | undefined, arbitrary string used for identifying the corresponding server [response](#parameter-values). If this field is not set, the server may not send a response to the client.
 
 #### Example

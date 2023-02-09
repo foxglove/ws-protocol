@@ -315,42 +315,42 @@ describe("FoxgloveServer", () => {
       send(
         JSON.stringify({
           op: "setParameters",
-          parameters: [{ name: "/foo/bool_param", value: false }],
+          parameters: [
+            { name: "/foo/bool_param", value: false },
+            { name: "/foo/int_param", value: undefined },
+          ],
         }),
       );
 
       const setParameters = await nextEvent();
       expect(setParameters).toMatchObject([
         "setParameters",
-        { parameters: [{ name: "/foo/bool_param", value: false }] },
+        {
+          parameters: [{ name: "/foo/bool_param", value: false }, { name: "/foo/int_param" }],
+        },
       ]);
       const request = setParameters[1] as { parameters: Parameter[] };
-      paramStore = paramStore.map((p) => request.parameters.find((p2) => p2.name === p.name) ?? p);
+      paramStore = paramStore
+        .map((p) => request.parameters.find((p2) => p2.name === p.name) ?? p)
+        .filter((p) => p.value != undefined);
 
       // client get parameter request
-      const paramNames = paramStore.map((p) => p.name);
       send(
         JSON.stringify({
           op: "getParameters",
-          parameterNames: paramNames,
+          parameterNames: [],
           id: "req-456",
         }),
       );
 
       const getParameters = await nextEvent();
-      expect(getParameters).toMatchObject([
-        "getParameters",
-        { parameterNames: paramNames, id: "req-456" },
-      ]);
+      expect(getParameters).toMatchObject(["getParameters", { parameterNames: [], id: "req-456" }]);
       const clientConnection = getParameters[2] as IWebSocket | undefined;
       server.publishParameterValues(paramStore, "req-456", clientConnection);
 
       await expect(nextJsonMessage()).resolves.toEqual({
         op: "parameterValues",
-        parameters: [
-          { name: "/foo/bool_param", value: false },
-          { name: "/foo/int_param", value: 123 },
-        ],
+        parameters: [{ name: "/foo/bool_param", value: false }],
         id: "req-456",
       });
     } catch (ex) {
