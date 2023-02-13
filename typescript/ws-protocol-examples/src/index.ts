@@ -7,6 +7,8 @@ import ParamClient from "./examples/param-client";
 import ParamServer from "./examples/param-server";
 import PerfTestClient from "./examples/perf-test-client";
 import PublishClient from "./examples/publish-client";
+import ServiceClient from "./examples/service-client";
+import ServiceServer from "./examples/service-server";
 import SimpleClient from "./examples/simple-client";
 import Sysmon from "./examples/sysmon";
 
@@ -19,5 +21,7 @@ program.addCommand(Sysmon);
 program.addCommand(PerfTestClient);
 program.addCommand(ParamClient);
 program.addCommand(ParamServer);
+program.addCommand(ServiceClient);
+program.addCommand(ServiceServer);
 
 program.parseAsync().catch(console.error);
