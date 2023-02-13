@@ -516,10 +516,10 @@
   resolved "https://registry.yarnpkg.com/@foxglove/crc/-/crc-0.0.3.tgz#04cd8816454e14f1ec48de17c949199b4b3ec9c2"
   integrity sha512-DjIZsnL3CyP/yQ/vUYA9cjrD0a/8YXejI5ZmsaOiT16cLfZcTwaCxIN01/ys4jsy+dZCQ/9DnWFn7AEFbiMDaA==
 
-"@foxglove/eslint-plugin@0.20.0":
-  version "0.20.0"
-  resolved "https://registry.yarnpkg.com/@foxglove/eslint-plugin/-/eslint-plugin-0.20.0.tgz#386933c44b38ba1deccb345e9941f65c040ae063"
-  integrity sha512-/rSWnqworu9kGd1bnfijF/aRof+hc4XmVyVLi46GKBYbeNAloh1IhZ0w8cXsio7uqIc2fxaEJvSXIrtV3cBMRA==
+"@foxglove/eslint-plugin@0.21.0":
+  version "0.21.0"
+  resolved "https://registry.yarnpkg.com/@foxglove/eslint-plugin/-/eslint-plugin-0.21.0.tgz#9be2b5d0c46ac0f7c86aec7341cb479e4e8c29a6"
+  integrity sha512-bSSwYZ7D5xutMv9kFA/HFBuVHMjWVrkW+nyrVIo2UCoywm3Oh9FG7Ag1tv7SsS2c3bZ/pIb8KoeWRf7J5Fctrw==
   dependencies:
     "@typescript-eslint/utils" "^5"
     tsutils "^3"
