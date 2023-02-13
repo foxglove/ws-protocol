@@ -41,7 +41,7 @@
     "run-example": "tsc -b ../*/tsconfig*.json && ts-node --project tsconfig.cjs.json --files src/index.ts"
   },
   "devDependencies": {
-    "@foxglove/eslint-plugin": "0.20.0",
+    "@foxglove/eslint-plugin": "0.21.0",
     "@foxglove/tsconfig": "1.1.0",
     "@types/debug": "^4.1.7",
     "@types/lodash": "^4.14.191",
