@@ -5,8 +5,8 @@ import { Command } from "commander";
 import Debug from "debug";
 import { WebSocketServer } from "ws";
 
-import boxen from "../boxen";
 import { setupSigintHandler } from "./util/setupSigintHandler";
+import boxen from "../boxen";
 
 const log = Debug("foxglove:service-server");
 Debug.enable("foxglove:*");
