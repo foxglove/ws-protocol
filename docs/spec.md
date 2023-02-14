@@ -33,6 +33,7 @@
 - [Advertise Services](#advertise-services) (json)
 - [Unadvertise Services](#unadvertise-services) (json)
 - [Service Call Response](#service-call-response) (binary)
+- [Connection Graph Update](#connection-graph-update) (json)
 
 ### Sent by client
 
@@ -46,6 +47,8 @@
 - [Subscribe Parameter Update](#subscribe-parameter-update) (json)
 - [Unsubscribe Parameter Update](#unsubscribe-parameter-update) (json)
 - [Service Call Request](#service-call-request) (binary)
+- [Subscribe connection graph updates](#subscribe-connection-graph-updates) (json)
+- [Unubscribe connection graph updates](#unsubscribe-connection-graph-updates) (json)
 
 ## JSON messages
 
@@ -65,6 +68,7 @@ Each JSON message must be an object containing a field called `op` which identif
   - `parametersSubscribe`: Allow clients to subscribe to parameter changes
   - `time`: The server may publish binary [time](#time) messages
   - `services`: Allow clients to call services
+  - `connectionGraph`: Allow clients to subscribe to updates to the connection graph
 - `supportedEncodings`: array of strings | informing the client about which encodings may be used for client-side publishing or service call requests/responses. Only set if client publishing or services are supported.
 - `metadata`: optional map of key-value pairs
 - `sessionId`: optional string. Allows the client to understand if the connection is a re-connection or if it is connecting to a new server instance. This can for example be a timestamp or a UUID.
@@ -229,6 +233,42 @@ Informs the client about services that are no longer available. Only supported i
 {
   "op": "unadvertiseServices",
   "serviceIds": [1, 2]
+}
+```
+
+### Connection graph update
+
+Informs the client about updates to the connection graph. This is only sent to clients which have previously [subscribed to connection graph updates](#subscribe-connection-graph-updates). Only supported if the server previously declared that it has the `connectionGraph` [capability](#server-info).
+
+#### Fields
+
+- `op`: string `"connectionGraphUpdate"`
+- `topicUpdates`: array of newly added or updated topics
+  - `name`: string, topic name
+  - `publisherIds`: array of string, list of publisher IDs
+  - `subscriberIds`: array of string, list of subscriber IDs
+- `serviceUpdates`: array of newly added or updated services
+  - `name`: string, service name
+  - `providerIds`: array of string, list of service provider IDs
+- `removedTopics`: array of string, names of topics that have been removed
+- `removedServices`: array of string, names of services that have been removed
+
+#### Example
+
+```json
+{
+  "op": "connectionGraphUpdate",
+  "topicUpdates": [
+    {
+      "name": "/foo",
+      "publisherIds": ["/node_1"],
+      "subscriberIds": ["/node_2"]
+    },
+    { "name": "/bar", "publisherIds": ["/node_1"], "subscriberIds": [] }
+  ],
+  "serviceUpdates": [{ "name": "/set_bool", "providerIds": ["/node_2"] }],
+  "removedTopics": ["/baz"],
+  "removedServices": []
 }
 ```
 
@@ -416,6 +456,38 @@ Unsubscribe from parameter updates. Only supported if the server previously decl
     "/string_param",
     "/node/nested_ints_param"
   ]
+}
+```
+
+### Subscribe connection graph updates
+
+Subscribe to [connection graph updates](#connection-graph-update). Only supported if the server previously declared that it has the `connectionGraph` [capability](#server-info).
+
+#### Fields
+
+- `op`: string `"subscribeConnectionGraphUpdate"`
+
+#### Example
+
+```json
+{
+  "op": "subscribeConnectionGraphUpdate"
+}
+```
+
+### UnSubscribe connection graph updates
+
+Unsubscribe from [connection graph updates](#connection-graph-update). Only supported if the server previously declared that it has the `connectionGraph` [capability](#server-info).
+
+#### Fields
+
+- `op`: string `"unsubscribeConnectionGraphUpdate"`
+
+#### Example
+
+```json
+{
+  "op": "unsubscribeConnectionGraphUpdate"
 }
 ```
 
