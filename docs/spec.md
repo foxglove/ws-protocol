@@ -321,20 +321,6 @@ Informs the client about services that are no longer available. Only supported i
 }
 ```
 
-### Client Publish
-
-- Sends a binary websocket message containing the raw messsage payload to the server. Note that the client is only allowed to publish messages if the server previously declared that it has the `clientPublish` [capability](#server-info).
-
-#### Message Data
-
-- Provides a raw message payload, encoded as advertised in the [Client Advertise](#client-advertise) operation.
-
-| Bytes           | Type    | Description     |
-| --------------- | ------- | --------------- |
-| 1               | opcode  | 0x01            |
-| 4               | uint32  | channel id      |
-| remaining bytes | uint8[] | message payload |
-
 ### Get Parameters
 
 Request one or more parameters. Only supported if the server previously declared that it has the `parameters` [capability](#server-info).
@@ -462,20 +448,6 @@ All integer types explicitly specified (uint32, uint64, etc.) in this section ar
 | 1     | opcode | 0x02                    |
 | 8     | uint64 | timestamp (nanoseconds) |
 
-#### Service Call Request
-
-- Request to call a service that has been advertised by the server.
-- Only supported if the server previously declared the `services` [capability](#server-info).
-
-| Bytes             | Type    | Description                                                             |
-| ----------------- | ------- | ----------------------------------------------------------------------- |
-| 1                 | opcode  | 0x02                                                                    |
-| 4                 | uint32  | service id                                                              |
-| 4                 | uint32  | call id, a unique number to identify the corresponding service response |
-| 4                 | uint32  | encoding length                                                         |
-| _encoding length_ | char[]  | encoding, one of the encodings [supported by the server](#server-info)  |
-| remaining bytes   | uint8[] | request payload                                                         |
-
 ### Service Call Response
 
 - Provides the response to a previous [service call](#service-call-request).
@@ -489,3 +461,28 @@ All integer types explicitly specified (uint32, uint64, etc.) in this section ar
 | 4                 | uint32  | encoding length                                       |
 | _encoding length_ | char[]  | encoding, same encoding that was used for the request |
 | remaining bytes   | uint8[] | response payload                                      |
+
+### Client Message Data
+
+- Sends a binary websocket message containing the raw messsage payload to the server. Note that the client is only allowed to publish messages if the server previously declared that it has the `clientPublish` [capability](#server-info).
+- The message payload is encoded as advertised in the [Client Advertise](#client-advertise) operation.
+
+| Bytes           | Type    | Description     |
+| --------------- | ------- | --------------- |
+| 1               | opcode  | 0x01            |
+| 4               | uint32  | channel id      |
+| remaining bytes | uint8[] | message payload |
+
+### Service Call Request
+
+- Request to call a service that has been advertised by the server.
+- Only supported if the server previously declared the `services` [capability](#server-info).
+
+| Bytes             | Type    | Description                                                             |
+| ----------------- | ------- | ----------------------------------------------------------------------- |
+| 1                 | opcode  | 0x02                                                                    |
+| 4                 | uint32  | service id                                                              |
+| 4                 | uint32  | call id, a unique number to identify the corresponding service response |
+| 4                 | uint32  | encoding length                                                         |
+| _encoding length_ | char[]  | encoding, one of the encodings [supported by the server](#server-info)  |
+| remaining bytes   | uint8[] | request payload                                                         |
