@@ -260,15 +260,12 @@ Informs the client about updates to the connection graph. This is only sent to c
 ```json
 {
   "op": "connectionGraphUpdate",
-  "topicUpdates": [
-    {
-      "name": "/foo",
-      "publisherIds": ["/node_1"],
-      "subscriberIds": ["/node_2"]
-    },
-    { "name": "/bar", "publisherIds": ["/node_1"], "subscriberIds": [] }
+  "publishedTopics": [
+    { "name": "/foo", "publisherIds": ["/node_1"] },
+    { "name": "/bar", "publisherIds": ["/node_1"] }
   ],
-  "serviceUpdates": [{ "name": "/set_bool", "providerIds": ["/node_2"] }],
+  "subscribedTopics": [{ "name": "/foo", "subscriberIds": ["/node_2"] }],
+  "advertisedServices": [{ "name": "/set_bool", "providerIds": ["/node_2"] }],
   "removedTopics": ["/baz"],
   "removedServices": []
 }
