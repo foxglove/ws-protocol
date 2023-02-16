@@ -9,6 +9,7 @@ import {
   ClientChannel,
   ClientChannelId,
   ClientMessage,
+  ConnectionGraphUpdate,
   IWebSocket,
   Parameter,
   ParameterValues,
@@ -36,6 +37,7 @@ type EventTypes = {
   unadvertiseServices: (removedServices: ServiceId[]) => void;
   parameterValues: (event: ParameterValues) => void;
   serviceCallResponse: (event: ServiceCallResponse) => void;
+  connectionGraphUpdate: (event: ConnectionGraphUpdate) => void;
 };
 
 const textEncoder = new TextEncoder();
@@ -119,6 +121,10 @@ export default class FoxgloveClient {
 
         case "unadvertiseServices":
           this.emitter.emit("unadvertiseServices", message.serviceIds);
+          return;
+
+        case "connectionGraphUpdate":
+          this.emitter.emit("connectionGraphUpdate", message);
           return;
 
         case BinaryOpcode.MESSAGE_DATA:
@@ -216,6 +222,14 @@ export default class FoxgloveClient {
     );
     payload.set(data, offset);
     this.ws.send(payload);
+  }
+
+  subscribeConnectionGraph(): void {
+    this.send({ op: "subscribeConnectionGraphUpdate" });
+  }
+
+  unsubscribeConnectionGraph(): void {
+    this.send({ op: "unsubscribeConnectionGraphUpdate" });
   }
 
   /**
