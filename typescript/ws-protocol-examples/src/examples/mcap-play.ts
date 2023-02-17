@@ -1,11 +1,11 @@
 import decompressLZ4 from "@foxglove/wasm-lz4";
+import * as Zstd from "@foxglove/wasm-zstd";
 import { FoxgloveServer } from "@foxglove/ws-protocol";
 import { McapIndexedReader, McapTypes } from "@mcap/core";
 import { Command } from "commander";
 import Debug from "debug";
 import fs from "fs/promises";
 import { WebSocketServer } from "ws";
-import { ZstdCodec, ZstdModule, ZstdStreaming } from "zstd-codec";
 
 import { setupSigintHandler } from "./util/setupSigintHandler";
 import boxen from "../boxen";
@@ -25,35 +25,11 @@ async function getDecompressHandlers(): Promise<McapTypes.DecompressHandlers> {
   }
 
   await decompressLZ4.isLoaded;
-  const zstd = await new Promise<ZstdModule>((resolve) => ZstdCodec.run(resolve));
-  let zstdStreaming: ZstdStreaming | undefined;
+  await Zstd.isLoaded;
 
   cachedDecompressHandlers = {
     lz4: (buffer, decompressedSize) => decompressLZ4(buffer, Number(decompressedSize)),
-
-    zstd: (buffer, decompressedSize) => {
-      if (!zstdStreaming) {
-        zstdStreaming = new zstd.Streaming();
-      }
-      // We use streaming decompression because the zstd-codec package has a limited (and
-      // non-growable) amount of WASM memory, and does not currently support passing the
-      // decompressedSize into the simple one-shot decode() function.
-      // https://github.com/yoshihitoh/zstd-codec/issues/223
-      const result = zstdStreaming.decompressChunks(
-        (function* () {
-          const chunkSize = 4 * 1024 * 1024;
-          const endOffset = buffer.byteOffset + buffer.byteLength;
-          for (let offset = buffer.byteOffset; offset < endOffset; offset += chunkSize) {
-            yield new Uint8Array(buffer.buffer, offset, Math.min(chunkSize, endOffset - offset));
-          }
-        })(),
-        Number(decompressedSize),
-      );
-      if (!result) {
-        throw new Error("Decompression failed");
-      }
-      return result;
-    },
+    zstd: (buffer, decompressedSize) => Zstd.decompress(buffer, Number(decompressedSize)),
   };
   return cachedDecompressHandlers;
 }
