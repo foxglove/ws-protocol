@@ -225,11 +225,11 @@ export default class FoxgloveClient {
   }
 
   subscribeConnectionGraph(): void {
-    this.send({ op: "subscribeConnectionGraphUpdate" });
+    this.send({ op: "subscribeConnectionGraph" });
   }
 
   unsubscribeConnectionGraph(): void {
-    this.send({ op: "unsubscribeConnectionGraphUpdate" });
+    this.send({ op: "unsubscribeConnectionGraph" });
   }
 
   /**

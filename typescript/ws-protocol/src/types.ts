@@ -96,8 +96,8 @@ export type ClientMessage =
   | UnsubscribeParameterUpdates
   | ClientMessageData
   | ServiceCallRequest
-  | SubscribeConnectionGraphUpdate
-  | UnsubscribeConnectionGraphUpdate;
+  | SubscribeConnectionGraph
+  | UnsubscribeConnectionGraph;
 
 export type ServerInfo = {
   op: "serverInfo";
@@ -151,11 +151,11 @@ export type UnadvertiseServices = {
   op: "unadvertiseServices";
   serviceIds: ServiceId[];
 };
-export type SubscribeConnectionGraphUpdate = {
-  op: "subscribeConnectionGraphUpdate";
+export type SubscribeConnectionGraph = {
+  op: "subscribeConnectionGraph";
 };
-export type UnsubscribeConnectionGraphUpdate = {
-  op: "unsubscribeConnectionGraphUpdate";
+export type UnsubscribeConnectionGraph = {
+  op: "unsubscribeConnectionGraph";
 };
 export type ConnectionGraphUpdate = {
   op: "connectionGraphUpdate";

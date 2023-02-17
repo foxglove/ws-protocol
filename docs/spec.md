@@ -464,13 +464,13 @@ Subscribe to [connection graph updates](#connection-graph-update). Only supporte
 
 #### Fields
 
-- `op`: string `"subscribeConnectionGraphUpdate"`
+- `op`: string `"subscribeConnectionGraph"`
 
 #### Example
 
 ```json
 {
-  "op": "subscribeConnectionGraphUpdate"
+  "op": "subscribeConnectionGraph"
 }
 ```
 
@@ -480,13 +480,13 @@ Unsubscribe from [connection graph updates](#connection-graph-update). Only supp
 
 #### Fields
 
-- `op`: string `"unsubscribeConnectionGraphUpdate"`
+- `op`: string `"unsubscribeConnectionGraph"`
 
 #### Example
 
 ```json
 {
-  "op": "unsubscribeConnectionGraphUpdate"
+  "op": "unsubscribeConnectionGraph"
 }
 ```
 
