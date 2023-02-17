@@ -245,13 +245,13 @@ Informs the client about updates to the connection graph. This is only sent to c
 - `op`: string `"connectionGraphUpdate"`
 - `publishedTopics`: array of
   - `name`: topic name
-  - `publisherIds`: array of string, list of publisher IDs
+  - `publisherIds`: array of string, list of publisher IDs. Replaces any previous publisher information about this topic.
 - `subscribedTopics`: array of
   - `name`: topic name
-  - `subscriberIds`: array of string, list of subscriber IDs
+  - `subscriberIds`: array of string, list of subscriber IDs. Replaces any previous subscriber information about this topic.
 - `advertisedServices`: array of
   - `name`: service name
-  - `providerIds`: array of string, list of provider IDs
+  - `providerIds`: array of string, list of provider IDs. Replaces any previous provider information about this service.
 - `removedTopics`: array of string, names of topics that have been removed
 - `removedServices`: array of string, names of services that have been removed
 
