@@ -18,6 +18,7 @@ export enum ServerCapability {
   parameters = "parameters",
   parametersSubscribe = "parametersSubscribe",
   services = "services",
+  connectionGraph = "connectionGraph",
 }
 
 export type ChannelId = number;
@@ -94,7 +95,9 @@ export type ClientMessage =
   | SubscribeParameterUpdates
   | UnsubscribeParameterUpdates
   | ClientMessageData
-  | ServiceCallRequest;
+  | ServiceCallRequest
+  | SubscribeConnectionGraph
+  | UnsubscribeConnectionGraph;
 
 export type ServerInfo = {
   op: "serverInfo";
@@ -148,6 +151,29 @@ export type UnadvertiseServices = {
   op: "unadvertiseServices";
   serviceIds: ServiceId[];
 };
+export type SubscribeConnectionGraph = {
+  op: "subscribeConnectionGraph";
+};
+export type UnsubscribeConnectionGraph = {
+  op: "unsubscribeConnectionGraph";
+};
+export type ConnectionGraphUpdate = {
+  op: "connectionGraphUpdate";
+  publishedTopics: {
+    name: string;
+    publisherIds: string[];
+  }[];
+  subscribedTopics: {
+    name: string;
+    subscriberIds: string[];
+  }[];
+  advertisedServices: {
+    name: string;
+    providerIds: string[];
+  }[];
+  removedTopics: string[];
+  removedServices: string[];
+};
 export type MessageData = {
   op: BinaryOpcode.MESSAGE_DATA;
   subscriptionId: SubscriptionId;
@@ -180,7 +206,8 @@ export type ServerMessage =
   | MessageData
   | Time
   | ServiceCallResponse
-  | ParameterValues;
+  | ParameterValues
+  | ConnectionGraphUpdate;
 
 /**
  * Abstraction that supports both browser and Node WebSocket clients.

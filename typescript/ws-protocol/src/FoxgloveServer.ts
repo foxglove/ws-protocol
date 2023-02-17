@@ -80,6 +80,8 @@ const REQUIRED_CAPABILITY_BY_OPERATION: Record<
   subscribeParameterUpdates: ServerCapability.parametersSubscribe,
   unsubscribeParameterUpdates: ServerCapability.parametersSubscribe,
   [ClientBinaryOpcode.SERVICE_CALL_REQUEST]: ServerCapability.services,
+  subscribeConnectionGraph: ServerCapability.connectionGraph,
+  unsubscribeConnectionGraph: ServerCapability.connectionGraph,
 };
 
 export default class FoxgloveServer {
