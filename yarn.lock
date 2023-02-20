@@ -583,6 +583,15 @@
   resolved "https://registry.yarnpkg.com/@foxglove/wasm-zstd/-/wasm-zstd-1.0.1.tgz#41f97f9c1ed5d10790603376fbecda7ce2145fe5"
   integrity sha512-hqKTO45Sl+kSq9SDqM9xi5L+GncjFEZIJgYEkGTlpJXTfhy1Gf+a+3epWMcE0tLUKmzM77dtu8snape/J+7ueQ==
 
+"@foxglove/ws-protocol@^0.4.0":
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/@foxglove/ws-protocol/-/ws-protocol-0.4.1.tgz#5cfcba3a28a02d0d9bb4e5751fe001b9320a8fce"
+  integrity sha512-c35KQ+IzOAyDpCUSOM2XNnFLx7RYCKXeGBxENOHR/TAu5izI0/t0zWMtMjxRsTUahLaEGsRnO9HBkOV/JhTuSA==
+  dependencies:
+    debug "^4"
+    eventemitter3 "^5.0.0"
+    tslib "^2"
+
 "@humanwhocodes/config-array@^0.11.8":
   version "0.11.8"
   resolved "https://registry.yarnpkg.com/@humanwhocodes/config-array/-/config-array-0.11.8.tgz#03595ac2075a4dc0f191cc2131de14fbd7d410b9"
@@ -1110,10 +1119,10 @@
   resolved "https://registry.yarnpkg.com/@types/ms/-/ms-0.7.31.tgz#31b7ca6407128a3d2bbc27fe2d21b345397f6197"
   integrity sha512-iiUgKzV9AuaEkZqkOLDIvlQiL6ltuZd9tGcW3gwpnX8JbuiuhFlEGmmFXEXkN50Cvq7Os88IY2v0dkDqXYWVgA==
 
-"@types/node@*", "@types/node@>=13.7.0", "@types/node@^18.13.0":
-  version "18.13.0"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-18.13.0.tgz#0400d1e6ce87e9d3032c19eb6c58205b0d3f7850"
-  integrity sha512-gC3TazRzGoOnoKAhUx+Q0t8S9Tzs74z7m0ipwGpSqQrleP14hKxP4/JUeEQcD3W1/aIpnWl8pHowI7WokuZpXg==
+"@types/node@*", "@types/node@>=13.7.0", "@types/node@^18.14.0":
+  version "18.14.0"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-18.14.0.tgz#94c47b9217bbac49d4a67a967fdcdeed89ebb7d0"
+  integrity sha512-5EWrvLmglK+imbCJY0+INViFWUHg1AHel1sq4ZVSfdcNqGy9Edv3UB9IIzzg+xPaUcAgZYcfVs2fBcwDeZzU0A==
 
 "@types/prettier@^2.1.5":
   version "2.4.4"
