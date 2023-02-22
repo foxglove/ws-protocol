@@ -22,7 +22,7 @@ ENV CXX=clang++
 WORKDIR /src
 
 FROM base as build
-RUN pip --no-cache-dir install conan
+RUN pip --no-cache-dir install conan~=1.0
 
 RUN conan config init
 RUN conan profile update settings.compiler.cppstd=17 default
