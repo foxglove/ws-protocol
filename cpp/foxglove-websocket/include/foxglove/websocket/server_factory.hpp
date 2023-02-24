@@ -1,9 +1,9 @@
 #pragma once
 
+#include <websocketpp/common/connection_hdl.hpp>
+
 #include <memory>
 #include <string>
-
-#include <websocketpp/common/connection_hdl.hpp>
 
 #include "common.hpp"
 #include "server_interface.hpp"

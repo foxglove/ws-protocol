@@ -1,5 +1,7 @@
 #pragma once
 
+#include <nlohmann/json.hpp>
+
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
@@ -13,8 +15,6 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-
-#include <nlohmann/json.hpp>
 
 #include "common.hpp"
 #include "parameter.hpp"
@@ -105,6 +105,8 @@ public:
 
   void setHandlers(ServerHandlers<ConnHandle>&& handlers) override;
 
+  void broadcastMessage(ChannelId chanId, uint64_t timestamp, const uint8_t* payload,
+                        size_t payloadSize) override;
   void sendMessage(ConnHandle clientHandle, ChannelId chanId, uint64_t timestamp,
                    const uint8_t* payload, size_t payloadSize) override;
   void broadcastTime(uint64_t timestamp) override;
@@ -112,6 +114,10 @@ public:
 
   uint16_t getPort() override;
   std::string remoteEndpointString(ConnHandle clientHandle) override;
+
+  typename ServerType::endpoint_type& getEndpoint() & {
+    return _server;
+  }
 
 private:
   struct ClientInfo {
@@ -945,6 +951,17 @@ inline void Server<ServerConfiguration>::removeServices(const std::vector<Servic
       (void)clientInfo;
       sendJsonRaw(hdl, msg);
     }
+  }
+}
+
+template <typename ServerConfiguration>
+inline void Server<ServerConfiguration>::broadcastMessage(ChannelId chanId, uint64_t timestamp,
+                                                          const uint8_t* payload,
+                                                          size_t payloadSize) {
+  std::shared_lock<std::shared_mutex> lock(_clientsMutex);
+  for (const auto& [hdl, clientInfo] : _clients) {
+    (void)clientInfo;
+    sendMessage(hdl, chanId, timestamp, payload, payloadSize);
   }
 }
 

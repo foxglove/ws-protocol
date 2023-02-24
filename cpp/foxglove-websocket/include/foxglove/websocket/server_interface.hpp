@@ -62,6 +62,8 @@ public:
 
   virtual void setHandlers(ServerHandlers<ConnectionHandle>&& handlers) = 0;
 
+  virtual void broadcastMessage(ChannelId chanId, uint64_t timestamp, const uint8_t* payload,
+                                size_t payloadSize) = 0;
   virtual void sendMessage(ConnectionHandle clientHandle, ChannelId chanId, uint64_t timestamp,
                            const uint8_t* payload, size_t payloadSize) = 0;
   virtual void broadcastTime(uint64_t timestamp) = 0;

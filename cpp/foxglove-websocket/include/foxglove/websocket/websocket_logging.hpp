@@ -1,9 +1,9 @@
 #pragma once
 
-#include <functional>
-
 #include <asio/ip/address.hpp>
 #include <websocketpp/logger/levels.hpp>
+
+#include <functional>
 
 #include "common.hpp"
 

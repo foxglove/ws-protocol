@@ -1,8 +1,8 @@
 #pragma once
 
-#include <stdint.h>
-
 #include <nlohmann/json.hpp>
+
+#include <stdint.h>
 
 #include "common.hpp"
 #include "parameter.hpp"

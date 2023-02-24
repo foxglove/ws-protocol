@@ -1,7 +1,7 @@
-#include <websocketpp/common/connection_hdl.hpp>
-
 #include <foxglove/websocket/server_factory.hpp>
 #include <foxglove/websocket/websocket_server.hpp>
+
+#include <websocketpp/common/connection_hdl.hpp>
 
 namespace foxglove {
 
