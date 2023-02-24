@@ -1,9 +1,11 @@
-from conans import ConanFile, tools
+from conan import ConanFile
+from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout
+from conan.tools.build import check_min_cppstd
 
 
 class FoxgloveWebSocketConan(ConanFile):
     name = "foxglove-websocket"
-    version = "0.0.1"
+    version = "1.0.0"
     url = "https://github.com/foxglove/ws-protocol"
     homepage = "https://github.com/foxglove/ws-protocol"
     description = "A C++ server implementation of the Foxglove WebSocket Protocol"
@@ -11,18 +13,34 @@ class FoxgloveWebSocketConan(ConanFile):
     topics = ("foxglove", "websocket")
 
     settings = ("os", "compiler", "build_type", "arch")
-    requires = ("nlohmann_json/3.10.5", "websocketpp/0.8.2")
-    generators = "cmake"
+    generators = "CMakeDeps"
+    exports_sources = "CMakeLists.txt", "LICENSE", "src/*", "include/*"
 
     def validate(self):
-        tools.check_min_cppstd(self, "17")
+        check_min_cppstd(self, "17")
+
+    def requirements(self):
+        self.requires("nlohmann_json/3.10.5")
+        self.requires("websocketpp/0.8.2")
 
     def configure(self):
         self.options["websocketpp"].asio = "standalone"
 
-    def package(self):
-        self.copy(pattern="LICENSE", dst="licenses")
-        self.copy("include/*")
+    def layout(self):
+        cmake_layout(self)
 
-    def package_id(self):
-        self.info.header_only()
+    def generate(self):
+        tc = CMakeToolchain(self)
+        tc.generate()
+
+    def build(self):
+        cmake = CMake(self)
+        cmake.configure()
+        cmake.build()
+
+    def package(self):
+        cmake = CMake(self)
+        cmake.install()
+
+    def package_info(self):
+        self.cpp_info.libs = ["foxglove_websocket"]

@@ -23,20 +23,19 @@ WORKDIR /src
 
 FROM base as build
 RUN pip --no-cache-dir install conan
-
-RUN conan config init
-RUN conan profile update settings.compiler.cppstd=17 default
+RUN conan profile detect --force
 
 FROM build as build_example_server
-COPY ./examples/conanfile.py /src/examples/conanfile.py
+COPY ./foxglove-websocket/conanfile.py /src/foxglove-websocket/conanfile.py
+RUN conan install foxglove-websocket -s compiler.cppstd=17 --build=missing
 COPY ./foxglove-websocket /src/foxglove-websocket/
-COPY ./.clang-format /src/
-RUN conan editable add ./foxglove-websocket foxglove-websocket/0.0.1
-RUN conan install examples --install-folder examples/build --build=openssl --build=zlib --build=protobuf
+RUN conan create foxglove-websocket -s compiler.cppstd=17
+COPY ./examples/conanfile.py /src/examples/conanfile.py
+RUN conan install examples --output-folder examples/build --build=missing -s compiler.cppstd=17
 
 FROM build_example_server AS example_server
 COPY --from=build_example_server /src /src
 COPY ./examples /src/examples
 COPY --from=build_example_server /src/examples/build/ /src/examples/build/
-RUN conan build examples --build-folder examples/build
-ENTRYPOINT ["examples/build/bin/example_server"]
+RUN conan build examples --output-folder examples/ -s compiler.cppstd=17
+CMD ["examples/build/Release/example_server"]

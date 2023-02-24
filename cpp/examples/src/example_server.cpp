@@ -1,12 +1,17 @@
-#include <foxglove/websocket/server.hpp>
+#include <foxglove/websocket/websocket_notls.hpp>
+#include <foxglove/websocket/websocket_server.hpp>
 
 #include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/util/time_util.h>
 
 #include <atomic>
 #include <chrono>
+#include <cmath>
 #include <iostream>
+#include <memory>
+#include <queue>
 #include <thread>
+#include <unordered_set>
 
 #include "foxglove/SceneUpdate.pb.h"
 
@@ -86,76 +91,75 @@ static void setAxisAngle(foxglove::Quaternion* q, double x, double y, double z, 
 }
 
 int main() {
-  foxglove::websocket::Server server{8765, "C++ Protobuf example server"};
+  const auto logHandler = [](foxglove::WebSocketLogLevel, char const* msg) {
+    std::cout << msg << std::endl;
+  };
+  foxglove::ServerOptions serverOptions;
+  auto server = std::make_unique<foxglove::Server<foxglove::WebSocketNoTls>>(
+    "C++ Protobuf example server", logHandler, serverOptions);
 
-  const auto chanId = server.addChannel({
+  foxglove::ServerHandlers<foxglove::ConnHandle> hdlrs;
+  hdlrs.subscribeHandler = [&](foxglove::ChannelId chanId, foxglove::ConnHandle) {
+    std::cout << "first client subscribed to " << chanId << std::endl;
+  };
+  hdlrs.unsubscribeHandler = [&](foxglove::ChannelId chanId, foxglove::ConnHandle) {
+    std::cout << "last client unsubscribed from " << chanId << std::endl;
+  };
+  server->setHandlers(std::move(hdlrs));
+  server->start("0.0.0.0", 8765);
+
+  const auto chanelIds = server->addChannels({{
     .topic = "example_msg",
     .encoding = "protobuf",
     .schemaName = foxglove::SceneUpdate::descriptor()->full_name(),
     .schema = Base64Encode(SerializeFdSet(foxglove::SceneUpdate::descriptor())),
-  });
+  }});
+  const auto chanId = chanelIds.front();
 
-  server.setSubscribeHandler([&](foxglove::websocket::ChannelId chanId) {
-    std::cout << "first client subscribed to " << chanId << std::endl;
-  });
-  server.setUnsubscribeHandler([&](foxglove::websocket::ChannelId chanId) {
-    std::cout << "last client unsubscribed from " << chanId << std::endl;
-  });
+  bool running = true;
 
-  std::shared_ptr<asio::steady_timer> timer;
-  std::function<void()> setTimer = [&] {
-    timer = server.getEndpoint().set_timer(50, [&](std::error_code const& ec) {
-      if (ec) {
-        std::cerr << "timer error: " << ec.message() << std::endl;
-        return;
-      }
-
-      const auto now = nanosecondsSinceEpoch();
-
-      foxglove::SceneUpdate msg;
-      auto* entity = msg.add_entities();
-      *entity->mutable_timestamp() = google::protobuf::util::TimeUtil::NanosecondsToTimestamp(now);
-      entity->set_frame_id("root");
-      auto* cube = entity->add_cubes();
-      auto* size = cube->mutable_size();
-      size->set_x(1);
-      size->set_y(1);
-      size->set_z(1);
-      auto* position = cube->mutable_pose()->mutable_position();
-      position->set_x(2);
-      position->set_y(0);
-      position->set_z(0);
-      auto* orientation = cube->mutable_pose()->mutable_orientation();
-      setAxisAngle(orientation, 0, 0, 1, double(now) / 1e9 * 0.5);
-      auto* color = cube->mutable_color();
-      color->set_r(0.6);
-      color->set_g(0.2);
-      color->set_b(1);
-      color->set_a(1);
-
-      server.sendMessage(chanId, now, msg.SerializeAsString());
-      setTimer();
-    });
-  };
-
-  setTimer();
-
-  asio::signal_set signals(server.getEndpoint().get_io_service(), SIGINT);
-
+  asio::signal_set signals(server->getEndpoint().get_io_service(), SIGINT);
   signals.async_wait([&](std::error_code const& ec, int sig) {
     if (ec) {
       std::cerr << "signal error: " << ec.message() << std::endl;
       return;
     }
     std::cerr << "received signal " << sig << ", shutting down" << std::endl;
-    server.removeChannel(chanId);
-    server.stop();
-    if (timer) {
-      timer->cancel();
-    }
+    running = false;
   });
 
-  server.run();
+  while (running) {
+    const auto now = nanosecondsSinceEpoch();
+    foxglove::SceneUpdate msg;
+    auto* entity = msg.add_entities();
+    *entity->mutable_timestamp() = google::protobuf::util::TimeUtil::NanosecondsToTimestamp(now);
+    entity->set_frame_id("root");
+    auto* cube = entity->add_cubes();
+    auto* size = cube->mutable_size();
+    size->set_x(1);
+    size->set_y(1);
+    size->set_z(1);
+    auto* position = cube->mutable_pose()->mutable_position();
+    position->set_x(2);
+    position->set_y(0);
+    position->set_z(0);
+    auto* orientation = cube->mutable_pose()->mutable_orientation();
+    setAxisAngle(orientation, 0, 0, 1, double(now) / 1e9 * 0.5);
+    auto* color = cube->mutable_color();
+    color->set_r(0.6);
+    color->set_g(0.2);
+    color->set_b(1);
+    color->set_a(1);
+
+    const auto serializedMsg = msg.SerializeAsString();
+    server->broadcastMessage(chanId, now, reinterpret_cast<const uint8_t*>(serializedMsg.data()),
+                             serializedMsg.size());
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  }
+
+  server->removeChannels({chanId});
+  server->stop();
 
   return 0;
 }
