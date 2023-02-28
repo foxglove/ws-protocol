@@ -399,6 +399,14 @@ export default class FoxgloveServer {
             });
             continue;
           }
+          if (client.subscriptionsByChannel.has(channelId)) {
+            this.send(client.connection, {
+              op: "status",
+              level: StatusLevel.WARNING,
+              message: `Client already subscribed to channel ${channelId}; ignoring subscription`,
+            });
+            continue;
+          }
           const channel = this.channels.get(channelId);
           if (!channel) {
             this.send(client.connection, {
