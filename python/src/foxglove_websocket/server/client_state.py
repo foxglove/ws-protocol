@@ -25,8 +25,8 @@ class ClientState:
     )
 
     def remove_channel(self, removed_chan_id: ChannelId):
-        subId = self.subscriptions_by_channel.get(removed_chan_id)
-        if subId is not None:
+        sub_id = self.subscriptions_by_channel.get(removed_chan_id)
+        if sub_id is not None:
             self.subscriptions = MappingProxyType(
                 {
                     sub: chan
