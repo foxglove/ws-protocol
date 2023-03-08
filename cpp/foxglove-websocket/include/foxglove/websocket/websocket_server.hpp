@@ -1,6 +1,8 @@
 #pragma once
 
 #include <nlohmann/json.hpp>
+#include <websocketpp/config/asio.hpp>
+#include <websocketpp/server.hpp>
 
 #include <algorithm>
 #include <chrono>
@@ -18,11 +20,10 @@
 
 #include "common.hpp"
 #include "parameter.hpp"
+#include "regex_utils.hpp"
 #include "serialization.hpp"
 #include "server_interface.hpp"
 #include "websocket_logging.hpp"
-#include "websocket_notls.hpp"
-#include "websocket_tls.hpp"
 
 // Debounce a function call (tied to the line number)
 // This macro takes in a function and the debounce time in milliseconds
@@ -55,6 +56,26 @@ constexpr uint32_t Integer(const std::string_view str) {
   return result;
 }
 
+/// Map of required capability by client operation (text).
+const std::unordered_map<std::string, std::string> CAPABILITY_BY_CLIENT_OPERATION = {
+  // {"subscribe", },   // No required capability.
+  // {"unsubscribe", }, // No required capability.
+  {"advertise", CAPABILITY_CLIENT_PUBLISH},
+  {"unadvertise", CAPABILITY_CLIENT_PUBLISH},
+  {"getParameters", CAPABILITY_PARAMETERS},
+  {"setParameters", CAPABILITY_PARAMETERS},
+  {"subscribeParameterUpdates", CAPABILITY_PARAMETERS_SUBSCRIBE},
+  {"unsubscribeParameterUpdates", CAPABILITY_PARAMETERS_SUBSCRIBE},
+  {"subscribeConnectionGraph", CAPABILITY_CONNECTION_GRAPH},
+  {"unsubscribeConnectionGraph", CAPABILITY_CONNECTION_GRAPH},
+};
+
+/// Map of required capability by client operation (binary).
+const std::unordered_map<ClientBinaryOpcode, std::string> CAPABILITY_BY_CLIENT_BINARY_OPERATION = {
+  {ClientBinaryOpcode::MESSAGE_DATA, CAPABILITY_CLIENT_PUBLISH},
+  {ClientBinaryOpcode::SERVICE_CALL_REQUEST, CAPABILITY_SERVICES},
+};
+
 enum class StatusLevel : uint8_t {
   Info = 0,
   Warning = 1,
@@ -81,8 +102,6 @@ public:
   using ConnectionType = websocketpp::connection<ServerConfiguration>;
   using MessagePtr = typename ServerType::message_ptr;
   using Tcp = websocketpp::lib::asio::ip::tcp;
-
-  static bool USES_TLS;
 
   explicit Server(std::string name, LogCallback logger, const ServerOptions& options);
   virtual ~Server();
@@ -111,6 +130,8 @@ public:
                    const uint8_t* payload, size_t payloadSize) override;
   void broadcastTime(uint64_t timestamp) override;
   void sendServiceResponse(ConnHandle clientHandle, const ServiceResponse& response) override;
+  void updateConnectionGraph(const MapOfSets& publishedTopics, const MapOfSets& subscribedTopics,
+                             const MapOfSets& advertisedServices) override;
 
   uint16_t getPort() override;
   std::string remoteEndpointString(ConnHandle clientHandle) override;
@@ -125,6 +146,7 @@ private:
     ConnHandle handle;
     std::unordered_map<ChannelId, SubscriptionId> subscriptionsByChannel;
     std::unordered_set<ClientChannelId> advertisedChannels;
+    bool subscribedToConnectionGraph = false;
 
     ClientInfo(const ClientInfo&) = delete;
     ClientInfo& operator=(const ClientInfo&) = delete;
@@ -154,6 +176,14 @@ private:
   std::shared_mutex _clientChannelsMutex;
   std::shared_mutex _servicesMutex;
   std::mutex _clientParamSubscriptionsMutex;
+
+  struct {
+    int subscriptionCount = 0;
+    MapOfSets publishedTopics;
+    MapOfSets subscribedTopics;
+    MapOfSets advertisedServices;
+  } _connectionGraph;
+  std::shared_mutex _connectionGraphMutex;
 
   void setupTlsHandler();
   void socketInit(ConnHandle hdl);
@@ -284,6 +314,7 @@ inline void Server<ServerConfiguration>::handleConnectionClosed(ConnHandle hdl) 
   std::unordered_map<ChannelId, SubscriptionId> oldSubscriptionsByChannel;
   std::unordered_set<ClientChannelId> oldAdvertisedChannels;
   std::string clientName;
+  bool wasSubscribedToConnectionGraph;
   {
     std::unique_lock<std::shared_mutex> lock(_clientsMutex);
     const auto clientIt = _clients.find(hdl);
@@ -299,6 +330,7 @@ inline void Server<ServerConfiguration>::handleConnectionClosed(ConnHandle hdl) 
 
     oldSubscriptionsByChannel = std::move(client.subscriptionsByChannel);
     oldAdvertisedChannels = std::move(client.advertisedChannels);
+    wasSubscribedToConnectionGraph = client.subscribedToConnectionGraph;
     _clients.erase(clientIt);
   }
 
@@ -332,6 +364,15 @@ inline void Server<ServerConfiguration>::handleConnectionClosed(ConnHandle hdl) 
     _clientParamSubscriptions.erase(hdl);
   }
   unsubscribeParamsWithoutSubscriptions(hdl, clientSubscribedParameters);
+
+  if (wasSubscribedToConnectionGraph) {
+    std::unique_lock<std::shared_mutex> lock(_connectionGraphMutex);
+    _connectionGraph.subscriptionCount--;
+    if (_connectionGraph.subscriptionCount == 0 && _handlers.subscribeConnectionGraphHandler) {
+      _server.get_alog().write(APP, "Unsubscribing from connection graph updates.");
+      _handlers.subscribeConnectionGraphHandler(false);
+    }
+  }
 
 }  // namespace foxglove
 
@@ -452,7 +493,7 @@ inline void Server<ServerConfiguration>::start(const std::string& host, uint16_t
     throw std::runtime_error("Failed to resolve the local endpoint: " + ec.message());
   }
 
-  const std::string protocol = USES_TLS ? "wss" : "ws";
+  const std::string protocol = _options.useTls ? "wss" : "ws";
   auto address = endpoint.address();
   _server.get_alog().write(APP, "WebSocket server listening at " + protocol + "://" +
                                   IPAddressToString(address) + ":" +
@@ -528,6 +569,15 @@ inline void Server<ServerConfiguration>::handleTextMessage(ConnHandle hdl, const
   const json payload = json::parse(msg);
   const std::string& op = payload.at("op").get<std::string>();
 
+  const auto requiredCapabilityIt = CAPABILITY_BY_CLIENT_OPERATION.find(op);
+  if (requiredCapabilityIt != CAPABILITY_BY_CLIENT_OPERATION.end() &&
+      !hasCapability(requiredCapabilityIt->second)) {
+    sendStatus(hdl, StatusLevel::Error,
+               "Operation '" + op + "' not supported as server capability '" +
+                 requiredCapabilityIt->second + "' is missing");
+    return;
+  }
+
   std::shared_lock<std::shared_mutex> clientsLock(_clientsMutex);
   auto& clientInfo = _clients.at(hdl);
 
@@ -546,6 +596,8 @@ inline void Server<ServerConfiguration>::handleTextMessage(ConnHandle hdl, const
   constexpr auto SET_PARAMETERS = Integer("setParameters");
   constexpr auto SUBSCRIBE_PARAMETER_UPDATES = Integer("subscribeParameterUpdates");
   constexpr auto UNSUBSCRIBE_PARAMETER_UPDATES = Integer("unsubscribeParameterUpdates");
+  constexpr auto SUBSCRIBE_CONNECTION_GRAPH = Integer("subscribeConnectionGraph");
+  constexpr auto UNSUBSCRIBE_CONNECTION_GRAPH = Integer("unsubscribeConnectionGraph");
 
   switch (Integer(op)) {
     case SUBSCRIBE: {
@@ -602,9 +654,17 @@ inline void Server<ServerConfiguration>::handleTextMessage(ConnHandle hdl, const
                      "Channel " + std::to_string(channelId) + " was already advertised");
           continue;
         }
+
+        const auto topic = chan.at("topic").get<std::string>();
+        if (!isWhitelisted(topic, _options.clientTopicWhitelistPatterns)) {
+          sendStatus(hdl, StatusLevel::Error,
+                     "Can't advertise channel " + std::to_string(channelId) + ", topic '" + topic +
+                       "' not whitelisted");
+          continue;
+        }
         ClientAdvertisement advertisement{};
         advertisement.channelId = channelId;
-        advertisement.topic = chan.at("topic").get<std::string>();
+        advertisement.topic = topic;
         advertisement.encoding = chan.at("encoding").get<std::string>();
         advertisement.schemaName = chan.at("schemaName").get<std::string>();
         clientPublications.emplace(channelId, advertisement);
@@ -642,12 +702,7 @@ inline void Server<ServerConfiguration>::handleTextMessage(ConnHandle hdl, const
       }
     } break;
     case GET_PARAMETERS: {
-      if (!hasCapability(CAPABILITY_PARAMETERS)) {
-        _server.get_elog().write(RECOVERABLE, "Operation '" + op +
-                                                "' not supported as server capability '" +
-                                                CAPABILITY_PARAMETERS + "' is missing");
-        return;
-      } else if (!_handlers.parameterRequestHandler) {
+      if (!_handlers.parameterRequestHandler) {
         return;
       }
 
@@ -658,12 +713,7 @@ inline void Server<ServerConfiguration>::handleTextMessage(ConnHandle hdl, const
       _handlers.parameterRequestHandler(paramNames, requestId, hdl);
     } break;
     case SET_PARAMETERS: {
-      if (!hasCapability(CAPABILITY_PARAMETERS)) {
-        _server.get_elog().write(RECOVERABLE, "Operation '" + op +
-                                                "' not supported as server capability '" +
-                                                CAPABILITY_PARAMETERS + "' is missing");
-        return;
-      } else if (!_handlers.parameterChangeHandler) {
+      if (!_handlers.parameterChangeHandler) {
         return;
       }
 
@@ -674,12 +724,7 @@ inline void Server<ServerConfiguration>::handleTextMessage(ConnHandle hdl, const
       _handlers.parameterChangeHandler(parameters, requestId, hdl);
     } break;
     case SUBSCRIBE_PARAMETER_UPDATES: {
-      if (!hasCapability(CAPABILITY_PARAMETERS_SUBSCRIBE)) {
-        _server.get_elog().write(RECOVERABLE, "Operation '" + op +
-                                                "' not supported as server capability '" +
-                                                CAPABILITY_PARAMETERS_SUBSCRIBE + " is missing'");
-        return;
-      } else if (!_handlers.parameterSubscriptionHandler) {
+      if (!_handlers.parameterSubscriptionHandler) {
         return;
       }
 
@@ -704,12 +749,7 @@ inline void Server<ServerConfiguration>::handleTextMessage(ConnHandle hdl, const
       }
     } break;
     case UNSUBSCRIBE_PARAMETER_UPDATES: {
-      if (!hasCapability(CAPABILITY_PARAMETERS_SUBSCRIBE)) {
-        _server.get_elog().write(RECOVERABLE, "Operation '" + op +
-                                                "' not supported as server capability '" +
-                                                CAPABILITY_PARAMETERS_SUBSCRIBE + " is missing'");
-        return;
-      } else if (!_handlers.parameterSubscriptionHandler) {
+      if (!_handlers.parameterSubscriptionHandler) {
         return;
       }
 
@@ -724,6 +764,53 @@ inline void Server<ServerConfiguration>::handleTextMessage(ConnHandle hdl, const
 
       unsubscribeParamsWithoutSubscriptions(hdl, paramNames);
     } break;
+    case SUBSCRIBE_CONNECTION_GRAPH: {
+      std::unique_lock<std::shared_mutex> lock(_connectionGraphMutex);
+      _connectionGraph.subscriptionCount++;
+
+      if (_connectionGraph.subscriptionCount == 1 && _handlers.subscribeConnectionGraphHandler) {
+        // First subscriber, let the handler know that we are interested in updates.
+        _server.get_alog().write(APP, "Subscribing to connection graph updates.");
+        _handlers.subscribeConnectionGraphHandler(true);
+        clientInfo.subscribedToConnectionGraph = true;
+      }
+
+      json::array_t publishedTopicsJson, subscribedTopicsJson, advertisedServicesJson;
+      for (const auto& [name, ids] : _connectionGraph.publishedTopics) {
+        publishedTopicsJson.push_back(nlohmann::json{{"name", name}, {"publisherIds", ids}});
+      }
+      for (const auto& [name, ids] : _connectionGraph.subscribedTopics) {
+        subscribedTopicsJson.push_back(nlohmann::json{{"name", name}, {"subscriberIds", ids}});
+      }
+      for (const auto& [name, ids] : _connectionGraph.advertisedServices) {
+        advertisedServicesJson.push_back(nlohmann::json{{"name", name}, {"providerIds", ids}});
+      }
+
+      const json jsonMsg = {
+        {"op", "connectionGraphUpdate"},
+        {"publishedTopics", publishedTopicsJson},
+        {"subscribedTopics", subscribedTopicsJson},
+        {"advertisedServices", advertisedServicesJson},
+        {"removedTopics", json::array()},
+        {"removedServices", json::array()},
+      };
+
+      sendJsonRaw(hdl, jsonMsg.dump());
+    } break;
+    case UNSUBSCRIBE_CONNECTION_GRAPH: {
+      if (clientInfo.subscribedToConnectionGraph) {
+        clientInfo.subscribedToConnectionGraph = false;
+        std::unique_lock<std::shared_mutex> lock(_connectionGraphMutex);
+        _connectionGraph.subscriptionCount--;
+        if (_connectionGraph.subscriptionCount == 0 && _handlers.subscribeConnectionGraphHandler) {
+          _server.get_alog().write(APP, "Unsubscribing from connection graph updates.");
+          _handlers.subscribeConnectionGraphHandler(false);
+        }
+      } else {
+        sendStatus(hdl, StatusLevel::Error,
+                   "Client was not subscribed to connection graph updates");
+      }
+    } break;
     default: {
       sendStatus(hdl, StatusLevel::Error, "Unrecognized client opcode \"" + op + "\"");
     } break;
@@ -733,22 +820,32 @@ inline void Server<ServerConfiguration>::handleTextMessage(ConnHandle hdl, const
 template <typename ServerConfiguration>
 inline void Server<ServerConfiguration>::handleBinaryMessage(ConnHandle hdl, const uint8_t* msg,
                                                              size_t length) {
-  const auto timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                           std::chrono::high_resolution_clock::now().time_since_epoch())
-                           .count();
-
   if (length < 1) {
     sendStatus(hdl, StatusLevel::Error, "Received an empty binary message");
     return;
   }
 
   const auto op = static_cast<ClientBinaryOpcode>(msg[0]);
+
+  const auto requiredCapabilityIt = CAPABILITY_BY_CLIENT_BINARY_OPERATION.find(op);
+  if (requiredCapabilityIt != CAPABILITY_BY_CLIENT_BINARY_OPERATION.end() &&
+      !hasCapability(requiredCapabilityIt->second)) {
+    sendStatus(hdl, StatusLevel::Error,
+               "Binary operation '" + std::to_string(static_cast<int>(op)) +
+                 "' not supported as server capability '" + requiredCapabilityIt->second +
+                 "' is missing");
+    return;
+  }
+
   switch (op) {
     case ClientBinaryOpcode::MESSAGE_DATA: {
       if (length < 5) {
         sendStatus(hdl, StatusLevel::Error, "Invalid message length " + std::to_string(length));
         return;
       }
+      const auto timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                               std::chrono::high_resolution_clock::now().time_since_epoch())
+                               .count();
       const ClientChannelId channelId = *reinterpret_cast<const ClientChannelId*>(msg + 1);
       std::shared_lock<std::shared_mutex> lock(_clientChannelsMutex);
 
@@ -1050,6 +1147,81 @@ inline uint16_t Server<ServerConfiguration>::getPort() {
 }
 
 template <typename ServerConfiguration>
+inline void Server<ServerConfiguration>::updateConnectionGraph(
+  const MapOfSets& publishedTopics, const MapOfSets& subscribedTopics,
+  const MapOfSets& advertisedServices) {
+  json::array_t publisherDiff, subscriberDiff, servicesDiff;
+  std::unordered_set<std::string> topicNames, serviceNames;
+  std::unordered_set<std::string> knownTopicNames, knownServiceNames;
+  {
+    std::unique_lock<std::shared_mutex> lock(_connectionGraphMutex);
+    for (const auto& [name, publisherIds] : publishedTopics) {
+      const auto it = _connectionGraph.publishedTopics.find(name);
+      if (it == _connectionGraph.publishedTopics.end() ||
+          _connectionGraph.publishedTopics[name] != publisherIds) {
+        publisherDiff.push_back(nlohmann::json{{"name", name}, {"publisherIds", publisherIds}});
+      }
+      topicNames.insert(name);
+    }
+    for (const auto& [name, subscriberIds] : subscribedTopics) {
+      const auto it = _connectionGraph.subscribedTopics.find(name);
+      if (it == _connectionGraph.subscribedTopics.end() ||
+          _connectionGraph.subscribedTopics[name] != subscriberIds) {
+        subscriberDiff.push_back(nlohmann::json{{"name", name}, {"subscriberIds", subscriberIds}});
+      }
+      topicNames.insert(name);
+    }
+    for (const auto& [name, providerIds] : advertisedServices) {
+      const auto it = _connectionGraph.advertisedServices.find(name);
+      if (it == _connectionGraph.advertisedServices.end() ||
+          _connectionGraph.advertisedServices[name] != providerIds) {
+        servicesDiff.push_back(nlohmann::json{{"name", name}, {"providerIds", providerIds}});
+      }
+      serviceNames.insert(name);
+    }
+
+    for (const auto& nameWithIds : _connectionGraph.publishedTopics) {
+      knownTopicNames.insert(nameWithIds.first);
+    }
+    for (const auto& nameWithIds : _connectionGraph.subscribedTopics) {
+      knownTopicNames.insert(nameWithIds.first);
+    }
+    for (const auto& nameWithIds : _connectionGraph.advertisedServices) {
+      knownServiceNames.insert(nameWithIds.first);
+    }
+
+    _connectionGraph.publishedTopics = publishedTopics;
+    _connectionGraph.subscribedTopics = subscribedTopics;
+    _connectionGraph.advertisedServices = advertisedServices;
+  }
+
+  std::vector<std::string> removedTopics, removedServices;
+  std::set_difference(knownTopicNames.begin(), knownTopicNames.end(), topicNames.begin(),
+                      topicNames.end(), std::back_inserter(removedTopics));
+  std::set_difference(knownServiceNames.begin(), knownServiceNames.end(), serviceNames.begin(),
+                      serviceNames.end(), std::back_inserter(removedServices));
+
+  if (publisherDiff.empty() && subscriberDiff.empty() && servicesDiff.empty() &&
+      removedTopics.empty() && removedServices.empty()) {
+    return;
+  }
+
+  const json msg = {
+    {"op", "connectionGraphUpdate"},      {"publishedTopics", publisherDiff},
+    {"subscribedTopics", subscriberDiff}, {"advertisedServices", servicesDiff},
+    {"removedTopics", removedTopics},     {"removedServices", removedServices},
+  };
+  const auto payload = msg.dump();
+
+  std::shared_lock<std::shared_mutex> clientsLock(_clientsMutex);
+  for (const auto& [hdl, clientInfo] : _clients) {
+    if (clientInfo.subscribedToConnectionGraph) {
+      _server.send(hdl, payload, OpCode::TEXT);
+    }
+  }
+}
+
+template <typename ServerConfiguration>
 inline std::string Server<ServerConfiguration>::remoteEndpointString(ConnHandle clientHandle) {
   std::error_code ec;
   const auto con = _server.get_con_from_hdl(clientHandle, ec);
@@ -1090,53 +1262,6 @@ template <typename ServerConfiguration>
 inline bool Server<ServerConfiguration>::hasCapability(const std::string& capability) const {
   return std::find(_options.capabilities.begin(), _options.capabilities.end(), capability) !=
          _options.capabilities.end();
-}
-
-template <>
-bool Server<WebSocketNoTls>::USES_TLS = false;
-
-template <>
-bool Server<WebSocketTls>::USES_TLS = true;
-
-template <>
-inline void Server<WebSocketNoTls>::setupTlsHandler() {
-  _server.get_alog().write(APP, "Server running without TLS");
-}
-
-template <>
-inline void Server<WebSocketTls>::setupTlsHandler() {
-  _server.set_tls_init_handler([this](ConnHandle hdl) {
-    (void)hdl;
-
-    namespace asio = websocketpp::lib::asio;
-    auto ctx = websocketpp::lib::make_shared<asio::ssl::context>(asio::ssl::context::sslv23);
-
-    try {
-      ctx->set_options(asio::ssl::context::default_workarounds | asio::ssl::context::no_tlsv1 |
-                       asio::ssl::context::no_sslv2 | asio::ssl::context::no_sslv3);
-      ctx->use_certificate_chain_file(_options.certfile);
-      ctx->use_private_key_file(_options.keyfile, asio::ssl::context::pem);
-
-      // Ciphers are taken from the websocketpp example echo tls server:
-      // https://github.com/zaphoyd/websocketpp/blob/1b11fd301/examples/echo_server_tls/echo_server_tls.cpp#L119
-      constexpr char ciphers[] =
-        "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:"
-        "ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+"
-        "AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-"
-        "AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-"
-        "ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-"
-        "AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!3DES:"
-        "!MD5:!PSK";
-
-      if (SSL_CTX_set_cipher_list(ctx->native_handle(), ciphers) != 1) {
-        _server.get_elog().write(RECOVERABLE, "Error setting cipher list");
-      }
-    } catch (const std::exception& ex) {
-      _server.get_elog().write(RECOVERABLE,
-                               std::string("Exception in TLS handshake: ") + ex.what());
-    }
-    return ctx;
-  });
 }
 
 }  // namespace foxglove
