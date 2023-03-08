@@ -15,6 +15,11 @@
 
 #include "foxglove/SceneUpdate.pb.h"
 
+namespace foxglove {
+template <>
+void Server<WebSocketNoTls>::setupTlsHandler() {}
+}  // namespace foxglove
+
 static uint64_t nanosecondsSinceEpoch() {
   return uint64_t(std::chrono::duration_cast<std::chrono::nanoseconds>(
                     std::chrono::system_clock::now().time_since_epoch())
