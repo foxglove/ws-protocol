@@ -123,7 +123,7 @@ Each JSON message must be an object containing a field called `op` which identif
     > Note: Encodings currently supported by Foxglove Studio are `json`, `protobuf`, `ros1`, and `cdr` (ROS 2). For more information, see the [Foxglove Studio documentation](https://foxglove.dev/docs/studio/connection/custom#foxglove-websocket).
   - `schemaName`: string
   - `schema`: string
-    > Note: Foxglove Studio expects the schema to be in a format matching the `encoding`. For more information, see the [Foxglove Studio documentation](https://foxglove.dev/docs/studio/connection/custom#foxglove-websocket).
+    > Note: Foxglove Studio expects the schema to be in a format matching the `schemaEncoding` or alternatively the `encoding` if `schemaEncoding` is not specified. For more information, see the [Foxglove Studio documentation](https://foxglove.dev/docs/studio/connection/custom#foxglove-websocket).
   - `schemaEncoding`: string | undefined, type of encoding used for schema encoding. May be used if the schema encoding can't be uniquely deduced from the message encoding.
 
 #### Example
