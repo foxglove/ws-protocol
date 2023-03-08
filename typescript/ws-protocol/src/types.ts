@@ -32,6 +32,7 @@ export type Channel = {
   encoding: string;
   schemaName: string;
   schema: string;
+  schemaEncoding?: string;
 };
 export type Service = {
   id: number;
