@@ -3,10 +3,11 @@ project(FoxgloveWebSocket CXX)
 
 find_package(nlohmann_json REQUIRED)
 find_package(websocketpp REQUIRED)
+find_package(asio REQUIRED)
 
 add_library(foxglove_websocket src/parameter.cpp src/serialization.cpp)
 target_include_directories(foxglove_websocket PUBLIC include)
-target_link_libraries(foxglove_websocket nlohmann_json::nlohmann_json websocketpp::websocketpp)
+target_link_libraries(foxglove_websocket nlohmann_json::nlohmann_json websocketpp::websocketpp asio::asio)
 
 install(TARGETS foxglove_websocket)
 INSTALL (DIRECTORY ${CMAKE_SOURCE_DIR}/include/
