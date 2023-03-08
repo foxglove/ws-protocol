@@ -16,7 +16,7 @@ constexpr char CAPABILITY_PARAMETERS_SUBSCRIBE[] = "parametersSubscribe";
 constexpr char CAPABILITY_SERVICES[] = "services";
 constexpr char CAPABILITY_CONNECTION_GRAPH[] = "connectionGraph";
 
-constexpr std::array<const char*, 5> DEFAULT_CAPABILITIES = {
+constexpr std::array DEFAULT_CAPABILITIES = {
   CAPABILITY_CLIENT_PUBLISH, CAPABILITY_CONNECTION_GRAPH, CAPABILITY_PARAMETERS_SUBSCRIBE,
   CAPABILITY_PARAMETERS,     CAPABILITY_SERVICES,
 };
