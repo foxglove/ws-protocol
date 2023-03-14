@@ -20,6 +20,18 @@ export enum ServerCapability {
   services = "services",
   connectionGraph = "connectionGraph",
 }
+export enum ParameterType {
+  NOT_SET = "not_set",
+  BOOL = "bool",
+  INTEGER = "integer",
+  DOUBLE = "double",
+  STRING = "string",
+  BYTE_ARRAY = "byte_array",
+  BOOL_ARRAY = "bool_array",
+  INTEGER_ARRAY = "integer_array",
+  DOUBLE_ARRAY = "double_array",
+  STRING_ARRAY = "string_array",
+}
 
 export type ChannelId = number;
 export type ClientChannelId = number;
@@ -195,6 +207,7 @@ export type ClientPublish = {
 export type Parameter = {
   name: string;
   value: number | boolean | string | number[] | boolean[] | string[] | undefined;
+  type?: ParameterType;
 };
 
 export type ServerMessage =

@@ -171,7 +171,27 @@ Informs the client about parameters. Only supported if the server declares the `
 - `parameters`: array of:
   - `name`: string, name of the parameter
   - `value`: number | boolean | string | number[] | boolean[] | string[]
+  - `type`: string | undefined, optional [parameter type](#parameter-types) for cases where the parameter type can't be deduced from the value type. If the type is `byte_array`, `value` shall be interpreted as base64 encoded string.
 - `id`: string | undefined. Only set when the [getParameters](#get-parameters) or [setParameters](#set-parameters) request's `id` field was set
+
+#### Parameter types
+
+The following parameter types are supported:
+
+```ts
+enum ParameterType {
+  NOT_SET = "not_set",
+  BOOL = "bool",
+  INTEGER = "integer",
+  DOUBLE = "double",
+  STRING = "string",
+  BYTE_ARRAY = "byte_array",
+  BOOL_ARRAY = "bool_array",
+  INTEGER_ARRAY = "integer_array",
+  DOUBLE_ARRAY = "double_array",
+  STRING_ARRAY = "string_array",
+}
+```
 
 #### Example
 
@@ -183,6 +203,7 @@ Informs the client about parameters. Only supported if the server declares the `
     { "name": "/float_param", "value": 1.2 },
     { "name": "/string_param", "value": "foo" },
     { "name": "/node/nested_ints_param", "value": [1, 2, 3] }
+    { "name": "/byte_array_param", "value": "QUJDRA==", "type": "byte_array" },
   ],
   "id": "request-123"
 }
@@ -396,6 +417,7 @@ Set one or more parameters. Only supported if the server previously declared tha
 - `parameters`: array of:
   - `name`: string
   - `value`: number | boolean | string | number[] | boolean[] | string[] | undefined. If the value is not set (`undefined`), the parameter shall be unset (removed).
+  - `type`: string | undefined, optional [parameter type](#parameter-types). If the type is `byte_array`, `value` shall be a base64 encoded string.
 - `id`: string | undefined, arbitrary string used for identifying the corresponding server [response](#parameter-values). If this field is not set, the server may not send a response to the client.
 
 #### Example
@@ -405,7 +427,8 @@ Set one or more parameters. Only supported if the server previously declared tha
   "op": "setParameters",
   "parameters": [
     { "name": "/int_param", "value": 3 },
-    { "name": "/float_param", "value": 4.1 }
+    { "name": "/float_param", "value": 4.1 },
+    { "name": "/byte_array_param", "value": "QUJDRA==", "type": "byte_array" }
   ],
   "id": "request-456"
 }
