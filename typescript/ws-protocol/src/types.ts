@@ -195,6 +195,7 @@ export type ClientPublish = {
 export type Parameter = {
   name: string;
   value: number | boolean | string | number[] | boolean[] | string[] | undefined;
+  type?: "byte_array";
 };
 
 export type ServerMessage =
