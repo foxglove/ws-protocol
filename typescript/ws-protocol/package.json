@@ -40,7 +40,7 @@
     "@types/jest": "^29.4.0",
     "@types/lodash": "4.14.191",
     "@types/node": "^18.15.1",
-    "@typescript-eslint/eslint-plugin": "5.54.1",
+    "@typescript-eslint/eslint-plugin": "5.55.0",
     "@typescript-eslint/parser": "5.54.1",
     "commander": "10.0.0",
     "consumer-queue": "1.1.0",
