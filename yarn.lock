@@ -555,12 +555,12 @@
     "@foxglove/message-definition" "^0.2.0"
     "@foxglove/rosmsg" "^4.0.0"
 
-"@foxglove/rosmsg-serialization@^1.5.3":
-  version "1.5.3"
-  resolved "https://registry.yarnpkg.com/@foxglove/rosmsg-serialization/-/rosmsg-serialization-1.5.3.tgz#82c311d81c1aec4319880ecb37208a2a74b1164a"
-  integrity sha512-T0JBYljwN4qTWTkNGq1nxi/Y9Z1GnI10s6rN7P/sTAKLr+QpR1rC+Ag7RHLGUYqBPuFu8Mth1IGPGEufW18xEw==
+"@foxglove/rosmsg-serialization@^2.0.1":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@foxglove/rosmsg-serialization/-/rosmsg-serialization-2.0.1.tgz#c1b977364855f00fb875a055fb9bd47cd1164cbc"
+  integrity sha512-s5ITg03L+0HU6YZZ3p+tn4lUoRYdK9/FWJGfgqRmzycbV73k+LFOyyzoI30B8WmuyQkqPyoFfAHe99ZFtiehSw==
   dependencies:
-    "@foxglove/rosmsg" "^3.1.0"
+    "@foxglove/message-definition" "^0.2.0"
 
 "@foxglove/rosmsg2-serialization@^2.0.0":
   version "2.0.0"
@@ -570,13 +570,6 @@
     "@foxglove/cdr" "^2.0.0"
     "@foxglove/message-definition" "^0.2.0"
     "@foxglove/rostime" "^1.1.2"
-
-"@foxglove/rosmsg@^3.1.0":
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/@foxglove/rosmsg/-/rosmsg-3.1.0.tgz#edbe3e2e743a5cc89df8195889a054e639230916"
-  integrity sha512-uvL3a3PRusrQw4tg91tsXfPMCWjsKV35nAaHkzPqRt4bZRzO2DAUMavCltjRux5Hc8WLPYWt77iUSk3KfxqUZQ==
-  dependencies:
-    md5-typescript "^1.0.5"
 
 "@foxglove/rosmsg@^4.0.0":
   version "4.2.1"
