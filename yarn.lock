@@ -892,10 +892,10 @@
     "@jridgewell/resolve-uri" "3.1.0"
     "@jridgewell/sourcemap-codec" "1.4.14"
 
-"@mcap/core@^1.2.0":
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/@mcap/core/-/core-1.2.0.tgz#85e40420ee9a34e52ed6631a4a4d542123740111"
-  integrity sha512-VVeyyiwBmBdq6w6ar3aY4L2PcjqzTlee/lPsIdML6vYTNlWEHAB28QjGinF2ekUnJP7iu954EqTp4OauHqN2Mw==
+"@mcap/core@^1.2.1":
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/@mcap/core/-/core-1.2.1.tgz#245dd0b2004576699e709629c18cbd6c9d8fd4c3"
+  integrity sha512-DDOkiF+VkxiaehjX5DBJE5Dfa2C/bPppxckuRGgHhdf2e9R6pUczNhwqmeoHhIDM77HW/k5L+HVV5ocQPZHR9w==
   dependencies:
     "@foxglove/crc" "^0.0.3"
     heap-js "^2.2.0"
