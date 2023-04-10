@@ -533,14 +533,14 @@
   resolved "https://registry.yarnpkg.com/@foxglove/crc/-/crc-0.0.3.tgz#04cd8816454e14f1ec48de17c949199b4b3ec9c2"
   integrity sha512-DjIZsnL3CyP/yQ/vUYA9cjrD0a/8YXejI5ZmsaOiT16cLfZcTwaCxIN01/ys4jsy+dZCQ/9DnWFn7AEFbiMDaA==
 
-"@foxglove/eslint-plugin@0.21.0":
-  version "0.21.0"
-  resolved "https://registry.yarnpkg.com/@foxglove/eslint-plugin/-/eslint-plugin-0.21.0.tgz#9be2b5d0c46ac0f7c86aec7341cb479e4e8c29a6"
-  integrity sha512-bSSwYZ7D5xutMv9kFA/HFBuVHMjWVrkW+nyrVIo2UCoywm3Oh9FG7Ag1tv7SsS2c3bZ/pIb8KoeWRf7J5Fctrw==
+"@foxglove/eslint-plugin@0.21.2":
+  version "0.21.2"
+  resolved "https://registry.yarnpkg.com/@foxglove/eslint-plugin/-/eslint-plugin-0.21.2.tgz#dc2e976da50879491b247b49ac7bc4bef6c47c5e"
+  integrity sha512-qUSMrouyknykZNTN40MFgACDGBKQC+4CiV0eAJ4f8g4pJLxWpyXWbR6Su8DefqE71HPIVfQBU1AdvyfBx3/teg==
   dependencies:
     "@typescript-eslint/utils" "^5"
     tsutils "^3"
-    typescript "^4"
+    typescript "^4 || ^5"
 
 "@foxglove/message-definition@^0.2.0":
   version "0.2.0"
@@ -4031,10 +4031,10 @@ typescript@5.0.4:
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.0.4.tgz#b217fd20119bd61a94d4011274e0ab369058da3b"
   integrity sha512-cW9T5W9xY37cc+jfEnaUvX91foxtHkza3Nw3wkoF4sSlKn0MONdkdEndig/qPBWXNkmplh3NzayQzCiHM4/hqw==
 
-typescript@^4:
-  version "4.9.4"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.9.4.tgz#a2a3d2756c079abda241d75f149df9d561091e78"
-  integrity sha512-Uz+dTXYzxXXbsFpM86Wh3dKCxrQqUcVMxwU54orwlJjOpO3ao8L7j5lH+dWfTwgCwIuM9GQ2kvVotzYJMXTBZg==
+"typescript@^4 || ^5":
+  version "5.0.4"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.0.4.tgz#b217fd20119bd61a94d4011274e0ab369058da3b"
+  integrity sha512-cW9T5W9xY37cc+jfEnaUvX91foxtHkza3Nw3wkoF4sSlKn0MONdkdEndig/qPBWXNkmplh3NzayQzCiHM4/hqw==
 
 unbox-primitive@^1.0.1:
   version "1.0.1"
