@@ -5,7 +5,7 @@ build:
 	docker compose build --build-arg CPPSTD=17
 
 .PHONY: build-cpp20
-build:
+build-cpp20:
 	docker compose build --build-arg CPPSTD=20
 
 .PHONY: format-check
