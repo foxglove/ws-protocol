@@ -148,6 +148,10 @@ private:
     std::unordered_set<ClientChannelId> advertisedChannels;
     bool subscribedToConnectionGraph = false;
 
+    explicit ClientInfo(const std::string& name, ConnHandle handle)
+        : name(name)
+        , handle(handle) {}
+
     ClientInfo(const ClientInfo&) = delete;
     ClientInfo& operator=(const ClientInfo&) = delete;
 
@@ -270,7 +274,7 @@ inline void Server<ServerConfiguration>::handleConnectionOpened(ConnHandle hdl) 
 
   {
     std::unique_lock<std::shared_mutex> lock(_clientsMutex);
-    _clients.emplace(hdl, ClientInfo{endpoint, hdl, {}, {}});
+    _clients.emplace(hdl, ClientInfo(endpoint, hdl));
   }
 
   con->send(json({

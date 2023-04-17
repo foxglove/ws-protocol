@@ -27,15 +27,16 @@ RUN conan profile detect --force
 
 FROM build as build_example_server
 COPY ./foxglove-websocket/conanfile.py /src/foxglove-websocket/conanfile.py
-RUN conan install foxglove-websocket -s compiler.cppstd=17 --build=missing
+ARG CPPSTD=17
+RUN conan install foxglove-websocket -s compiler.cppstd=$CPPSTD --build=missing
 COPY ./foxglove-websocket /src/foxglove-websocket/
-RUN conan create foxglove-websocket -s compiler.cppstd=17
+RUN conan create foxglove-websocket -s compiler.cppstd=$CPPSTD
 COPY ./examples/conanfile.py /src/examples/conanfile.py
-RUN conan install examples --output-folder examples/build --build=missing -s compiler.cppstd=17
+RUN conan install examples --output-folder examples/build --build=missing -s compiler.cppstd=$CPPSTD
 
 FROM build_example_server AS example_server
 COPY --from=build_example_server /src /src
 COPY ./examples /src/examples
 COPY --from=build_example_server /src/examples/build/ /src/examples/build/
-RUN conan build examples --output-folder examples/ -s compiler.cppstd=17
+RUN conan build examples --output-folder examples/ -s compiler.cppstd=$CPPSTD
 CMD ["examples/build/Release/example_server"]
