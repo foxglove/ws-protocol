@@ -2,7 +2,11 @@ default: build
 
 .PHONY: build
 build:
-	docker compose build
+	docker compose build --build-arg CPPSTD=17
+
+.PHONY: build-cpp20
+build:
+	docker compose build --build-arg CPPSTD=20
 
 .PHONY: format-check
 format-check:
