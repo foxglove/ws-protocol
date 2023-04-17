@@ -3,7 +3,7 @@ import asyncio
 import json
 import logging
 from struct import Struct
-from typing import Any, Dict, Optional, Tuple, cast
+from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, Union, cast
 from websockets.server import serve, WebSocketServer, WebSocketServerProtocol
 from websockets.exceptions import ConnectionClosed
 from websockets.typing import Data, Subprotocol
@@ -14,7 +14,14 @@ from ..types import (
     Channel,
     ChannelId,
     ChannelWithoutId,
+    ClientBinaryOpcode,
+    ClientChannel,
+    ClientChannelId,
     ClientMessage,
+    Parameter,
+    Service,
+    ServiceId,
+    ServiceWithoutId,
     SubscriptionId,
     ServerMessage,
     StatusLevel,
@@ -31,20 +38,91 @@ def _get_default_logger():
 
 
 MessageDataHeader = Struct("<BIQ")
+TimeDataHeader = Struct("<BQ")
+ClientMessageHeader = Struct("<BI")
+ServiceCallRequestHeader = Struct("<BIII")
+ServiceCallResponseHeader = ServiceCallRequestHeader
 
 
 class FoxgloveServerListener(ABC):
     @abstractmethod
-    def on_subscribe(self, server: "FoxgloveServer", channel_id: ChannelId):
+    async def on_subscribe(self, server: "FoxgloveServer", channel_id: ChannelId):
         """
         Called when the first client subscribes to `channel_id`.
         """
         ...
 
     @abstractmethod
-    def on_unsubscribe(self, server: "FoxgloveServer", channel_id: ChannelId):
+    async def on_unsubscribe(self, server: "FoxgloveServer", channel_id: ChannelId):
         """
         Called when the last subscribed client unsubscribes from `channel_id`.
+        """
+        ...
+
+    async def on_client_advertise(
+        self, server: "FoxgloveServer", channel: ClientChannel
+    ):
+        """
+        Called when a new client channel is advertised.
+        """
+        ...
+
+    async def on_client_unadvertise(
+        self, server: "FoxgloveServer", channel_id: ClientChannelId
+    ):
+        """
+        Called when a client channel is unadvertised.
+        """
+        ...
+
+    async def on_client_message(
+        self, server: "FoxgloveServer", channel_id: ClientChannelId, payload: bytes
+    ):
+        """
+        Called when a client channel message is received.
+        """
+        ...
+
+    async def on_service_request(
+        self,
+        server: "FoxgloveServer",
+        service_id: ServiceId,
+        call_id: str,
+        encoding: str,
+        payload: bytes,
+    ) -> bytes:
+        """
+        Called when a service request is made.
+        """
+        ...
+
+    async def on_get_parameters(
+        self,
+        server: "FoxgloveServer",
+        param_names: List[str],
+        request_id: Optional[str],
+    ) -> List[Parameter]:
+        """
+        Called when parameter values are requested.
+        """
+        ...
+
+    async def on_set_parameters(
+        self,
+        server: "FoxgloveServer",
+        params: List[Parameter],
+        request_id: Optional[str],
+    ) -> List[Parameter]:
+        """
+        Called when parameteres are to be modified.
+        """
+        ...
+
+    async def on_parameters_subscribe(
+        self, server: "FoxgloveServer", param_name: List[str], subscribe: bool
+    ):
+        """
+        Called when parameters are subscribed/unsubscribed.
         """
         ...
 
@@ -53,6 +131,9 @@ class FoxgloveServer:
     _clients: Tuple[ClientState, ...]
     _channels: Dict[ChannelId, Channel]
     _next_channel_id: ChannelId
+    _services: Dict[ServiceId, Service]
+    _next_service_id: ServiceId
+    _subscribed_params: Set[str]
     _logger: logging.Logger
     _listener: Optional[FoxgloveServerListener]
     _opened: "asyncio.Future[WebSocketServer]"
@@ -63,14 +144,25 @@ class FoxgloveServer:
         port: Optional[int],
         name: str,
         *,
+        capabilities: List[str] = [],
+        supported_encodings: Optional[List[str]] = None,
+        metadata: Optional[Mapping[str, str]] = None,
+        session_id: Optional[str] = None,
         logger: logging.Logger = _get_default_logger(),
     ):
         self.host = host
         self.port = port
         self.name = name
+        self.capabilities = capabilities
+        self.supported_encodings = supported_encodings
+        self.metadata = metadata
+        self.session_id = session_id
         self._clients = ()
         self._channels = {}
         self._next_channel_id = ChannelId(0)
+        self._services = {}
+        self._next_service_id = ServiceId(0)
+        self._subscribed_params = set([])
         self._logger = logger
         self._listener = None
         self._opened = asyncio.get_running_loop().create_future()
@@ -161,6 +253,44 @@ class FoxgloveServer:
                 },
             )
 
+    async def add_service(self, service: ServiceWithoutId) -> ServiceId:
+        new_id = self._next_service_id
+        self._next_service_id = ServiceId(new_id + 1)
+        new_service = Service(id=new_id, **service)
+        self._services[new_id] = new_service
+        # Any clients added during await will already see the new service.
+        for client in self._clients:
+            await self._send_json(
+                client.connection,
+                {
+                    "op": "advertiseServices",
+                    "services": [new_service],
+                },
+            )
+        return new_id
+
+    async def remove_service(self, service_id: ServiceId):
+        del self._services[service_id]
+        # Any clients added during await will not have received info about the new service.
+        for client in self._clients:
+            await self._send_json(
+                client.connection,
+                {
+                    "op": "unadvertiseServices",
+                    "serviceIds": [service_id],
+                },
+            )
+
+    async def update_parameters(self, parameters: List[Parameter]):
+        for client in self._clients:
+            params_of_interest = [
+                p for p in parameters if p["name"] in client.subscribed_params
+            ]
+            await self._send_json(
+                client.connection,
+                {"op": "parameterValues", "parameters": params_of_interest, "id": None},
+            )
+
     async def send_message(self, chan_id: ChannelId, timestamp: int, payload: bytes):
         for client in self._clients:
             sub_id = client.subscriptions_by_channel.get(chan_id, None)
@@ -172,9 +302,45 @@ class FoxgloveServer:
                     payload=payload,
                 )
 
+    async def reset_session_id(self, newSessionId: Optional[str] = None):
+        """
+        Reset session Id and send new server info to clients.
+        """
+        self.session_id = newSessionId
+        for client in self._clients:
+            await self._send_server_info(client.connection)
+
+    async def broadcast_time(self, timestamp: int):
+        msg = TimeDataHeader.pack(BinaryOpcode.TIME, timestamp)
+        for client in self._clients:
+            try:
+                await client.connection.send(msg)
+            except ConnectionClosed:
+                pass
+
     async def _send_json(self, connection: WebSocketServerProtocol, msg: ServerMessage):
+        def remove_nones(
+            value: Union[Dict[str, Any], List[Any], Any]
+        ) -> Union[Dict[str, Any], List[Any], Any]:
+            """
+            Recursively remove all None values from dictionaries and lists, and returns
+            the result as a new dictionary or list.
+
+            Adapted from https://stackoverflow.com/a/60124334
+            """
+            if isinstance(value, list):
+                return [remove_nones(x) for x in value if x is not None]
+            elif isinstance(value, dict):
+                return {
+                    key: remove_nones(val)
+                    for key, val in value.items()
+                    if val is not None
+                }
+            else:
+                return value
+
         try:
-            await connection.send(json.dumps(msg, separators=(",", ":")))
+            await connection.send(json.dumps(remove_nones(msg), separators=(",", ":")))
         except ConnectionClosed:
             pass
 
@@ -194,6 +360,19 @@ class FoxgloveServer:
         except ConnectionClosed:
             pass
 
+    async def _send_server_info(self, connection: WebSocketServerProtocol) -> None:
+        await self._send_json(
+            connection,
+            {
+                "op": "serverInfo",
+                "name": self.name,
+                "capabilities": self.capabilities,
+                "supportedEncodings": self.supported_encodings,
+                "metadata": self.metadata,
+                "sessionId": self.session_id,
+            },
+        )
+
     async def _handle_connection(
         self, connection: WebSocketServerProtocol, path: str
     ) -> None:
@@ -205,14 +384,7 @@ class FoxgloveServer:
         self._clients += (client,)
 
         try:
-            await self._send_json(
-                connection,
-                {
-                    "op": "serverInfo",
-                    "name": self.name,
-                    "capabilities": [],
-                },
-            )
+            await self._send_server_info(connection)
             await self._send_json(
                 connection,
                 {
@@ -220,6 +392,14 @@ class FoxgloveServer:
                     "channels": list(self._channels.values()),
                 },
             )
+            if "services" in self.capabilities:
+                await self._send_json(
+                    connection,
+                    {
+                        "op": "advertiseServices",
+                        "services": list(self._services.values()),
+                    },
+                )
             async for raw_message in connection:
                 await self._handle_raw_client_message(client, raw_message)
 
@@ -243,56 +423,60 @@ class FoxgloveServer:
             if self._listener:
                 for chan_id in potential_unsubscribes:
                     if not self._any_subscribed(chan_id):
-                        self._listener.on_unsubscribe(self, chan_id)
+                        await self._listener.on_unsubscribe(self, chan_id)
+
+    async def _send_status(
+        self, connection: WebSocketServerProtocol, level: StatusLevel, msg: str
+    ) -> None:
+        await self._send_json(
+            connection,
+            {
+                "op": "status",
+                "level": level,
+                "message": msg,
+            },
+        )
 
     async def _handle_raw_client_message(self, client: ClientState, raw_message: Data):
         try:
-            if not isinstance(raw_message, str):
-                raise TypeError(
-                    f"Expected text message, got {type(raw_message)} (first byte: {next(iter(raw_message), None)})"
+            if isinstance(raw_message, str):
+                message = json.loads(raw_message)
+                self._logger.debug("Got message: %s", message)
+                if not isinstance(message, dict):
+                    raise TypeError(f"Expected JSON object, got {type(message)}")
+                await self._handle_client_text_message(
+                    client, cast(ClientMessage, message)
                 )
-            message = json.loads(raw_message)
-            self._logger.debug("Got message: %s", message)
-            if not isinstance(message, dict):
-                raise TypeError(f"Expected JSON object, got {type(message)}")
-            await self._handle_client_message(client, cast(ClientMessage, message))
+            else:
+                await self._handle_client_binary_message(client, raw_message)
         except ConnectionClosed:
             pass
         except Exception as exc:
             self._logger.exception("Error handling message %s", raw_message)
-            await self._send_json(
-                client.connection,
-                {
-                    "op": "status",
-                    "level": StatusLevel.ERROR,
-                    "message": f"{type(exc).__name__}: {exc}",
-                },
+            await self._send_status(
+                client.connection, StatusLevel.ERROR, f"{type(exc).__name__}: {exc}"
             )
 
-    async def _handle_client_message(self, client: ClientState, message: ClientMessage):
+    async def _handle_client_text_message(
+        self, client: ClientState, message: ClientMessage
+    ):
         if message["op"] == "subscribe":
             for sub in message["subscriptions"]:
                 chan_id = sub["channelId"]
                 sub_id = sub["id"]
                 if sub_id in client.subscriptions:
-                    await self._send_json(
+                    await self._send_status(
                         client.connection,
-                        {
-                            "op": "status",
-                            "level": StatusLevel.ERROR,
-                            "message": f"Client subscription id {sub_id} was already used; ignoring subscription",
-                        },
+                        StatusLevel.ERROR,
+                        f"Client subscription id {sub_id} was already used; ignoring subscription",
                     )
                     continue
                 chan = self._channels.get(chan_id)
                 if chan is None:
-                    await self._send_json(
+                    await self._send_status(
                         client.connection,
-                        {
-                            "op": "status",
-                            "level": StatusLevel.WARNING,
-                            "message": f"Channel {chan_id} is not available; ignoring subscription",
-                        },
+                        StatusLevel.WARNING,
+                        f"Channel {chan_id} is not available; ignoring subscription",
                     )
                     continue
                 first_subscription = not self._any_subscribed(chan_id)
@@ -303,15 +487,12 @@ class FoxgloveServer:
                         chan_id,
                     )
                     if self._listener and first_subscription:
-                        self._listener.on_subscribe(self, chan_id)
+                        await self._listener.on_subscribe(self, chan_id)
                 else:
-                    await self._send_json(
+                    await self._send_status(
                         client.connection,
-                        {
-                            "op": "status",
-                            "level": StatusLevel.WARNING,
-                            "message": f"Client is already subscribed to channel {chan_id}; ignoring subscription",
-                        },
+                        StatusLevel.WARNING,
+                        f"Client is already subscribed to channel {chan_id}; ignoring subscription",
                     )
                     continue
 
@@ -319,13 +500,10 @@ class FoxgloveServer:
             for sub_id in message["subscriptionIds"]:
                 chan_id = client.remove_subscription(sub_id)
                 if chan_id is None:
-                    await self._send_json(
+                    await self._send_status(
                         client.connection,
-                        {
-                            "op": "status",
-                            "level": StatusLevel.WARNING,
-                            "message": f"Client subscription id {sub_id} did not exist; ignoring unsubscription",
-                        },
+                        StatusLevel.WARNING,
+                        f"Client subscription id {sub_id} did not exist; ignoring unsubscription",
                     )
                     continue
                 self._logger.debug(
@@ -334,6 +512,171 @@ class FoxgloveServer:
                     chan_id,
                 )
                 if self._listener and not self._any_subscribed(chan_id):
-                    self._listener.on_unsubscribe(self, chan_id)
+                    await self._listener.on_unsubscribe(self, chan_id)
+        elif message["op"] == "advertise":
+            for channel in message["channels"]:
+                if not client.add_client_channel(channel):
+                    self._logger.error(f"Failed to add client channel {channel['id']}")
+                    await self._send_status(
+                        client.connection,
+                        StatusLevel.WARNING,
+                        f"Failed to add client channel {channel['id']}",
+                    )
+                    continue
+                self._logger.debug(
+                    "Client %s advertised channel %d (%s)",
+                    client.connection.remote_address,
+                    channel["id"],
+                    channel["topic"],
+                )
+                if self._listener:
+                    await self._listener.on_client_advertise(self, channel)
+        elif message["op"] == "unadvertise":
+            for channel_id in message["channelIds"]:
+                if not client.remove_client_channel(channel_id):
+                    self._logger.error(f"Failed to remove client channel {channel_id}")
+                    await self._send_status(
+                        client.connection,
+                        StatusLevel.WARNING,
+                        f"Failed to remove client channel {channel_id}",
+                    )
+                    continue
+                self._logger.debug(
+                    "Client %s unadvertised channel %d",
+                    client.connection.remote_address,
+                    channel_id,
+                )
+                if self._listener:
+                    await self._listener.on_client_unadvertise(self, channel_id)
+        elif message["op"] == "getParameters":
+            if self._listener:
+                request_id = message.get("id", None)
+                params = await self._listener.on_get_parameters(
+                    self, message["parameterNames"], request_id
+                )
+                await self._send_json(
+                    client.connection,
+                    {
+                        "op": "parameterValues",
+                        "parameters": params,
+                        "id": request_id,
+                    },
+                )
+        elif message["op"] == "setParameters":
+            if self._listener:
+                request_id = message.get("id", None)
+                updated_params = await self._listener.on_set_parameters(
+                    self, message["parameters"], request_id
+                )
+                if request_id is not None:
+                    await self._send_json(
+                        client.connection,
+                        {
+                            "op": "parameterValues",
+                            "parameters": updated_params,
+                            "id": request_id,
+                        },
+                    )
+        elif message["op"] == "subscribeParameterUpdates":
+            new_param_subscriptions = [
+                name
+                for name in message["parameterNames"]
+                if name not in self._subscribed_params
+            ]
+            client.subscribed_params.update(message["parameterNames"])
+            self._subscribed_params.update(new_param_subscriptions)
+            if self._listener:
+                await self._listener.on_parameters_subscribe(
+                    self, new_param_subscriptions, True
+                )
+        elif message["op"] == "unsubscribeParameterUpdates":
+            new_param_unsubscriptions = [
+                name
+                for name in message["parameterNames"]
+                if name in self._subscribed_params
+            ]
+            client.subscribed_params.difference_update(message["parameterNames"])
+            self._subscribed_params.difference_update(new_param_unsubscriptions)
+            if self._listener:
+                await self._listener.on_parameters_subscribe(
+                    self, new_param_unsubscriptions, False
+                )
         else:
             raise ValueError(f"Unrecognized client opcode: {message['op']}")
+
+    async def _handle_client_binary_message(
+        self, client: ClientState, message: bytes
+    ) -> None:
+        if len(message) < 5:
+            msg = f"Received invalid binary message of size {len(message)}"
+            self._logger.error(msg)
+            await self._send_status(
+                client.connection,
+                StatusLevel.ERROR,
+                msg,
+            )
+            return
+
+        op = message[0]
+
+        if op == ClientBinaryOpcode.MESSAGE_DATA:
+            _, channel_id = ClientMessageHeader.unpack_from(message)
+            payload = message[ClientMessageHeader.size :]
+
+            if not channel_id in client.advertisements_by_channel:
+                msg = f"Channel {channel_id} not registered by client {client.connection.remote_address}"
+                self._logger.error(msg)
+                await self._send_status(
+                    client.connection,
+                    StatusLevel.ERROR,
+                    msg,
+                )
+                return
+
+            if self._listener:
+                await self._listener.on_client_message(self, channel_id, payload)
+        elif op == ClientBinaryOpcode.SERVICE_CALL_REQUEST:
+            (
+                _,
+                service_id,
+                call_id,
+                encoding_length,
+            ) = ServiceCallRequestHeader.unpack_from(message)
+            service = self._services.get(service_id)
+            if service is None:
+                msg = f"Unknown service {service_id}"
+                self._logger.error(msg)
+                await self._send_status(
+                    client.connection,
+                    StatusLevel.ERROR,
+                    msg,
+                )
+                return
+
+            offset = ServiceCallRequestHeader.size
+            encoding = message[offset : offset + encoding_length]
+            offset = ServiceCallRequestHeader.size + encoding_length
+            payload = message[offset:]
+            if self._listener:
+                response = await self._listener.on_service_request(
+                    self, service_id, call_id, encoding.decode(), payload
+                )
+                try:
+                    header = ServiceCallRequestHeader.pack(
+                        BinaryOpcode.SERVICE_CALL_RESPONSE,
+                        service_id,
+                        call_id,
+                        encoding_length,
+                    )
+                    await client.connection.send([header, encoding, response])
+                except ConnectionClosed:
+                    pass
+
+        else:
+            msg = f"Received binary message with invalid operation {op}"
+            self._logger.error(msg)
+            await self._send_status(
+                client.connection,
+                StatusLevel.ERROR,
+                msg,
+            )

@@ -49,10 +49,10 @@ def build_file_descriptor_set(
 
 async def main():
     class Listener(FoxgloveServerListener):
-        def on_subscribe(self, server: FoxgloveServer, channel_id: ChannelId):
+        async def on_subscribe(self, server: FoxgloveServer, channel_id: ChannelId):
             print("First client subscribed to", channel_id)
 
-        def on_unsubscribe(self, server: FoxgloveServer, channel_id: ChannelId):
+        async def on_unsubscribe(self, server: FoxgloveServer, channel_id: ChannelId):
             print("Last client unsubscribed from", channel_id)
 
     async with FoxgloveServer("0.0.0.0", 8765, "example server") as server:
@@ -65,6 +65,7 @@ async def main():
                 "schema": b64encode(
                     build_file_descriptor_set(SceneUpdate).SerializeToString()
                 ).decode("ascii"),
+                "schemaEncoding": "protobuf",
             }
         )
 
