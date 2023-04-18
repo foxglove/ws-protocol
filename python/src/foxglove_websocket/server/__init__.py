@@ -17,13 +17,13 @@ from ..types import (
     ClientBinaryOpcode,
     ClientChannel,
     ClientChannelId,
-    ClientMessage,
+    ClientJsonMessage,
     Parameter,
     Service,
     ServiceId,
     ServiceWithoutId,
     SubscriptionId,
-    ServerMessage,
+    ServerJsonMessage,
     StatusLevel,
 )
 
@@ -45,14 +45,12 @@ ServiceCallResponseHeader = ServiceCallRequestHeader
 
 
 class FoxgloveServerListener(ABC):
-    @abstractmethod
     async def on_subscribe(self, server: "FoxgloveServer", channel_id: ChannelId):
         """
         Called when the first client subscribes to `channel_id`.
         """
         ...
 
-    @abstractmethod
     async def on_unsubscribe(self, server: "FoxgloveServer", channel_id: ChannelId):
         """
         Called when the last subscribed client unsubscribes from `channel_id`.
@@ -286,10 +284,15 @@ class FoxgloveServer:
             params_of_interest = [
                 p for p in parameters if p["name"] in client.subscribed_params
             ]
-            await self._send_json(
-                client.connection,
-                {"op": "parameterValues", "parameters": params_of_interest, "id": None},
-            )
+            if len(params_of_interest):
+                await self._send_json(
+                    client.connection,
+                    {
+                        "op": "parameterValues",
+                        "parameters": params_of_interest,
+                        "id": None,
+                    },
+                )
 
     async def send_message(self, chan_id: ChannelId, timestamp: int, payload: bytes):
         for client in self._clients:
@@ -318,29 +321,11 @@ class FoxgloveServer:
             except ConnectionClosed:
                 pass
 
-    async def _send_json(self, connection: WebSocketServerProtocol, msg: ServerMessage):
-        def remove_nones(
-            value: Union[Dict[str, Any], List[Any], Any]
-        ) -> Union[Dict[str, Any], List[Any], Any]:
-            """
-            Recursively remove all None values from dictionaries and lists, and returns
-            the result as a new dictionary or list.
-
-            Adapted from https://stackoverflow.com/a/60124334
-            """
-            if isinstance(value, list):
-                return [remove_nones(x) for x in value if x is not None]
-            elif isinstance(value, dict):
-                return {
-                    key: remove_nones(val)
-                    for key, val in value.items()
-                    if val is not None
-                }
-            else:
-                return value
-
+    async def _send_json(
+        self, connection: WebSocketServerProtocol, msg: ServerJsonMessage
+    ):
         try:
-            await connection.send(json.dumps(remove_nones(msg), separators=(",", ":")))
+            await connection.send(json.dumps(msg, separators=(",", ":")))
         except ConnectionClosed:
             pass
 
@@ -445,7 +430,7 @@ class FoxgloveServer:
                 if not isinstance(message, dict):
                     raise TypeError(f"Expected JSON object, got {type(message)}")
                 await self._handle_client_text_message(
-                    client, cast(ClientMessage, message)
+                    client, cast(ClientJsonMessage, message)
                 )
             else:
                 await self._handle_client_binary_message(client, raw_message)
@@ -458,7 +443,7 @@ class FoxgloveServer:
             )
 
     async def _handle_client_text_message(
-        self, client: ClientState, message: ClientMessage
+        self, client: ClientState, message: ClientJsonMessage
     ):
         if message["op"] == "subscribe":
             for sub in message["subscriptions"]:
@@ -577,6 +562,7 @@ class FoxgloveServer:
                             "id": request_id,
                         },
                     )
+                await self.update_parameters(updated_params)
         elif message["op"] == "subscribeParameterUpdates":
             new_param_subscriptions = [
                 name
@@ -595,8 +581,8 @@ class FoxgloveServer:
                 for name in message["parameterNames"]
                 if name in self._subscribed_params
             ]
-            client.subscribed_params.difference_update(message["parameterNames"])
-            self._subscribed_params.difference_update(new_param_unsubscriptions)
+            client.subscribed_params -= set(message["parameterNames"])
+            self._subscribed_params -= set(new_param_unsubscriptions)
             if self._listener:
                 await self._listener.on_parameters_subscribe(
                     self, new_param_unsubscriptions, False
@@ -662,7 +648,7 @@ class FoxgloveServer:
                     self, service_id, call_id, encoding.decode(), payload
                 )
                 try:
-                    header = ServiceCallRequestHeader.pack(
+                    header = ServiceCallResponseHeader.pack(
                         BinaryOpcode.SERVICE_CALL_RESPONSE,
                         service_id,
                         call_id,

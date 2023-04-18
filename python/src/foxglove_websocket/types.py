@@ -84,7 +84,7 @@ class UnsubscribeParameterUpdates(TypedDict):
     parameterNames: List[str]
 
 
-ClientMessage = Union[
+ClientJsonMessage = Union[
     Subscribe,
     Unsubscribe,
     ClientAdvertise,
@@ -177,7 +177,7 @@ class ParameterValues(TypedDict):
     id: Optional[str]
 
 
-ServerMessage = Union[
+ServerJsonMessage = Union[
     ServerInfo,
     StatusMessage,
     Advertise,

@@ -2,19 +2,13 @@ import asyncio
 from typing import Any, Dict, List, Optional
 from foxglove_websocket import run_cancellable
 from foxglove_websocket.server import FoxgloveServer, FoxgloveServerListener
-from foxglove_websocket.types import ChannelId, Parameter
+from foxglove_websocket.types import Parameter
 
 
 async def main():
     class Listener(FoxgloveServerListener):
         def __init__(self, param_store: Dict[str, Any]) -> None:
             self._param_store = param_store
-
-        async def on_subscribe(self, server: FoxgloveServer, channel_id: ChannelId):
-            pass
-
-        async def on_unsubscribe(self, server: FoxgloveServer, channel_id: ChannelId):
-            pass
 
         async def on_get_parameters(
             self,
@@ -68,7 +62,7 @@ async def main():
             await asyncio.sleep(3.0)
             param_store["int_param"] = i
             await server.update_parameters(
-                [Parameter(name=k, value=v, type=None) for k, v in param_store.items()]
+                [Parameter(name="int_param", value=param_store["int_param"], type=None)]
             )
 
 

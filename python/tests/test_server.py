@@ -4,7 +4,7 @@ import logging
 import pytest
 from socket import AddressFamily
 from struct import Struct
-from typing import Dict, List, Tuple, Optional, cast
+from typing import Dict, List, Tuple, Optional
 from websockets.client import connect
 from websockets.server import WebSocketServer
 
@@ -129,6 +129,9 @@ async def test_listener_callbacks():
                 "op": "serverInfo",
                 "name": "test server",
                 "capabilities": [],
+                "metadata": None,
+                "sessionId": None,
+                "supportedEncodings": None,
             }
             assert json.loads(await ws.recv()) == {
                 "channels": [
@@ -164,6 +167,9 @@ async def test_update_channels():
                 "op": "serverInfo",
                 "name": "test server",
                 "capabilities": [],
+                "metadata": None,
+                "sessionId": None,
+                "supportedEncodings": None,
             }
             assert json.loads(await ws.recv()) == {
                 "channels": [],
@@ -227,6 +233,9 @@ async def test_unsubscribe_during_send():
                 "op": "serverInfo",
                 "name": "test server",
                 "capabilities": [],
+                "metadata": None,
+                "sessionId": None,
+                "supportedEncodings": None,
             }
             assert json.loads(await ws.recv()) == {
                 "channels": [{**channel, "id": chan_id}],
@@ -277,12 +286,6 @@ async def test_unsubscribe_during_send():
 @pytest.mark.asyncio
 async def test_service_call():
     class Listener(FoxgloveServerListener):
-        async def on_subscribe(self, server: FoxgloveServer, channel_id: ChannelId):
-            pass
-
-        async def on_unsubscribe(self, server: FoxgloveServer, channel_id: ChannelId):
-            pass
-
         async def on_service_request(
             self,
             server: FoxgloveServer,
@@ -333,6 +336,8 @@ async def test_service_call():
                 "name": "test server",
                 "capabilities": ["services"],
                 "supportedEncodings": ["json"],
+                "metadata": None,
+                "sessionId": None,
             }
 
             advertise_msg = json.loads(await ws.recv())
@@ -356,12 +361,13 @@ async def test_service_call():
             await ws.send([request_header, encoding.encode(), request_payload.encode()])
 
             response = await ws.recv()
+            assert isinstance(response, bytes)
             (
                 op,
                 res_service_id,
                 res_call_id,
                 encoding_length,
-            ) = service_header.unpack_from(cast(bytes, response))
+            ) = service_header.unpack_from(response)
             assert op == BinaryOpcode.SERVICE_CALL_RESPONSE
             assert res_service_id == service_id
             assert res_call_id == call_id
@@ -375,15 +381,9 @@ async def test_param_get_set():
     class Listener(FoxgloveServerListener):
         def __init__(self) -> None:
             self._params: Dict[str, Parameter] = {
-                "int_param": Parameter(**{"name": "int_param", "value": 123}),
-                "str_param": Parameter(**{"name": "str_param", "value": "foo"}),
+                "int_param": Parameter(name="int_param", value=123, type=None),
+                "str_param": Parameter(name="str_param", value="foo", type=None),
             }
-
-        async def on_subscribe(self, server: FoxgloveServer, channel_id: ChannelId):
-            pass
-
-        async def on_unsubscribe(self, server: FoxgloveServer, channel_id: ChannelId):
-            pass
 
         async def on_get_parameters(
             self,
@@ -427,6 +427,9 @@ async def test_param_get_set():
                 "op": "serverInfo",
                 "name": "test server",
                 "capabilities": ["parameters"],
+                "metadata": None,
+                "sessionId": None,
+                "supportedEncodings": None,
             }
 
             advertise_msg = json.loads(await ws.recv())
@@ -436,9 +439,10 @@ async def test_param_get_set():
             assert json.loads(await ws.recv()) == {
                 "op": "parameterValues",
                 "parameters": [
-                    {"name": "int_param", "value": 123},
-                    {"name": "str_param", "value": "foo"},
+                    {"name": "int_param", "value": 123, "type": None},
+                    {"name": "str_param", "value": "foo", "type": None},
                 ],
+                "id": None,
             }
 
             await ws.send(
@@ -447,8 +451,9 @@ async def test_param_get_set():
             assert json.loads(await ws.recv()) == {
                 "op": "parameterValues",
                 "parameters": [
-                    {"name": "str_param", "value": "foo"},
+                    {"name": "str_param", "value": "foo", "type": None},
                 ],
+                "id": None,
             }
 
             await ws.send(
@@ -457,7 +462,7 @@ async def test_param_get_set():
                         "op": "setParameters",
                         "id": "set-req",
                         "parameters": [
-                            {"name": "str_param", "value": "bar"},
+                            {"name": "str_param", "value": "bar", "type": None},
                         ],
                     }
                 )
@@ -466,6 +471,6 @@ async def test_param_get_set():
                 "op": "parameterValues",
                 "id": "set-req",
                 "parameters": [
-                    {"name": "str_param", "value": "bar"},
+                    {"name": "str_param", "value": "bar", "type": None},
                 ],
             }

@@ -97,10 +97,11 @@ class ClientState:
         if channel_id not in self.advertisements_by_channel:
             return False
 
-        advertisements_by_channel = {
-            chan: subs
-            for chan, subs in self.advertisements_by_channel.items()
-            if chan != channel_id
-        }
-        self.advertisements_by_channel = MappingProxyType(advertisements_by_channel)
+        self.advertisements_by_channel = MappingProxyType(
+            {
+                chan: subs
+                for chan, subs in self.advertisements_by_channel.items()
+                if chan != channel_id
+            }
+        )
         return True
