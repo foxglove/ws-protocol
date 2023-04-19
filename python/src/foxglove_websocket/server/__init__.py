@@ -1,9 +1,9 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 import asyncio
 import json
 import logging
 from struct import Struct
-from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, Union, cast
+from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, cast
 from websockets.server import serve, WebSocketServer, WebSocketServerProtocol
 from websockets.exceptions import ConnectionClosed
 from websockets.typing import Data, Subprotocol
