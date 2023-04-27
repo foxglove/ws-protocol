@@ -49,6 +49,12 @@ Run a client that advertises the `/chatter` topic and publishes messages to it w
 $ npx @foxglove/ws-protocol-examples@latest publish-client -e json ws://localhost:8765
 ```
 
+Connect to a server and record message data into an [MCAP](https://mcap.dev) file:
+
+```
+$ npx @foxglove/ws-protocol-examples@latest mcap-record ws://localhost:8765 -o <file.mcap>
+```
+
 ## Development
 
 This package lives inside a monorepo that uses [yarn workspaces](https://yarnpkg.com/features/workspaces), so most commands (other than `yarn install`) should be prefixed with `yarn workspace @foxglove/ws-protocol-examples ...`.
