@@ -56,6 +56,7 @@ async function waitForServer(
         );
         resolve(undefined);
       };
+      client.on("close", onClose);
       client.on("open", () => {
         client.off("close", onClose);
         signal.addEventListener("abort", () => {
@@ -63,7 +64,6 @@ async function waitForServer(
         });
         resolve(client);
       });
-      client.on("close", onClose);
     });
     if (maybeClient) {
       return maybeClient;
@@ -128,29 +128,19 @@ async function main(address: string, options: { output: string }): Promise<void>
           newChannels.map(async (channel) => {
             let schemaEncoding = channel.schemaEncoding;
             if (schemaEncoding == undefined) {
-              switch (channel.encoding) {
-                case "json":
-                  schemaEncoding = "jsonschema";
-                  break;
-                case "protobuf":
-                  schemaEncoding = "protobuf";
-                  break;
-                case "flatbuffer":
-                  schemaEncoding = "flatbuffer";
-                  break;
-                case "ros1":
-                  schemaEncoding = "ros1msg";
-                  break;
-                case "ros2":
-                  schemaEncoding = "ros2msg";
-                  break;
-                default:
-                  log(
-                    "unable to infer schema encoding from message encoding %s on topic %s, messages will be recorded without schema",
-                    channel.encoding,
-                    channel.topic,
-                  );
-                  break;
+              schemaEncoding = {
+                json: "jsonschema",
+                protobuf: "protobuf",
+                flatbuffer: "flatbuffer",
+                ros1: "ros1msg",
+                ros2: "ros2msg",
+              }[channel.encoding];
+              if (schemaEncoding == undefined) {
+                log(
+                  "unable to infer schema encoding from message encoding %s on topic %s, messages will be recorded without schema",
+                  channel.encoding,
+                  channel.topic,
+                );
               }
             }
             let schemaData: Uint8Array | undefined;
