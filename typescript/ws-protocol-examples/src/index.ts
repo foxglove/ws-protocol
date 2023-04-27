@@ -3,6 +3,7 @@ import { program } from "commander";
 
 import ImageServer from "./examples/image-server";
 import McapPlay from "./examples/mcap-play";
+import McapRecord from "./examples/mcap-record";
 import ParamClient from "./examples/param-client";
 import ParamServer from "./examples/param-server";
 import PerfTestClient from "./examples/perf-test-client";
@@ -15,6 +16,7 @@ import Sysmon from "./examples/sysmon";
 program.name("ws-protocol-examples");
 program.addCommand(ImageServer);
 program.addCommand(McapPlay);
+program.addCommand(McapRecord);
 program.addCommand(PublishClient);
 program.addCommand(SimpleClient);
 program.addCommand(Sysmon);

@@ -1,6 +1,6 @@
 {
   "name": "@foxglove/ws-protocol-examples",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Foxglove WebSocket protocol examples",
   "keywords": [
     "foxglove",
