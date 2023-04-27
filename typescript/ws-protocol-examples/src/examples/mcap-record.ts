@@ -106,7 +106,6 @@ async function main(address: string, options: { output: string }): Promise<void>
       return;
     }
     await new Promise<void>((resolve) => {
-      const mcapChannelsByWsChannel = new Map<WsChannelId, McapChannelId>();
       const wsChannelsByMcapChannel = new Map<McapChannelId, WsChannelId>();
       const subscriptionsById = new Map<
         SubscriptionId,
@@ -177,7 +176,6 @@ async function main(address: string, options: { output: string }): Promise<void>
               messageEncoding: channel.encoding,
               metadata: new Map(),
             })) as McapChannelId;
-            mcapChannelsByWsChannel.set(channel.id as WsChannelId, mcapChannelId);
             wsChannelsByMcapChannel.set(mcapChannelId, channel.id as WsChannelId);
 
             log("subscribing to %s", channel.topic);
