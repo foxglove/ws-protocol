@@ -1,9 +1,21 @@
 from abc import ABC
 import asyncio
+import inspect
 import json
 import logging
 from struct import Struct
-from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, cast
+from typing import (
+    Any,
+    Dict,
+    List,
+    Mapping,
+    Optional,
+    Set,
+    Union,
+    Tuple,
+    cast,
+    Coroutine,
+)
 from websockets.server import serve, WebSocketServer, WebSocketServerProtocol
 from websockets.exceptions import ConnectionClosed
 from websockets.typing import Data, Subprotocol
@@ -45,13 +57,17 @@ ServiceCallResponseHeader = ServiceCallRequestHeader
 
 
 class FoxgloveServerListener(ABC):
-    async def on_subscribe(self, server: "FoxgloveServer", channel_id: ChannelId):
+    def on_subscribe(
+        self, server: "FoxgloveServer", channel_id: ChannelId
+    ) -> Union[None, Coroutine[Any, Any, None]]:
         """
         Called when the first client subscribes to `channel_id`.
         """
         ...
 
-    async def on_unsubscribe(self, server: "FoxgloveServer", channel_id: ChannelId):
+    def on_unsubscribe(
+        self, server: "FoxgloveServer", channel_id: ChannelId
+    ) -> Union[None, Coroutine[Any, Any, None]]:
         """
         Called when the last subscribed client unsubscribes from `channel_id`.
         """
@@ -408,7 +424,9 @@ class FoxgloveServer:
             if self._listener:
                 for chan_id in potential_unsubscribes:
                     if not self._any_subscribed(chan_id):
-                        await self._listener.on_unsubscribe(self, chan_id)
+                        result = self._listener.on_unsubscribe(self, chan_id)
+                        if inspect.isawaitable(result):
+                            await result
 
     async def _send_status(
         self, connection: WebSocketServerProtocol, level: StatusLevel, msg: str
@@ -472,7 +490,9 @@ class FoxgloveServer:
                         chan_id,
                     )
                     if self._listener and first_subscription:
-                        await self._listener.on_subscribe(self, chan_id)
+                        result = self._listener.on_subscribe(self, chan_id)
+                        if inspect.isawaitable(result):
+                            await result
                 else:
                     await self._send_status(
                         client.connection,
@@ -497,7 +517,9 @@ class FoxgloveServer:
                     chan_id,
                 )
                 if self._listener and not self._any_subscribed(chan_id):
-                    await self._listener.on_unsubscribe(self, chan_id)
+                    result = self._listener.on_unsubscribe(self, chan_id)
+                    if inspect.isawaitable(result):
+                        await result
         elif message["op"] == "advertise":
             for channel in message["channels"]:
                 if not client.add_client_channel(channel):
