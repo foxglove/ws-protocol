@@ -21,8 +21,7 @@ class FoxgloveWebSocketConan(ConanFile):
 
     def requirements(self):
         self.requires("nlohmann_json/3.10.5")
-        self.requires("websocketpp/0.8.2")
-        self.requires("asio/1.24.0")
+        self.requires("websocketpp/0.8.2", transitive_headers=True)
 
     def configure(self):
         self.options["websocketpp"].asio = "standalone"
