@@ -132,6 +132,7 @@ class ExampleMiddlewareThread(threading.Thread):
                                 },
                             }
                         ),
+                        "schemaEncoding": "jsonschema",
                     },
                 )
                 active_channels[id] = 0
