@@ -192,9 +192,16 @@ export type ClientPublish = {
   channel: ClientChannel;
   data: DataView;
 };
+export type ParameterValue =
+  | undefined
+  | number
+  | boolean
+  | string
+  | { [key: string]: ParameterValue }
+  | ParameterValue[];
 export type Parameter = {
   name: string;
-  value: number | boolean | string | number[] | boolean[] | string[] | undefined;
+  value: ParameterValue;
   type?: "byte_array";
 };
 
