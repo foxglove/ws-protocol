@@ -170,7 +170,7 @@ Informs the client about parameters. Only supported if the server declares the `
 - `op`: string `"parameterValues"`
 - `parameters`: array of:
   - `name`: string, name of the parameter
-  - `value`: number | boolean | string | number[] | boolean[] | string[]
+  - `value`: ParameterValue, where ParameterValue is of type number | boolean | string | ParameterValue[] | { [key: string]: ParameterValue } | undefined.
   - `type`: "byte_array" | undefined. If the type is `byte_array`, `value` shall be interpreted as base64 encoded string.
 - `id`: string | undefined. Only set when the [getParameters](#get-parameters) or [setParameters](#set-parameters) request's `id` field was set
 
