@@ -592,10 +592,10 @@
     "@foxglove/rosmsg-msgs-common" "^3.0.0"
     tslib "^2.5.0"
 
-"@foxglove/tsconfig@1.1.0":
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/@foxglove/tsconfig/-/tsconfig-1.1.0.tgz#48c37fffd6f349c3ee08a60fc62ccf636f3b59a6"
-  integrity sha512-qZU4MtXVgPhDBFazSEx7yDEuEg8cPHXFQVhBaUABZkCBdcnEE9sxlgEt0gSikF4fRtY6COGIJPVRflnPJXjJKA==
+"@foxglove/tsconfig@2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@foxglove/tsconfig/-/tsconfig-2.0.0.tgz#5bd902c46b446a518c3965bb15384bad5678f5af"
+  integrity sha512-tifun2tMxfA0wJ4caDKnLvAm+CpNdaK2BYD78w07GdgMsoeVMu0KxAiR7ehRoR3QN6DUW7XDP5J4DqMTj3YFag==
 
 "@foxglove/wasm-lz4@^1.0.2":
   version "1.0.2"
