@@ -72,7 +72,7 @@
     "boxen": "^7.1.0",
     "commander": "^10.0.1",
     "debug": "^4",
-    "eventemitter3": "^5.0.0",
+    "eventemitter3": "^5.0.1",
     "protobufjs": "^7.2.3",
     "pureimage": "^0.3.17",
     "tslib": "^2.5.0",
