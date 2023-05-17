@@ -163,7 +163,7 @@ class FoxgloveServer:
         metadata: Optional[Mapping[str, str]] = None,
         session_id: Optional[str] = None,
         logger: logging.Logger = _get_default_logger(),
-        server_kwargs: Dict[str, Any] = { "compression": None },
+        server_kwargs: Dict[str, Any] = {"compression": None},
     ):
         self.host = host
         self.port = port
@@ -224,7 +224,7 @@ class FoxgloveServer:
                 self.host,
                 self.port,
                 subprotocols=[Subprotocol("foxglove.websocket.v1")],
-                **self._server_kwargs
+                **self._server_kwargs,
             )
             self._opened.set_result(server)
         except asyncio.CancelledError:
