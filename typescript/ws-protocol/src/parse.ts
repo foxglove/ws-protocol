@@ -35,6 +35,19 @@ export function parseServerMessage(buffer: ArrayBuffer): ServerMessage {
       const data = new DataView(buffer, offset, buffer.byteLength - offset);
       return { op, serviceId, callId, encoding, data };
     }
+    case BinaryOpcode.ASSET: {
+      const requestId = view.getUint32(offset, true);
+      offset += 4;
+      const lastModified = view.getBigUint64(offset, true);
+      offset += 8;
+      const mediaTypeLength = view.getUint32(offset, true);
+      offset += 4;
+      const mediaTypeBytes = new DataView(buffer, offset, mediaTypeLength);
+      const mediaType = textDecoder.decode(mediaTypeBytes);
+      offset += mediaTypeLength;
+      const data = new DataView(buffer, offset, buffer.byteLength - offset);
+      return { op, requestId, lastModified, mediaType, data };
+    }
   }
   throw new Error(`Unrecognized server opcode in binary message: ${op.toString(16)}`);
 }

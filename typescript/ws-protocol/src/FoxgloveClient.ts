@@ -3,6 +3,7 @@ import EventEmitter from "eventemitter3";
 import { ChannelId, MessageData, ServerInfo, StatusMessage } from ".";
 import { parseServerMessage } from "./parse";
 import {
+  Asset,
   BinaryOpcode,
   Channel,
   ClientBinaryOpcode,
@@ -38,6 +39,7 @@ type EventTypes = {
   parameterValues: (event: ParameterValues) => void;
   serviceCallResponse: (event: ServiceCallResponse) => void;
   connectionGraphUpdate: (event: ConnectionGraphUpdate) => void;
+  asset: (event: Asset) => void;
 };
 
 const textEncoder = new TextEncoder();
@@ -138,6 +140,10 @@ export default class FoxgloveClient {
         case BinaryOpcode.SERVICE_CALL_RESPONSE:
           this.emitter.emit("serviceCallResponse", message);
           return;
+
+        case BinaryOpcode.ASSET:
+          this.emitter.emit("asset", message);
+          return;
       }
       this.emitter.emit(
         "error",
@@ -230,6 +236,10 @@ export default class FoxgloveClient {
 
   unsubscribeConnectionGraph(): void {
     this.send({ op: "unsubscribeConnectionGraph" });
+  }
+
+  fetchAsset(uri: string, requestId: number): void {
+    this.send({ op: "fetchAsset", uri, requestId });
   }
 
   /**

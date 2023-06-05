@@ -4,6 +4,7 @@ import EventEmitter from "eventemitter3";
 import { ChannelId, StatusLevel } from ".";
 import { parseClientMessage } from "./parse";
 import {
+  Asset,
   BinaryOpcode,
   Channel,
   ClientBinaryOpcode,
@@ -11,6 +12,7 @@ import {
   ClientChannelId,
   ClientMessage,
   ClientPublish,
+  FetchAsset,
   IWebSocket,
   Parameter,
   ServerCapability,
@@ -62,6 +64,8 @@ type EventTypes = {
   unsubscribeParameterUpdates: (parameterNames: string[]) => void;
   /** Service call request has been received. */
   serviceCallRequest: (request: ServiceCallRequest, clientConnection: IWebSocket) => void;
+  /** Request to fetch an asset has been received. */
+  fetchAsset: (request: FetchAsset, clientConnection: IWebSocket) => void;
 };
 
 const log = createDebug("foxglove:server");
@@ -82,6 +86,7 @@ const REQUIRED_CAPABILITY_BY_OPERATION: Record<
   [ClientBinaryOpcode.SERVICE_CALL_REQUEST]: ServerCapability.services,
   subscribeConnectionGraph: ServerCapability.connectionGraph,
   unsubscribeConnectionGraph: ServerCapability.connectionGraph,
+  fetchAsset: ServerCapability.assets,
 };
 
 export default class FoxgloveServer {
@@ -538,6 +543,10 @@ export default class FoxgloveServer {
         }
         break;
 
+      case "fetchAsset":
+        this.emitter.emit("fetchAsset", { ...message }, client.connection);
+        break;
+
       case ClientBinaryOpcode.MESSAGE_DATA: {
         const channel = client.advertisements.get(message.channelId);
         if (!channel) {
@@ -598,5 +607,33 @@ export default class FoxgloveServer {
     msg.setBigUint64(1, timestamp, true);
 
     connection.send(msg);
+  }
+
+  /**
+   * Send an asset to the client
+   * @param asset The asset to send
+   * @param connection Connection of the client that called the service
+   */
+  sendAsset(asset: Asset, connection: IWebSocket): void {
+    const utf8Encode = new TextEncoder();
+    const mediaType = utf8Encode.encode(asset.mediaType);
+    const payload = new Uint8Array(1 + 4 + 8 + 4 + mediaType.length + asset.data.byteLength);
+    const view = new DataView(payload.buffer, payload.byteOffset, payload.byteLength);
+    let offset = 0;
+    view.setUint8(offset, BinaryOpcode.ASSET);
+    offset += 1;
+    view.setUint32(offset, asset.requestId, true);
+    offset += 4;
+    view.setBigUint64(offset, asset.lastModified, true);
+    offset += 4;
+    view.setUint32(offset, mediaType.length, true);
+    offset += 4;
+    payload.set(mediaType, offset);
+    offset += mediaType.length;
+    payload.set(
+      new Uint8Array(asset.data.buffer, asset.data.byteOffset, asset.data.byteLength),
+      offset,
+    );
+    connection.send(payload);
   }
 }

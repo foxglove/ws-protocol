@@ -2,6 +2,7 @@ export enum BinaryOpcode {
   MESSAGE_DATA = 1,
   TIME = 2,
   SERVICE_CALL_RESPONSE = 3,
+  ASSET = 4,
 }
 export enum ClientBinaryOpcode {
   MESSAGE_DATA = 1,
@@ -19,6 +20,7 @@ export enum ServerCapability {
   parametersSubscribe = "parametersSubscribe",
   services = "services",
   connectionGraph = "connectionGraph",
+  assets = "assets",
 }
 
 export type ChannelId = number;
@@ -98,7 +100,8 @@ export type ClientMessage =
   | ClientMessageData
   | ServiceCallRequest
   | SubscribeConnectionGraph
-  | UnsubscribeConnectionGraph;
+  | UnsubscribeConnectionGraph
+  | FetchAsset;
 
 export type ServerInfo = {
   op: "serverInfo";
@@ -158,6 +161,11 @@ export type SubscribeConnectionGraph = {
 export type UnsubscribeConnectionGraph = {
   op: "unsubscribeConnectionGraph";
 };
+export type FetchAsset = {
+  op: "fetchAsset";
+  uri: string;
+  requestId: number;
+};
 export type ConnectionGraphUpdate = {
   op: "connectionGraphUpdate";
   publishedTopics: {
@@ -188,6 +196,13 @@ export type Time = {
 export type ServiceCallResponse = ServiceCallPayload & {
   op: BinaryOpcode.SERVICE_CALL_RESPONSE;
 };
+export type Asset = {
+  op: BinaryOpcode.ASSET;
+  requestId: number;
+  lastModified: bigint;
+  mediaType: string;
+  data: DataView;
+};
 export type ClientPublish = {
   channel: ClientChannel;
   data: DataView;
@@ -216,7 +231,8 @@ export type ServerMessage =
   | Time
   | ServiceCallResponse
   | ParameterValues
-  | ConnectionGraphUpdate;
+  | ConnectionGraphUpdate
+  | Asset;
 
 /**
  * Abstraction that supports both browser and Node WebSocket clients.
