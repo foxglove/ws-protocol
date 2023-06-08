@@ -163,7 +163,7 @@ export type UnsubscribeConnectionGraph = {
 };
 export type FetchAsset = {
   op: "fetchAsset";
-  uri: string;
+  assetId: string;
   requestId: number;
 };
 export type ConnectionGraphUpdate = {
@@ -199,7 +199,7 @@ export type ServiceCallResponse = ServiceCallPayload & {
 export type Asset = {
   op: BinaryOpcode.ASSET;
   requestId: number;
-  lastModified: bigint;
+  status: number;
   mediaType: string;
   data: DataView;
 };

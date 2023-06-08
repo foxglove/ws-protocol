@@ -69,6 +69,7 @@ type EventTypes = {
 };
 
 const log = createDebug("foxglove:server");
+const textEncoder = new TextEncoder();
 
 const REQUIRED_CAPABILITY_BY_OPERATION: Record<
   ClientMessage["op"],
@@ -243,8 +244,7 @@ export default class FoxgloveServer {
    * @param connection Connection of the client that called the service
    */
   sendServiceCallResponse(response: ServiceCallPayload, connection: IWebSocket): void {
-    const utf8Encode = new TextEncoder();
-    const encoding = utf8Encode.encode(response.encoding);
+    const encoding = textEncoder.encode(response.encoding);
     const payload = new Uint8Array(1 + 4 + 4 + 4 + encoding.length + response.data.byteLength);
     const view = new DataView(payload.buffer, payload.byteOffset, payload.byteLength);
     let offset = 0;
@@ -615,17 +615,16 @@ export default class FoxgloveServer {
    * @param connection Connection of the client that called the service
    */
   sendAsset(asset: Asset, connection: IWebSocket): void {
-    const utf8Encode = new TextEncoder();
-    const mediaType = utf8Encode.encode(asset.mediaType);
-    const payload = new Uint8Array(1 + 4 + 8 + 4 + mediaType.length + asset.data.byteLength);
+    const mediaType = textEncoder.encode(asset.mediaType);
+    const payload = new Uint8Array(1 + 4 + 1 + 4 + mediaType.length + asset.data.byteLength);
     const view = new DataView(payload.buffer, payload.byteOffset, payload.byteLength);
     let offset = 0;
     view.setUint8(offset, BinaryOpcode.ASSET);
     offset += 1;
     view.setUint32(offset, asset.requestId, true);
     offset += 4;
-    view.setBigUint64(offset, asset.lastModified, true);
-    offset += 4;
+    view.setUint8(offset, asset.status);
+    offset += 1;
     view.setUint32(offset, mediaType.length, true);
     offset += 4;
     payload.set(mediaType, offset);
