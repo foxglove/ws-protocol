@@ -22,6 +22,10 @@ export enum ServerCapability {
   connectionGraph = "connectionGraph",
   assets = "assets",
 }
+export enum FetchAssetStatus {
+  SUCCESS = 0,
+  ERROR = 1,
+}
 
 export type ChannelId = number;
 export type ClientChannelId = number;
@@ -196,13 +200,20 @@ export type Time = {
 export type ServiceCallResponse = ServiceCallPayload & {
   op: BinaryOpcode.SERVICE_CALL_RESPONSE;
 };
-export type Asset = {
+export type FetchAssetSuccessResponse = {
   op: BinaryOpcode.ASSET;
   requestId: number;
-  status: number;
+  status: FetchAssetStatus.SUCCESS;
   mediaType: string;
   data: DataView;
 };
+export type FetchAssetErrorResponse = {
+  op: BinaryOpcode.ASSET;
+  requestId: number;
+  status: FetchAssetStatus.ERROR;
+  errorMsg: string;
+};
+export type FetchAssetResponse = FetchAssetSuccessResponse | FetchAssetErrorResponse;
 export type ClientPublish = {
   channel: ClientChannel;
   data: DataView;
@@ -232,7 +243,7 @@ export type ServerMessage =
   | ServiceCallResponse
   | ParameterValues
   | ConnectionGraphUpdate
-  | Asset;
+  | FetchAssetResponse;
 
 /**
  * Abstraction that supports both browser and Node WebSocket clients.

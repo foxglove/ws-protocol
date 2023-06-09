@@ -4,7 +4,6 @@ import EventEmitter from "eventemitter3";
 import { ChannelId, StatusLevel } from ".";
 import { parseClientMessage } from "./parse";
 import {
-  Asset,
   BinaryOpcode,
   Channel,
   ClientBinaryOpcode,
@@ -13,6 +12,8 @@ import {
   ClientMessage,
   ClientPublish,
   FetchAsset,
+  FetchAssetResponse,
+  FetchAssetStatus,
   IWebSocket,
   Parameter,
   ServerCapability,
@@ -610,29 +611,37 @@ export default class FoxgloveServer {
   }
 
   /**
-   * Send an asset to the client
-   * @param asset The asset to send
+   * Send a response to a fetchAsset request
+   * @param response The response to send
    * @param connection Connection of the client that called the service
    */
-  sendAsset(asset: Asset, connection: IWebSocket): void {
-    const mediaType = textEncoder.encode(asset.mediaType);
-    const payload = new Uint8Array(1 + 4 + 1 + 4 + mediaType.length + asset.data.byteLength);
+  sendFetchAssetResponse(response: FetchAssetResponse, connection: IWebSocket): void {
+    const isSuccess = response.status === FetchAssetStatus.SUCCESS;
+    const mediaTypeOrErrMsg = textEncoder.encode(
+      isSuccess ? response.mediaType : response.errorMsg,
+    );
+    const dataLength = isSuccess ? response.data.byteLength : 0;
+    const payload = new Uint8Array(1 + 4 + 1 + 4 + mediaTypeOrErrMsg.length + dataLength);
     const view = new DataView(payload.buffer, payload.byteOffset, payload.byteLength);
     let offset = 0;
     view.setUint8(offset, BinaryOpcode.ASSET);
     offset += 1;
-    view.setUint32(offset, asset.requestId, true);
+    view.setUint32(offset, response.requestId, true);
     offset += 4;
-    view.setUint8(offset, asset.status);
+    view.setUint8(offset, response.status);
     offset += 1;
-    view.setUint32(offset, mediaType.length, true);
+    view.setUint32(offset, mediaTypeOrErrMsg.length, true);
     offset += 4;
-    payload.set(mediaType, offset);
-    offset += mediaType.length;
-    payload.set(
-      new Uint8Array(asset.data.buffer, asset.data.byteOffset, asset.data.byteLength),
-      offset,
-    );
+    payload.set(mediaTypeOrErrMsg, offset);
+    offset += mediaTypeOrErrMsg.length;
+
+    if (isSuccess) {
+      payload.set(
+        new Uint8Array(response.data.buffer, response.data.byteOffset, response.data.byteLength),
+        offset,
+      );
+    }
+
     connection.send(payload);
   }
 }

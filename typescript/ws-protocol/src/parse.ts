@@ -1,4 +1,10 @@
-import { BinaryOpcode, ClientBinaryOpcode, ClientMessage, ServerMessage } from "./types";
+import {
+  BinaryOpcode,
+  ClientBinaryOpcode,
+  ClientMessage,
+  FetchAssetStatus,
+  ServerMessage,
+} from "./types";
 
 const textDecoder = new TextDecoder();
 
@@ -38,15 +44,20 @@ export function parseServerMessage(buffer: ArrayBuffer): ServerMessage {
     case BinaryOpcode.ASSET: {
       const requestId = view.getUint32(offset, true);
       offset += 4;
-      const status = view.getUint8(offset);
+      const status = view.getUint8(offset) as FetchAssetStatus;
       offset += 1;
-      const mediaTypeLength = view.getUint32(offset, true);
+      const mediaTypeOrErrMsgLength = view.getUint32(offset, true);
       offset += 4;
-      const mediaTypeBytes = new DataView(buffer, offset, mediaTypeLength);
-      const mediaType = textDecoder.decode(mediaTypeBytes);
-      offset += mediaTypeLength;
-      const data = new DataView(buffer, offset, buffer.byteLength - offset);
-      return { op, requestId, status, mediaType, data };
+      const mediaTypeOrErrMsgBytes = new DataView(buffer, offset, mediaTypeOrErrMsgLength);
+      const mediaTypeOrErr = textDecoder.decode(mediaTypeOrErrMsgBytes);
+
+      if (status === FetchAssetStatus.ERROR) {
+        return { op, requestId, status, errorMsg: mediaTypeOrErr };
+      } else {
+        offset += mediaTypeOrErrMsgLength;
+        const data = new DataView(buffer, offset, buffer.byteLength - offset);
+        return { op, requestId, status, mediaType: mediaTypeOrErr, data };
+      }
     }
   }
   throw new Error(`Unrecognized server opcode in binary message: ${op.toString(16)}`);

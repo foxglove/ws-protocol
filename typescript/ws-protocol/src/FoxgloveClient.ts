@@ -3,7 +3,6 @@ import EventEmitter from "eventemitter3";
 import { ChannelId, MessageData, ServerInfo, StatusMessage } from ".";
 import { parseServerMessage } from "./parse";
 import {
-  Asset,
   BinaryOpcode,
   Channel,
   ClientBinaryOpcode,
@@ -11,6 +10,7 @@ import {
   ClientChannelId,
   ClientMessage,
   ConnectionGraphUpdate,
+  FetchAssetResponse,
   IWebSocket,
   Parameter,
   ParameterValues,
@@ -39,7 +39,7 @@ type EventTypes = {
   parameterValues: (event: ParameterValues) => void;
   serviceCallResponse: (event: ServiceCallResponse) => void;
   connectionGraphUpdate: (event: ConnectionGraphUpdate) => void;
-  asset: (event: Asset) => void;
+  asset: (event: FetchAssetResponse) => void;
 };
 
 const textEncoder = new TextEncoder();
