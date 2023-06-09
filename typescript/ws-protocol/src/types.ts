@@ -59,6 +59,8 @@ export type ClientChannel = {
   topic: string;
   encoding: string;
   schemaName: string;
+  schema?: string;
+  schemaEncoding?: string;
 };
 export type ClientAdvertise = {
   op: "advertise";

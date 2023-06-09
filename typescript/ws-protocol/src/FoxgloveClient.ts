@@ -164,9 +164,15 @@ export default class FoxgloveClient {
     this.send({ op: "unsubscribe", subscriptionIds: [subscriptionId] });
   }
 
-  advertise(topic: string, encoding: string, schemaName: string): ClientChannelId {
+  advertise(
+    topic: string,
+    encoding: string,
+    schemaName: string,
+    schema?: string,
+    schemaEncoding?: string,
+  ): ClientChannelId {
     const id = ++this.nextAdvertisementId;
-    const channels: ClientChannel[] = [{ id, topic, encoding, schemaName }];
+    const channels: ClientChannel[] = [{ id, topic, encoding, schemaName, schema, schemaEncoding }];
     this.send({ op: "advertise", channels });
     return id;
   }
