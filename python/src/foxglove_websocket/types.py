@@ -40,6 +40,8 @@ class ClientChannel(TypedDict):
     topic: str
     encoding: str
     schemaName: str
+    schema: Optional[str]
+    schemaEncoding: Optional[str]
 
 
 class Subscribe(TypedDict):

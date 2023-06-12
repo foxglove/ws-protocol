@@ -326,8 +326,10 @@ Informs the client about updates to the connection graph. This is only sent to c
 - `channels`: array of:
   - `id`: number chosen by the client. The client may reuse ids that have previously been unadvertised.
   - `topic`: string
-  - `encoding`: string, one of the encodings [supported by the server](#server-info)
+  - `encoding`: string, one of the message encodings [supported by the server](#server-info)
   - `schemaName`: string
+  - `schema`: string | undefined, optional [schema definition](#advertise).
+  - `schemaEncoding`: string | undefined, optional [schema encoding](#advertise).
 
 #### Example
 

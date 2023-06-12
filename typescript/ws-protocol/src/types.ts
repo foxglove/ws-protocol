@@ -53,13 +53,17 @@ export type Unsubscribe = {
   op: "unsubscribe";
   subscriptionIds: SubscriptionId[];
 };
-
-export type ClientChannel = {
+type ClientChannelSchemaInfo =
+  | { schema: string; schemaEncoding: string }
+  | { schema?: undefined; schemaEncoding?: undefined };
+type ClientChannelBase = {
   id: ClientChannelId;
   topic: string;
   encoding: string;
   schemaName: string;
 };
+export type ClientChannel = ClientChannelBase & ClientChannelSchemaInfo;
+export type ClientChannelWithoutId = Omit<ClientChannelBase, "id"> & ClientChannelSchemaInfo;
 export type ClientAdvertise = {
   op: "advertise";
   channels: ClientChannel[];
