@@ -53,19 +53,17 @@ export type Unsubscribe = {
   op: "unsubscribe";
   subscriptionIds: SubscriptionId[];
 };
-type None<T> = { [K in keyof T]?: never };
-type BothOrNone<T1, T2> = (None<T1> & None<T2>) | (T1 & T2);
+type ClientChannelSchemaInfo =
+  | { schema: string; schemaEncoding: string }
+  | { schema?: undefined; schemaEncoding?: undefined };
 type ClientChannelBase = {
   id: ClientChannelId;
   topic: string;
   encoding: string;
   schemaName: string;
 };
-export type ClientChannel = ClientChannelBase &
-  BothOrNone<{ schema: string }, { schemaEncoding: string }>;
-export type ClientChannelWithoutId = Omit<ClientChannelBase, "id"> &
-  BothOrNone<{ schema: string }, { schemaEncoding: string }>;
-
+export type ClientChannel = ClientChannelBase & ClientChannelSchemaInfo;
+export type ClientChannelWithoutId = Omit<ClientChannelBase, "id"> & ClientChannelSchemaInfo;
 export type ClientAdvertise = {
   op: "advertise";
   channels: ClientChannel[];
