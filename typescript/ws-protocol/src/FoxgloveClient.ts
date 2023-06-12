@@ -8,6 +8,7 @@ import {
   ClientBinaryOpcode,
   ClientChannel,
   ClientChannelId,
+  ClientChannelWithoutId,
   ClientMessage,
   ConnectionGraphUpdate,
   IWebSocket,
@@ -164,15 +165,9 @@ export default class FoxgloveClient {
     this.send({ op: "unsubscribe", subscriptionIds: [subscriptionId] });
   }
 
-  advertise(
-    topic: string,
-    encoding: string,
-    schemaName: string,
-    schema?: string,
-    schemaEncoding?: string,
-  ): ClientChannelId {
+  advertise(clientChannel: ClientChannelWithoutId): ClientChannelId {
     const id = ++this.nextAdvertisementId;
-    const channels: ClientChannel[] = [{ id, topic, encoding, schemaName, schema, schemaEncoding }];
+    const channels: ClientChannel[] = [{ id, ...clientChannel }];
     this.send({ op: "advertise", channels });
     return id;
   }
