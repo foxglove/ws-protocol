@@ -1,1 +1,2 @@
 cpp/**/proto/**/*.proto linguist-generated
+cpp/**/flatbuffers/**/*.fbs linguist-generated
