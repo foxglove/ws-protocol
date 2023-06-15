@@ -76,13 +76,13 @@ int main() {
   server->setHandlers(std::move(hdlrs));
   server->start("0.0.0.0", 8765);
 
-  const auto chanelIds = server->addChannels({{
+  const auto channelIds = server->addChannels({{
     .topic = "example_msg",
     .encoding = "protobuf",
     .schemaName = foxglove::SceneUpdate::descriptor()->full_name(),
     .schema = Base64Encode(SerializeFdSet(foxglove::SceneUpdate::descriptor())),
   }});
-  const auto chanId = chanelIds.front();
+  const auto chanId = channelIds.front();
 
   bool running = true;
 

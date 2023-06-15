@@ -74,13 +74,13 @@ int main(int argc, char** argv) {
   server->setHandlers(std::move(hdlrs));
   server->start("0.0.0.0", 8765);
 
-  const auto chanelIds = server->addChannels({{
+  const auto channelIds = server->addChannels({{
     .topic = "example_msg",
     .encoding = "flatbuffer",
     .schemaName = "foxglove.SceneUpdate",
     .schema = Base64Encode(getFileContents(sceneUpdateBfbsPath)),
   }});
-  const auto chanId = chanelIds.front();
+  const auto chanId = channelIds.front();
 
   bool running = true;
 
@@ -112,7 +112,6 @@ int main(int argc, char** argv) {
     cubeBuilder.add_size(size);
     cubeBuilder.add_color(color);
     const auto cube = cubeBuilder.Finish();
-    builder.Finish(cube);
 
     auto frameId = builder.CreateString("root");
     auto cubes = builder.CreateVector({cube});
@@ -121,13 +120,18 @@ int main(int argc, char** argv) {
     entityBuilder.add_frame_id(frameId);
     entityBuilder.add_cubes(cubes);
     const auto entity = entityBuilder.Finish();
-    builder.Finish(entity);
 
     auto entities = builder.CreateVector({entity});
     auto updateBuilder = foxglove::SceneUpdateBuilder(builder);
     updateBuilder.add_entities(entities);
     const auto update = updateBuilder.Finish();
     builder.Finish(update);
+
+    auto verifier = flatbuffers::Verifier(builder.GetBufferPointer(), builder.GetSize());
+    if (!foxglove::VerifySceneUpdateBuffer(verifier)) {
+      std::cerr << "Flatbuffer verification failed" << std::endl;
+      return 1;
+    }
 
     server->broadcastMessage(chanId, now, builder.GetBufferPointer(), builder.GetSize());
 
