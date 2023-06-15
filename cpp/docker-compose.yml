@@ -11,10 +11,18 @@ services:
       dockerfile: dev.Dockerfile
       target: build
 
-  example_server:
+  example_server_protobuf:
     build:
       context: .
       dockerfile: dev.Dockerfile
-      target: example_server
+      target: example_server_protobuf
+    ports:
+      - "8765:8765"
+
+  example_server_flatbuffers:
+    build:
+      context: .
+      dockerfile: dev.Dockerfile
+      target: example_server_flatbuffers
     ports:
       - "8765:8765"

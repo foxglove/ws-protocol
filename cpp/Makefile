@@ -16,6 +16,10 @@ format-check:
 format-fix:
 	docker compose run --rm -v $(PWD):/src base python3 scripts/format.py --fix /src
 
-.PHONY: example_server
-example_server:
-	docker compose run --service-ports example_server
+.PHONY: example_server_protobuf
+example_server_protobuf:
+	docker compose run --service-ports example_server_protobuf
+
+.PHONY: example_server_flatbuffers
+example_server_flatbuffers:
+	docker compose run --service-ports example_server_flatbuffers
