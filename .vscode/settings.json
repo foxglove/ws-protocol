@@ -20,7 +20,7 @@
   "python.testing.pytestArgs": ["python"],
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
-  "python.formatting.provider": "none",
+  "python.formatting.provider": "black",
   "python.analysis.typeCheckingMode": "strict",
   "jest.rootPath": "typescript/ws-protocol",
 
@@ -33,8 +33,5 @@
   },
 
   // https://github.com/microsoft/vscode-cpptools/issues/722
-  "C_Cpp.autoAddFileAssociations": false,
-  "[python]": {
-    "editor.defaultFormatter": "ms-python.black-formatter"
-  }
+  "C_Cpp.autoAddFileAssociations": false
 }
