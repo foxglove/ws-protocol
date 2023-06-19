@@ -2,7 +2,7 @@ export enum BinaryOpcode {
   MESSAGE_DATA = 1,
   TIME = 2,
   SERVICE_CALL_RESPONSE = 3,
-  ASSET = 4,
+  FETCH_ASSET_RESPONSE = 4,
 }
 export enum ClientBinaryOpcode {
   MESSAGE_DATA = 1,
@@ -201,14 +201,14 @@ export type ServiceCallResponse = ServiceCallPayload & {
   op: BinaryOpcode.SERVICE_CALL_RESPONSE;
 };
 export type FetchAssetSuccessResponse = {
-  op: BinaryOpcode.ASSET;
+  op: BinaryOpcode.FETCH_ASSET_RESPONSE;
   requestId: number;
   status: FetchAssetStatus.SUCCESS;
   mediaType: string;
   data: DataView;
 };
 export type FetchAssetErrorResponse = {
-  op: BinaryOpcode.ASSET;
+  op: BinaryOpcode.FETCH_ASSET_RESPONSE;
   requestId: number;
   status: FetchAssetStatus.ERROR;
   errorMsg: string;

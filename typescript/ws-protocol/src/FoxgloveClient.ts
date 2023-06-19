@@ -39,7 +39,7 @@ type EventTypes = {
   parameterValues: (event: ParameterValues) => void;
   serviceCallResponse: (event: ServiceCallResponse) => void;
   connectionGraphUpdate: (event: ConnectionGraphUpdate) => void;
-  asset: (event: FetchAssetResponse) => void;
+  fetchAssetResponse: (event: FetchAssetResponse) => void;
 };
 
 const textEncoder = new TextEncoder();
@@ -141,8 +141,8 @@ export default class FoxgloveClient {
           this.emitter.emit("serviceCallResponse", message);
           return;
 
-        case BinaryOpcode.ASSET:
-          this.emitter.emit("asset", message);
+        case BinaryOpcode.FETCH_ASSET_RESPONSE:
+          this.emitter.emit("fetchAssetResponse", message);
           return;
       }
       this.emitter.emit(

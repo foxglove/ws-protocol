@@ -561,18 +561,19 @@ All integer types explicitly specified (uint32, uint64, etc.) in this section ar
 | _encoding length_ | char[]  | encoding, same encoding that was used for the request |
 | remaining bytes   | uint8[] | response payload                                      |
 
-### Asset
+### Fetch Asset Response
 
 - Response to a [fetch asset](#fetch-asset) request
 - Only supported if the server previously declared the `assets` [capability](#server-info).
 
-| Bytes           | Type             | Description                                                                                                                                              |
-| --------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1               | opcode           | 0x04                                                                                                                                                     |
-| 4               | uint32           | request id, as given in the corresponding [request](#fetch-asset)                                                                                        |
-| 1               | uint8            | status enum, `0` for success and `1` for error. Values `>1` are reserved for future use                                                                  |
-| 4 + N           | uint32 + char[N] | asset [media type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types), if `status == 0` <br /> error message, if `status == 1` |
-| remaining bytes | uint8[]          | asset data (file contents), empty if `status != 0`                                                                                                       |
+| Bytes           | Type             | Description                                                                                                             |
+| --------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| 1               | opcode           | 0x04                                                                                                                    |
+| 4               | uint32           | request id, as given in the corresponding [request](#fetch-asset)                                                       |
+| 1               | uint8            | status enum, `0` for success and `1` for error. Values `>1` are reserved for future use                                 |
+| 4 + N           | uint32 + char[N] | error message, empty if `status == 0`                                                                                   |
+| 4 + M           | uint32 + char[M] | asset [media type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types), empty if `status != 0` |
+| remaining bytes | uint8[]          | asset data (file contents), empty if `status != 0`                                                                      |
 
 ### Client Message Data
 

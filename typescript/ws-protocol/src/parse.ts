@@ -41,22 +41,25 @@ export function parseServerMessage(buffer: ArrayBuffer): ServerMessage {
       const data = new DataView(buffer, offset, buffer.byteLength - offset);
       return { op, serviceId, callId, encoding, data };
     }
-    case BinaryOpcode.ASSET: {
+    case BinaryOpcode.FETCH_ASSET_RESPONSE: {
       const requestId = view.getUint32(offset, true);
       offset += 4;
       const status = view.getUint8(offset) as FetchAssetStatus;
       offset += 1;
-      const mediaTypeOrErrMsgLength = view.getUint32(offset, true);
+      const errorMsgLength = view.getUint32(offset, true);
       offset += 4;
-      const mediaTypeOrErrMsgBytes = new DataView(buffer, offset, mediaTypeOrErrMsgLength);
-      const mediaTypeOrErr = textDecoder.decode(mediaTypeOrErrMsgBytes);
+      const errorMsg = textDecoder.decode(new DataView(buffer, offset, errorMsgLength));
+      offset += errorMsgLength;
+      const mediaTypeLength = view.getUint32(offset, true);
+      offset += 4;
+      const mediaType = textDecoder.decode(new DataView(buffer, offset, mediaTypeLength));
+      offset += mediaTypeLength;
 
       if (status === FetchAssetStatus.ERROR) {
-        return { op, requestId, status, errorMsg: mediaTypeOrErr };
+        return { op, requestId, status, errorMsg };
       } else {
-        offset += mediaTypeOrErrMsgLength;
         const data = new DataView(buffer, offset, buffer.byteLength - offset);
-        return { op, requestId, status, mediaType: mediaTypeOrErr, data };
+        return { op, requestId, status, mediaType, data };
       }
     }
   }

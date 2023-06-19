@@ -5,6 +5,8 @@ import {
   BinaryOpcode,
   ClientBinaryOpcode,
   ClientPublish,
+  FetchAssetStatus,
+  FetchAssetSuccessResponse,
   IWebSocket,
   Parameter,
   ServerCapability,
@@ -70,6 +72,9 @@ async function setupServerAndClient(server: FoxgloveServer) {
   );
   server.on("serviceCallRequest", (event, clientConnection) =>
     eventQueue.push(["serviceCallRequest", event, clientConnection]),
+  );
+  server.on("fetchAsset", (event, clientConnection) =>
+    eventQueue.push(["fetchAsset", event, clientConnection]),
   );
 
   const nextEvent = async () => await eventQueue.pop();
@@ -469,6 +474,64 @@ describe("FoxgloveServer", () => {
           ...uint32LE(response.callId),
           ...uint32LE("json".length),
           ...new TextEncoder().encode("json"),
+          4,
+          5,
+          6,
+        ]),
+      );
+    } catch (ex) {
+      close();
+      throw ex;
+    }
+    close();
+  });
+
+  it("receives fetch asset request from client and sends response back", async () => {
+    const server = new FoxgloveServer({
+      name: "foo",
+      capabilities: [ServerCapability.assets],
+    });
+    const { send, nextJsonMessage, nextBinaryMessage, nextEvent, close } =
+      await setupServerAndClient(server);
+
+    try {
+      await expect(nextJsonMessage()).resolves.toMatchObject({
+        op: "serverInfo",
+        name: "foo",
+        capabilities: ["assets"],
+      });
+
+      const request = {
+        op: "fetchAsset",
+        assetId: "package://foo/bar.urdf",
+        requestId: 123,
+      };
+
+      send(JSON.stringify(request));
+
+      const [eventId, receivedRequest, connection] = await nextEvent();
+      expect(eventId).toEqual("fetchAsset");
+      expect(receivedRequest).toEqual(request);
+
+      const response: FetchAssetSuccessResponse = {
+        op: BinaryOpcode.FETCH_ASSET_RESPONSE,
+        requestId: request.requestId,
+        status: FetchAssetStatus.SUCCESS,
+        mediaType: "text/xml",
+        data: new DataView(new Uint8Array([4, 5, 6]).buffer),
+      };
+
+      server.sendFetchAssetResponse(response, connection as IWebSocket);
+
+      await expect(nextBinaryMessage()).resolves.toEqual(
+        new Uint8Array([
+          BinaryOpcode.FETCH_ASSET_RESPONSE,
+          ...uint32LE(response.requestId),
+          FetchAssetStatus.SUCCESS,
+          ...uint32LE("".length),
+          ...new TextEncoder().encode(""),
+          ...uint32LE("text/xml".length),
+          ...new TextEncoder().encode("text/xml"),
           4,
           5,
           6,

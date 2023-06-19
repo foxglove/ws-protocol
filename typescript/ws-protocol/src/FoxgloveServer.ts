@@ -617,31 +617,34 @@ export default class FoxgloveServer {
    */
   sendFetchAssetResponse(response: FetchAssetResponse, connection: IWebSocket): void {
     const isSuccess = response.status === FetchAssetStatus.SUCCESS;
-    const mediaTypeOrErrMsg = textEncoder.encode(
-      isSuccess ? response.mediaType : response.errorMsg,
-    );
+    const errorMsg = textEncoder.encode(isSuccess ? "" : response.errorMsg);
+    const mediaType = textEncoder.encode(isSuccess ? response.mediaType : "");
     const dataLength = isSuccess ? response.data.byteLength : 0;
-    const payload = new Uint8Array(1 + 4 + 1 + 4 + mediaTypeOrErrMsg.length + dataLength);
-    const view = new DataView(payload.buffer, payload.byteOffset, payload.byteLength);
+    const msg = new Uint8Array(1 + 4 + 1 + 4 + errorMsg.length + 4 + mediaType.length + dataLength);
+    const view = new DataView(msg.buffer, msg.byteOffset, msg.byteLength);
     let offset = 0;
-    view.setUint8(offset, BinaryOpcode.ASSET);
+    view.setUint8(offset, BinaryOpcode.FETCH_ASSET_RESPONSE);
     offset += 1;
     view.setUint32(offset, response.requestId, true);
     offset += 4;
     view.setUint8(offset, response.status);
     offset += 1;
-    view.setUint32(offset, mediaTypeOrErrMsg.length, true);
+    view.setUint32(offset, errorMsg.length, true);
     offset += 4;
-    payload.set(mediaTypeOrErrMsg, offset);
-    offset += mediaTypeOrErrMsg.length;
+    msg.set(errorMsg, offset);
+    offset += errorMsg.length;
+    view.setUint32(offset, mediaType.length, true);
+    offset += 4;
+    msg.set(mediaType, offset);
+    offset += mediaType.length;
 
     if (isSuccess) {
-      payload.set(
+      msg.set(
         new Uint8Array(response.data.buffer, response.data.byteOffset, response.data.byteLength),
         offset,
       );
     }
 
-    connection.send(payload);
+    connection.send(msg);
   }
 }
