@@ -505,15 +505,15 @@ Fetch an asset from the server. Only supported if the server previously declared
 #### Fields
 
 - `op`: string `"fetchAsset"`
-- `assetId`: string, unique identifier to locate the asset
-- `requestId`: number, unique 32-bit unsigned integer which is to be included in the response
+- `assetURI`: string, uniform resource identifier to locate a single asset
+- `requestId`: number, unique 32-bit unsigned integer which is to be included in the [response](#fetch-asset-response)
 
 #### Example
 
 ```json
 {
   "op": "fetchAsset",
-  "assetId": "file:///foo/bar.txt",
+  "assetURI": "package://foo/robot.urdf",
   "requestId": 123
 }
 ```
@@ -566,14 +566,16 @@ All integer types explicitly specified (uint32, uint64, etc.) in this section ar
 - Response to a [fetch asset](#fetch-asset) request
 - Only supported if the server previously declared the `assets` [capability](#server-info).
 
-| Bytes           | Type             | Description                                                                                                             |
-| --------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| 1               | opcode           | 0x04                                                                                                                    |
-| 4               | uint32           | request id, as given in the corresponding [request](#fetch-asset)                                                       |
-| 1               | uint8            | status enum, `0` for success and `1` for error. Values `>1` are reserved for future use                                 |
-| 4 + N           | uint32 + char[N] | error message, empty if `status == 0`                                                                                   |
-| 4 + M           | uint32 + char[M] | asset [media type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types), empty if `status != 0` |
-| remaining bytes | uint8[]          | asset data (file contents), empty if `status != 0`                                                                      |
+| Bytes                  | Type    | Description                                                                                                             |
+| ---------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------- |
+| 1                      | opcode  | 0x04                                                                                                                    |
+| 4                      | uint32  | request id, as given in the corresponding [request](#fetch-asset)                                                       |
+| 1                      | uint8   | status enum, `0` for success and `1` for error. Values `>1` are reserved for future use                                 |
+| 4                      | uint32  | error message length                                                                                                    |
+| _error message length_ | char[]  | error message, empty if `status == 0`                                                                                   |
+| 4                      | uint32  | media type length                                                                                                       |
+| _media type length_    | char[]  | asset [media type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types), empty if `status != 0` |
+| remaining bytes        | uint8[] | asset data (file contents), empty if `status != 0`                                                                      |
 
 ### Client Message Data
 

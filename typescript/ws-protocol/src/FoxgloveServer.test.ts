@@ -5,6 +5,8 @@ import {
   BinaryOpcode,
   ClientBinaryOpcode,
   ClientPublish,
+  FetchAssetErrorResponse,
+  FetchAssetResponse,
   FetchAssetStatus,
   FetchAssetSuccessResponse,
   IWebSocket,
@@ -486,61 +488,86 @@ describe("FoxgloveServer", () => {
     close();
   });
 
-  it("receives fetch asset request from client and sends response back", async () => {
-    const server = new FoxgloveServer({
-      name: "foo",
-      capabilities: [ServerCapability.assets],
-    });
-    const { send, nextJsonMessage, nextBinaryMessage, nextEvent, close } =
-      await setupServerAndClient(server);
-
-    try {
-      await expect(nextJsonMessage()).resolves.toMatchObject({
-        op: "serverInfo",
-        name: "foo",
-        capabilities: ["assets"],
-      });
-
-      const request = {
-        op: "fetchAsset",
-        assetId: "package://foo/bar.urdf",
-        requestId: 123,
-      };
-
-      send(JSON.stringify(request));
-
-      const [eventId, receivedRequest, connection] = await nextEvent();
-      expect(eventId).toEqual("fetchAsset");
-      expect(receivedRequest).toEqual(request);
-
-      const response: FetchAssetSuccessResponse = {
+  it.each([
+    [
+      "existing asset",
+      "package://foo/bar.urdf",
+      {
         op: BinaryOpcode.FETCH_ASSET_RESPONSE,
-        requestId: request.requestId,
+        requestId: 123,
+        errorMsg: "",
         status: FetchAssetStatus.SUCCESS,
         mediaType: "text/xml",
         data: new DataView(new Uint8Array([4, 5, 6]).buffer),
-      };
+      } as FetchAssetSuccessResponse,
+    ],
+    [
+      "non existing asset",
+      "package://non-existing/bar.urdf",
+      {
+        op: BinaryOpcode.FETCH_ASSET_RESPONSE,
+        requestId: 456,
+        status: FetchAssetStatus.ERROR,
+        errorMsg: "asset not found",
+      } as FetchAssetErrorResponse,
+    ],
+  ])(
+    "should send fetch asset request and receive appropriate response for %s",
+    async (timePrimitive: string, assetURI: string, response: FetchAssetResponse) => {
+      expect(timePrimitive).toEqual(timePrimitive);
+      expect(assetURI).toEqual(assetURI);
+      expect(response).toEqual(response);
 
-      server.sendFetchAssetResponse(response, connection as IWebSocket);
+      const server = new FoxgloveServer({
+        name: "foo",
+        capabilities: [ServerCapability.assets],
+      });
+      const { send, nextJsonMessage, nextBinaryMessage, nextEvent, close } =
+        await setupServerAndClient(server);
 
-      await expect(nextBinaryMessage()).resolves.toEqual(
-        new Uint8Array([
-          BinaryOpcode.FETCH_ASSET_RESPONSE,
-          ...uint32LE(response.requestId),
-          FetchAssetStatus.SUCCESS,
-          ...uint32LE("".length),
-          ...new TextEncoder().encode(""),
-          ...uint32LE("text/xml".length),
-          ...new TextEncoder().encode("text/xml"),
-          4,
-          5,
-          6,
-        ]),
-      );
-    } catch (ex) {
+      try {
+        await expect(nextJsonMessage()).resolves.toMatchObject({
+          op: "serverInfo",
+          name: "foo",
+          capabilities: ["assets"],
+        });
+
+        const request = {
+          op: "fetchAsset",
+          assetURI,
+          requestId: response.requestId,
+        };
+        send(JSON.stringify(request));
+
+        const [eventId, receivedRequest, connection] = await nextEvent();
+        expect(eventId).toEqual("fetchAsset");
+        expect(receivedRequest).toEqual(request);
+        server.sendFetchAssetResponse(response, connection as IWebSocket);
+
+        const errorMsg = response.status === FetchAssetStatus.ERROR ? response.errorMsg : "";
+        const mediaType = response.status === FetchAssetStatus.SUCCESS ? response.mediaType : "";
+        const data =
+          response.status === FetchAssetStatus.SUCCESS
+            ? response.data
+            : new DataView(new ArrayBuffer(0));
+
+        await expect(nextBinaryMessage()).resolves.toEqual(
+          new Uint8Array([
+            BinaryOpcode.FETCH_ASSET_RESPONSE,
+            ...uint32LE(response.requestId),
+            response.status,
+            ...uint32LE(errorMsg.length),
+            ...new TextEncoder().encode(errorMsg),
+            ...uint32LE(mediaType.length),
+            ...new TextEncoder().encode(mediaType),
+            ...Buffer.from(data.buffer),
+          ]),
+        );
+      } catch (ex) {
+        close();
+        throw ex;
+      }
       close();
-      throw ex;
-    }
-    close();
-  });
+    },
+  );
 });
