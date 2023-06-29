@@ -167,7 +167,7 @@ export type UnsubscribeConnectionGraph = {
 };
 export type FetchAsset = {
   op: "fetchAsset";
-  assetURI: string;
+  assetUri: string;
   requestId: number;
 };
 export type ConnectionGraphUpdate = {

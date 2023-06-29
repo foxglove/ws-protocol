@@ -505,7 +505,7 @@ Fetch an asset from the server. Only supported if the server previously declared
 #### Fields
 
 - `op`: string `"fetchAsset"`
-- `assetURI`: string, uniform resource identifier to locate a single asset
+- `assetUri`: string, uniform resource identifier to locate a single asset
 - `requestId`: number, unique 32-bit unsigned integer which is to be included in the [response](#fetch-asset-response)
 
 #### Example
@@ -513,7 +513,7 @@ Fetch an asset from the server. Only supported if the server previously declared
 ```json
 {
   "op": "fetchAsset",
-  "assetURI": "package://foo/robot.urdf",
+  "assetUri": "package://foo/robot.urdf",
   "requestId": 123
 }
 ```
