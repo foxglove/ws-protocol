@@ -497,7 +497,6 @@ describe("FoxgloveServer", () => {
         requestId: 123,
         errorMsg: "",
         status: FetchAssetStatus.SUCCESS,
-        mediaType: "text/xml",
         data: new DataView(new Uint8Array([4, 5, 6]).buffer),
       } as FetchAssetSuccessResponse,
     ],
@@ -545,7 +544,6 @@ describe("FoxgloveServer", () => {
         server.sendFetchAssetResponse(response, connection as IWebSocket);
 
         const errorMsg = response.status === FetchAssetStatus.ERROR ? response.errorMsg : "";
-        const mediaType = response.status === FetchAssetStatus.SUCCESS ? response.mediaType : "";
         const data =
           response.status === FetchAssetStatus.SUCCESS
             ? response.data
@@ -558,8 +556,6 @@ describe("FoxgloveServer", () => {
             response.status,
             ...uint32LE(errorMsg.length),
             ...new TextEncoder().encode(errorMsg),
-            ...uint32LE(mediaType.length),
-            ...new TextEncoder().encode(mediaType),
             ...Buffer.from(data.buffer),
           ]),
         );

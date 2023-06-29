@@ -50,16 +50,12 @@ export function parseServerMessage(buffer: ArrayBuffer): ServerMessage {
       offset += 4;
       const errorMsg = textDecoder.decode(new DataView(buffer, offset, errorMsgLength));
       offset += errorMsgLength;
-      const mediaTypeLength = view.getUint32(offset, true);
-      offset += 4;
-      const mediaType = textDecoder.decode(new DataView(buffer, offset, mediaTypeLength));
-      offset += mediaTypeLength;
 
       if (status === FetchAssetStatus.ERROR) {
         return { op, requestId, status, errorMsg };
       } else {
         const data = new DataView(buffer, offset, buffer.byteLength - offset);
-        return { op, requestId, status, mediaType, data };
+        return { op, requestId, status, data };
       }
     }
   }

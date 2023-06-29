@@ -573,8 +573,6 @@ All integer types explicitly specified (uint32, uint64, etc.) in this section ar
 | 1                      | uint8   | status enum, `0` for success and `1` for error. Values `>1` are reserved for future use                                 |
 | 4                      | uint32  | error message length                                                                                                    |
 | _error message length_ | char[]  | error message, empty if `status == 0`                                                                                   |
-| 4                      | uint32  | media type length                                                                                                       |
-| _media type length_    | char[]  | asset [media type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types), empty if `status != 0` |
 | remaining bytes        | uint8[] | asset data (file contents), empty if `status != 0`                                                                      |
 
 ### Client Message Data

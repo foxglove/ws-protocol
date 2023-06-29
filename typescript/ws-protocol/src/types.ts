@@ -204,7 +204,6 @@ export type FetchAssetSuccessResponse = {
   op: BinaryOpcode.FETCH_ASSET_RESPONSE;
   requestId: number;
   status: FetchAssetStatus.SUCCESS;
-  mediaType: string;
   data: DataView;
 };
 export type FetchAssetErrorResponse = {

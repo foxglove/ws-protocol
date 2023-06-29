@@ -618,9 +618,8 @@ export default class FoxgloveServer {
   sendFetchAssetResponse(response: FetchAssetResponse, connection: IWebSocket): void {
     const isSuccess = response.status === FetchAssetStatus.SUCCESS;
     const errorMsg = textEncoder.encode(isSuccess ? "" : response.errorMsg);
-    const mediaType = textEncoder.encode(isSuccess ? response.mediaType : "");
     const dataLength = isSuccess ? response.data.byteLength : 0;
-    const msg = new Uint8Array(1 + 4 + 1 + 4 + errorMsg.length + 4 + mediaType.length + dataLength);
+    const msg = new Uint8Array(1 + 4 + 1 + 4 + errorMsg.length + dataLength);
     const view = new DataView(msg.buffer, msg.byteOffset, msg.byteLength);
     let offset = 0;
     view.setUint8(offset, BinaryOpcode.FETCH_ASSET_RESPONSE);
@@ -633,10 +632,6 @@ export default class FoxgloveServer {
     offset += 4;
     msg.set(errorMsg, offset);
     offset += errorMsg.length;
-    view.setUint32(offset, mediaType.length, true);
-    offset += 4;
-    msg.set(mediaType, offset);
-    offset += mediaType.length;
 
     if (isSuccess) {
       msg.set(
