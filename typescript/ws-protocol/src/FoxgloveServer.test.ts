@@ -5,10 +5,8 @@ import {
   BinaryOpcode,
   ClientBinaryOpcode,
   ClientPublish,
-  FetchAssetErrorResponse,
   FetchAssetResponse,
   FetchAssetStatus,
-  FetchAssetSuccessResponse,
   IWebSocket,
   Parameter,
   ServerCapability,
@@ -488,17 +486,16 @@ describe("FoxgloveServer", () => {
     close();
   });
 
-  it.each([
+  it.each<[string, string, FetchAssetResponse]>([
     [
       "existing asset",
       "package://foo/bar.urdf",
       {
         op: BinaryOpcode.FETCH_ASSET_RESPONSE,
         requestId: 123,
-        errorMsg: "",
         status: FetchAssetStatus.SUCCESS,
         data: new DataView(new Uint8Array([4, 5, 6]).buffer),
-      } as FetchAssetSuccessResponse,
+      },
     ],
     [
       "non existing asset",
@@ -508,7 +505,7 @@ describe("FoxgloveServer", () => {
         requestId: 456,
         status: FetchAssetStatus.ERROR,
         errorMsg: "asset not found",
-      } as FetchAssetErrorResponse,
+      },
     ],
   ])(
     "should send fetch asset request and receive appropriate response for %s",
