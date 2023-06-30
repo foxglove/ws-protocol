@@ -512,9 +512,9 @@ describe("FoxgloveServer", () => {
     ],
   ])(
     "should send fetch asset request and receive appropriate response for %s",
-    async (timePrimitive: string, assetUri: string, response: FetchAssetResponse) => {
+    async (timePrimitive: string, uri: string, response: FetchAssetResponse) => {
       expect(timePrimitive).toEqual(timePrimitive);
-      expect(assetUri).toEqual(assetUri);
+      expect(uri).toEqual(uri);
       expect(response).toEqual(response);
 
       const server = new FoxgloveServer({
@@ -533,7 +533,7 @@ describe("FoxgloveServer", () => {
 
         const request = {
           op: "fetchAsset",
-          assetUri,
+          uri,
           requestId: response.requestId,
         };
         send(JSON.stringify(request));

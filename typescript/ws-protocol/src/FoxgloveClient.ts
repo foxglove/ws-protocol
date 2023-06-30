@@ -238,8 +238,8 @@ export default class FoxgloveClient {
     this.send({ op: "unsubscribeConnectionGraph" });
   }
 
-  fetchAsset(assetUri: string, requestId: number): void {
-    this.send({ op: "fetchAsset", assetUri, requestId });
+  fetchAsset(uri: string, requestId: number): void {
+    this.send({ op: "fetchAsset", uri, requestId });
   }
 
   /**
