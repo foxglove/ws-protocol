@@ -504,7 +504,7 @@ describe("FoxgloveServer", () => {
         op: BinaryOpcode.FETCH_ASSET_RESPONSE,
         requestId: 456,
         status: FetchAssetStatus.ERROR,
-        errorMsg: "asset not found",
+        error: "asset not found",
       },
     ],
   ])(
@@ -540,7 +540,7 @@ describe("FoxgloveServer", () => {
         expect(receivedRequest).toEqual(request);
         server.sendFetchAssetResponse(response, connection as IWebSocket);
 
-        const errorMsg = response.status === FetchAssetStatus.ERROR ? response.errorMsg : "";
+        const errorMsg = response.status === FetchAssetStatus.ERROR ? response.error : "";
         const data =
           response.status === FetchAssetStatus.SUCCESS
             ? response.data

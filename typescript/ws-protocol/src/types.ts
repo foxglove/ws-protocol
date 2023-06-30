@@ -210,7 +210,7 @@ export type FetchAssetErrorResponse = {
   op: BinaryOpcode.FETCH_ASSET_RESPONSE;
   requestId: number;
   status: FetchAssetStatus.ERROR;
-  errorMsg: string;
+  error: string;
 };
 export type FetchAssetResponse = FetchAssetSuccessResponse | FetchAssetErrorResponse;
 export type ClientPublish = {

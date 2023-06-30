@@ -48,11 +48,11 @@ export function parseServerMessage(buffer: ArrayBuffer): ServerMessage {
       offset += 1;
       const errorMsgLength = view.getUint32(offset, true);
       offset += 4;
-      const errorMsg = textDecoder.decode(new DataView(buffer, offset, errorMsgLength));
+      const error = textDecoder.decode(new DataView(buffer, offset, errorMsgLength));
       offset += errorMsgLength;
 
       if (status === FetchAssetStatus.ERROR) {
-        return { op, requestId, status, errorMsg };
+        return { op, requestId, status, error };
       } else if (status === FetchAssetStatus.SUCCESS) {
         const data = new DataView(buffer, offset, buffer.byteLength - offset);
         return { op, requestId, status, data };
