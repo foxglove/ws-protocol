@@ -11,6 +11,9 @@ import {
   ClientChannelId,
   ClientMessage,
   ClientPublish,
+  FetchAsset,
+  FetchAssetResponse,
+  FetchAssetStatus,
   IWebSocket,
   Parameter,
   ServerCapability,
@@ -62,9 +65,12 @@ type EventTypes = {
   unsubscribeParameterUpdates: (parameterNames: string[]) => void;
   /** Service call request has been received. */
   serviceCallRequest: (request: ServiceCallRequest, clientConnection: IWebSocket) => void;
+  /** Request to fetch an asset has been received. */
+  fetchAsset: (request: FetchAsset, clientConnection: IWebSocket) => void;
 };
 
 const log = createDebug("foxglove:server");
+const textEncoder = new TextEncoder();
 
 const REQUIRED_CAPABILITY_BY_OPERATION: Record<
   ClientMessage["op"],
@@ -82,6 +88,7 @@ const REQUIRED_CAPABILITY_BY_OPERATION: Record<
   [ClientBinaryOpcode.SERVICE_CALL_REQUEST]: ServerCapability.services,
   subscribeConnectionGraph: ServerCapability.connectionGraph,
   unsubscribeConnectionGraph: ServerCapability.connectionGraph,
+  fetchAsset: ServerCapability.assets,
 };
 
 export default class FoxgloveServer {
@@ -238,8 +245,7 @@ export default class FoxgloveServer {
    * @param connection Connection of the client that called the service
    */
   sendServiceCallResponse(response: ServiceCallPayload, connection: IWebSocket): void {
-    const utf8Encode = new TextEncoder();
-    const encoding = utf8Encode.encode(response.encoding);
+    const encoding = textEncoder.encode(response.encoding);
     const payload = new Uint8Array(1 + 4 + 4 + 4 + encoding.length + response.data.byteLength);
     const view = new DataView(payload.buffer, payload.byteOffset, payload.byteLength);
     let offset = 0;
@@ -538,6 +544,10 @@ export default class FoxgloveServer {
         }
         break;
 
+      case "fetchAsset":
+        this.emitter.emit("fetchAsset", { ...message }, client.connection);
+        break;
+
       case ClientBinaryOpcode.MESSAGE_DATA: {
         const channel = client.advertisements.get(message.channelId);
         if (!channel) {
@@ -596,6 +606,39 @@ export default class FoxgloveServer {
     const msg = new DataView(new ArrayBuffer(1 + 8));
     msg.setUint8(0, BinaryOpcode.TIME);
     msg.setBigUint64(1, timestamp, true);
+
+    connection.send(msg);
+  }
+
+  /**
+   * Send a response to a fetchAsset request
+   * @param response The response to send
+   * @param connection Connection of the client that called the service
+   */
+  sendFetchAssetResponse(response: FetchAssetResponse, connection: IWebSocket): void {
+    const isSuccess = response.status === FetchAssetStatus.SUCCESS;
+    const errorMsg = textEncoder.encode(isSuccess ? "" : response.error);
+    const dataLength = isSuccess ? response.data.byteLength : 0;
+    const msg = new Uint8Array(1 + 4 + 1 + 4 + errorMsg.length + dataLength);
+    const view = new DataView(msg.buffer, msg.byteOffset, msg.byteLength);
+    let offset = 0;
+    view.setUint8(offset, BinaryOpcode.FETCH_ASSET_RESPONSE);
+    offset += 1;
+    view.setUint32(offset, response.requestId, true);
+    offset += 4;
+    view.setUint8(offset, response.status);
+    offset += 1;
+    view.setUint32(offset, errorMsg.length, true);
+    offset += 4;
+    msg.set(errorMsg, offset);
+    offset += errorMsg.length;
+
+    if (isSuccess) {
+      msg.set(
+        new Uint8Array(response.data.buffer, response.data.byteOffset, response.data.byteLength),
+        offset,
+      );
+    }
 
     connection.send(msg);
   }

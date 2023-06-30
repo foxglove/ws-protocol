@@ -11,6 +11,7 @@ import {
   ClientChannelWithoutId,
   ClientMessage,
   ConnectionGraphUpdate,
+  FetchAssetResponse,
   IWebSocket,
   Parameter,
   ParameterValues,
@@ -39,6 +40,7 @@ type EventTypes = {
   parameterValues: (event: ParameterValues) => void;
   serviceCallResponse: (event: ServiceCallResponse) => void;
   connectionGraphUpdate: (event: ConnectionGraphUpdate) => void;
+  fetchAssetResponse: (event: FetchAssetResponse) => void;
 };
 
 const textEncoder = new TextEncoder();
@@ -139,6 +141,10 @@ export default class FoxgloveClient {
         case BinaryOpcode.SERVICE_CALL_RESPONSE:
           this.emitter.emit("serviceCallResponse", message);
           return;
+
+        case BinaryOpcode.FETCH_ASSET_RESPONSE:
+          this.emitter.emit("fetchAssetResponse", message);
+          return;
       }
       this.emitter.emit(
         "error",
@@ -231,6 +237,10 @@ export default class FoxgloveClient {
 
   unsubscribeConnectionGraph(): void {
     this.send({ op: "unsubscribeConnectionGraph" });
+  }
+
+  fetchAsset(uri: string, requestId: number): void {
+    this.send({ op: "fetchAsset", uri, requestId });
   }
 
   /**

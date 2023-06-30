@@ -5,6 +5,8 @@ import {
   BinaryOpcode,
   ClientBinaryOpcode,
   ClientPublish,
+  FetchAssetResponse,
+  FetchAssetStatus,
   IWebSocket,
   Parameter,
   ServerCapability,
@@ -70,6 +72,9 @@ async function setupServerAndClient(server: FoxgloveServer) {
   );
   server.on("serviceCallRequest", (event, clientConnection) =>
     eventQueue.push(["serviceCallRequest", event, clientConnection]),
+  );
+  server.on("fetchAsset", (event, clientConnection) =>
+    eventQueue.push(["fetchAsset", event, clientConnection]),
   );
 
   const nextEvent = async () => await eventQueue.pop();
@@ -480,4 +485,82 @@ describe("FoxgloveServer", () => {
     }
     close();
   });
+
+  it.each<[string, string, FetchAssetResponse]>([
+    [
+      "existing asset",
+      "package://foo/bar.urdf",
+      {
+        op: BinaryOpcode.FETCH_ASSET_RESPONSE,
+        requestId: 123,
+        status: FetchAssetStatus.SUCCESS,
+        data: new DataView(new Uint8Array([4, 5, 6]).buffer),
+      },
+    ],
+    [
+      "non existing asset",
+      "package://non-existing/bar.urdf",
+      {
+        op: BinaryOpcode.FETCH_ASSET_RESPONSE,
+        requestId: 456,
+        status: FetchAssetStatus.ERROR,
+        error: "asset not found",
+      },
+    ],
+  ])(
+    "should send fetch asset request and receive appropriate response for %s",
+    async (timePrimitive: string, uri: string, response: FetchAssetResponse) => {
+      expect(timePrimitive).toEqual(timePrimitive);
+      expect(uri).toEqual(uri);
+      expect(response).toEqual(response);
+
+      const server = new FoxgloveServer({
+        name: "foo",
+        capabilities: [ServerCapability.assets],
+      });
+      const { send, nextJsonMessage, nextBinaryMessage, nextEvent, close } =
+        await setupServerAndClient(server);
+
+      try {
+        await expect(nextJsonMessage()).resolves.toMatchObject({
+          op: "serverInfo",
+          name: "foo",
+          capabilities: ["assets"],
+        });
+
+        const request = {
+          op: "fetchAsset",
+          uri,
+          requestId: response.requestId,
+        };
+        send(JSON.stringify(request));
+
+        const [eventId, receivedRequest, connection] = await nextEvent();
+        expect(eventId).toEqual("fetchAsset");
+        expect(receivedRequest).toEqual(request);
+        server.sendFetchAssetResponse(response, connection as IWebSocket);
+
+        const errorMsg = response.status === FetchAssetStatus.ERROR ? response.error : "";
+        const data =
+          response.status === FetchAssetStatus.SUCCESS
+            ? response.data
+            : new DataView(new ArrayBuffer(0));
+
+        await expect(nextBinaryMessage()).resolves.toEqual(
+          new Uint8Array([
+            BinaryOpcode.FETCH_ASSET_RESPONSE,
+            ...uint32LE(response.requestId),
+            response.status,
+            ...uint32LE(errorMsg.length),
+            ...new TextEncoder().encode(errorMsg),
+            ...Buffer.from(data.buffer),
+          ]),
+        );
+      } catch (ex) {
+        close();
+        throw ex;
+      }
+      close();
+    },
+  );
 });

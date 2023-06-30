@@ -34,6 +34,7 @@
 - [Unadvertise Services](#unadvertise-services) (json)
 - [Service Call Response](#service-call-response) (binary)
 - [Connection Graph Update](#connection-graph-update) (json)
+- [Asset](#asset) (binary)
 
 ### Sent by client
 
@@ -49,6 +50,7 @@
 - [Service Call Request](#service-call-request) (binary)
 - [Subscribe connection graph updates](#subscribe-connection-graph-updates) (json)
 - [Unubscribe connection graph updates](#unsubscribe-connection-graph-updates) (json)
+- [Fetch asset](#fetch-asset) (json)
 
 ## JSON messages
 
@@ -69,6 +71,7 @@ Each JSON message must be an object containing a field called `op` which identif
   - `time`: The server may publish binary [time](#time) messages
   - `services`: Allow clients to call services
   - `connectionGraph`: Allow clients to subscribe to updates to the connection graph
+  - `assets`: Allow clients to fetch assets
 - `supportedEncodings`: array of strings | informing the client about which encodings may be used for client-side publishing or service call requests/responses. Only set if client publishing or services are supported.
 - `metadata`: optional map of key-value pairs
 - `sessionId`: optional string. Allows the client to understand if the connection is a re-connection or if it is connecting to a new server instance. This can for example be a timestamp or a UUID.
@@ -497,6 +500,26 @@ Unsubscribe from [connection graph updates](#connection-graph-update). Only supp
 }
 ```
 
+### Fetch asset
+
+Fetch an asset from the server. Only supported if the server previously declared that it has the `assets` [capability](#server-info).
+
+#### Fields
+
+- `op`: string `"fetchAsset"`
+- `uri`: string, uniform resource identifier to locate a single asset
+- `requestId`: number, unique 32-bit unsigned integer which is to be included in the [response](#fetch-asset-response)
+
+#### Example
+
+```json
+{
+  "op": "fetchAsset",
+  "uri": "package://foo/robot.urdf",
+  "requestId": 123
+}
+```
+
 ## Binary messages
 
 All binary messages must start with a 1-byte opcode identifying the type of message. The interpretation of the remaining bytes depends on the opcode.
@@ -539,6 +562,20 @@ All integer types explicitly specified (uint32, uint64, etc.) in this section ar
 | 4                 | uint32  | encoding length                                       |
 | _encoding length_ | char[]  | encoding, same encoding that was used for the request |
 | remaining bytes   | uint8[] | response payload                                      |
+
+### Fetch Asset Response
+
+- Response to a [fetch asset](#fetch-asset) request
+- Only supported if the server previously declared the `assets` [capability](#server-info).
+
+| Bytes                  | Type    | Description                                                                                                             |
+| ---------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------- |
+| 1                      | opcode  | 0x04                                                                                                                    |
+| 4                      | uint32  | request id, as given in the corresponding [request](#fetch-asset)                                                       |
+| 1                      | uint8   | status enum, `0` for success and `1` for error. Values `>1` are reserved for future use                                 |
+| 4                      | uint32  | error message length                                                                                                    |
+| _error message length_ | char[]  | error message, empty if `status == 0`                                                                                   |
+| remaining bytes        | uint8[] | asset data (file contents), empty if `status != 0`                                                                      |
 
 ### Client Message Data
 

@@ -2,6 +2,7 @@ export enum BinaryOpcode {
   MESSAGE_DATA = 1,
   TIME = 2,
   SERVICE_CALL_RESPONSE = 3,
+  FETCH_ASSET_RESPONSE = 4,
 }
 export enum ClientBinaryOpcode {
   MESSAGE_DATA = 1,
@@ -19,6 +20,11 @@ export enum ServerCapability {
   parametersSubscribe = "parametersSubscribe",
   services = "services",
   connectionGraph = "connectionGraph",
+  assets = "assets",
+}
+export enum FetchAssetStatus {
+  SUCCESS = 0,
+  ERROR = 1,
 }
 
 export type ChannelId = number;
@@ -102,7 +108,8 @@ export type ClientMessage =
   | ClientMessageData
   | ServiceCallRequest
   | SubscribeConnectionGraph
-  | UnsubscribeConnectionGraph;
+  | UnsubscribeConnectionGraph
+  | FetchAsset;
 
 export type ServerInfo = {
   op: "serverInfo";
@@ -162,6 +169,11 @@ export type SubscribeConnectionGraph = {
 export type UnsubscribeConnectionGraph = {
   op: "unsubscribeConnectionGraph";
 };
+export type FetchAsset = {
+  op: "fetchAsset";
+  uri: string;
+  requestId: number;
+};
 export type ConnectionGraphUpdate = {
   op: "connectionGraphUpdate";
   publishedTopics: {
@@ -192,6 +204,19 @@ export type Time = {
 export type ServiceCallResponse = ServiceCallPayload & {
   op: BinaryOpcode.SERVICE_CALL_RESPONSE;
 };
+export type FetchAssetSuccessResponse = {
+  op: BinaryOpcode.FETCH_ASSET_RESPONSE;
+  requestId: number;
+  status: FetchAssetStatus.SUCCESS;
+  data: DataView;
+};
+export type FetchAssetErrorResponse = {
+  op: BinaryOpcode.FETCH_ASSET_RESPONSE;
+  requestId: number;
+  status: FetchAssetStatus.ERROR;
+  error: string;
+};
+export type FetchAssetResponse = FetchAssetSuccessResponse | FetchAssetErrorResponse;
 export type ClientPublish = {
   channel: ClientChannel;
   data: DataView;
@@ -220,7 +245,8 @@ export type ServerMessage =
   | Time
   | ServiceCallResponse
   | ParameterValues
-  | ConnectionGraphUpdate;
+  | ConnectionGraphUpdate
+  | FetchAssetResponse;
 
 /**
  * Abstraction that supports both browser and Node WebSocket clients.

@@ -1,4 +1,10 @@
-import { BinaryOpcode, ClientBinaryOpcode, ClientMessage, ServerMessage } from "./types";
+import {
+  BinaryOpcode,
+  ClientBinaryOpcode,
+  ClientMessage,
+  FetchAssetStatus,
+  ServerMessage,
+} from "./types";
 
 const textDecoder = new TextDecoder();
 
@@ -34,6 +40,25 @@ export function parseServerMessage(buffer: ArrayBuffer): ServerMessage {
       offset += encodingLength;
       const data = new DataView(buffer, offset, buffer.byteLength - offset);
       return { op, serviceId, callId, encoding, data };
+    }
+    case BinaryOpcode.FETCH_ASSET_RESPONSE: {
+      const requestId = view.getUint32(offset, true);
+      offset += 4;
+      const status = view.getUint8(offset) as FetchAssetStatus;
+      offset += 1;
+      const errorMsgLength = view.getUint32(offset, true);
+      offset += 4;
+      const error = textDecoder.decode(new DataView(buffer, offset, errorMsgLength));
+      offset += errorMsgLength;
+
+      if (status === FetchAssetStatus.ERROR) {
+        return { op, requestId, status, error };
+      } else if (status === FetchAssetStatus.SUCCESS) {
+        const data = new DataView(buffer, offset, buffer.byteLength - offset);
+        return { op, requestId, status, data };
+      } else {
+        throw new Error(`Unrecognized fetch asset status: ${status as number}`);
+      }
     }
   }
   throw new Error(`Unrecognized server opcode in binary message: ${op.toString(16)}`);
