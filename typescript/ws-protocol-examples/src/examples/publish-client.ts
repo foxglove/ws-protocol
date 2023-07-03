@@ -41,7 +41,11 @@ async function main(url: string, args: { encoding: "json" | "ros1" | "cdr" }) {
 }
 
 async function sendJsonMessages(client: FoxgloveClient) {
-  const channelId = client.advertise("/chatter", "json", "std_msgs/String");
+  const channelId = client.advertise({
+    topic: "/chatter",
+    encoding: "json",
+    schemaName: "std_msgs/String",
+  });
   while (running) {
     const data = `hello world ${Date.now()}`;
     const message = new Uint8Array(Buffer.from(JSON.stringify({ data })));
@@ -51,7 +55,11 @@ async function sendJsonMessages(client: FoxgloveClient) {
 }
 
 async function sendRos1Messages(client: FoxgloveClient) {
-  const channelId = client.advertise("/chatter", "ros1", "std_msgs/String");
+  const channelId = client.advertise({
+    topic: "/chatter",
+    encoding: "ros1",
+    schemaName: "std_msgs/String",
+  });
   const writer = new Ros1MessageWriter([{ definitions: [{ name: "data", type: "string" }] }]);
   while (running) {
     const data = `hello world ${Date.now()}`;
@@ -62,7 +70,11 @@ async function sendRos1Messages(client: FoxgloveClient) {
 }
 
 async function sendRos2Messages(client: FoxgloveClient) {
-  const channelId = client.advertise("/chatter", "cdr", "std_msgs/msg/String");
+  const channelId = client.advertise({
+    topic: "/chatter",
+    encoding: "cdr",
+    schemaName: "std_msgs/msg/String",
+  });
   const writer = new Ros2MessageWriter([{ definitions: [{ name: "data", type: "string" }] }]);
   while (running) {
     const data = `hello world ${Date.now()}`;
