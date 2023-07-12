@@ -1,16 +1,16 @@
 #pragma once
 
-#include <nlohmann/json.hpp>
-#include <websocketpp/client.hpp>
-#include <websocketpp/common/memory.hpp>
-#include <websocketpp/common/thread.hpp>
-
 #include <functional>
 #include <future>
 #include <optional>
 #include <shared_mutex>
 #include <utility>
 #include <vector>
+
+#include <nlohmann/json.hpp>
+#include <websocketpp/client.hpp>
+#include <websocketpp/common/memory.hpp>
+#include <websocketpp/common/thread.hpp>
 
 #include "common.hpp"
 #include "parameter.hpp"
@@ -50,6 +50,7 @@ public:
                              const std::optional<std::string>& requestId) = 0;
   virtual void subscribeParameterUpdates(const std::vector<std::string>& parameterNames) = 0;
   virtual void unsubscribeParameterUpdates(const std::vector<std::string>& parameterNames) = 0;
+  virtual void fetchAsset(const std::string& name, uint32_t requestId) = 0;
 
   virtual void setTextMessageHandler(TextMessageHandler handler) = 0;
   virtual void setBinaryMessageHandler(BinaryMessageHandler handler) = 0;
@@ -218,6 +219,11 @@ public:
   void unsubscribeParameterUpdates(const std::vector<std::string>& parameterNames) override {
     nlohmann::json jsonPayload{{"op", "unsubscribeParameterUpdates"},
                                {"parameterNames", parameterNames}};
+    sendText(jsonPayload.dump());
+  }
+
+  void fetchAsset(const std::string& uri, uint32_t requestId) override {
+    nlohmann::json jsonPayload{{"op", "fetchAsset"}, {"uri", uri}, {"requestId", requestId}};
     sendText(jsonPayload.dump());
   }
 
