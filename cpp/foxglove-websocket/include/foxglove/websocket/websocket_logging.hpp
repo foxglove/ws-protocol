@@ -1,9 +1,9 @@
 #pragma once
 
-#include <functional>
-
 #include <websocketpp/common/asio.hpp>
 #include <websocketpp/logger/levels.hpp>
+
+#include <functional>
 
 #include "common.hpp"
 

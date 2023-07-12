@@ -1,6 +1,6 @@
-#include <stdexcept>
-
 #include <foxglove/websocket/base64.hpp>
+
+#include <stdexcept>
 
 namespace foxglove {
 

@@ -1,5 +1,9 @@
 #pragma once
 
+#include <nlohmann/json.hpp>
+#include <websocketpp/config/asio.hpp>
+#include <websocketpp/server.hpp>
+
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
@@ -13,10 +17,6 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-
-#include <nlohmann/json.hpp>
-#include <websocketpp/config/asio.hpp>
-#include <websocketpp/server.hpp>
 
 #include "callback_queue.hpp"
 #include "common.hpp"

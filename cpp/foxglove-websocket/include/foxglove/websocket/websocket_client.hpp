@@ -1,16 +1,16 @@
 #pragma once
 
+#include <nlohmann/json.hpp>
+#include <websocketpp/client.hpp>
+#include <websocketpp/common/memory.hpp>
+#include <websocketpp/common/thread.hpp>
+
 #include <functional>
 #include <future>
 #include <optional>
 #include <shared_mutex>
 #include <utility>
 #include <vector>
-
-#include <nlohmann/json.hpp>
-#include <websocketpp/client.hpp>
-#include <websocketpp/common/memory.hpp>
-#include <websocketpp/common/thread.hpp>
 
 #include "common.hpp"
 #include "parameter.hpp"
