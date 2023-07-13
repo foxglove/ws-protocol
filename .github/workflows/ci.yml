@@ -81,7 +81,7 @@ jobs:
     defaults:
       run:
         working-directory: cpp
-    name: CPP (${{ matrix.make_cmd }})
+    name: cpp (${{ matrix.make_cmd }})
     steps:
       - uses: actions/checkout@v3
       - run: make ${{ matrix.make_cmd }}
