@@ -1,3 +1,4 @@
+#include <foxglove/websocket/base64.hpp>
 #include <foxglove/websocket/serialization.hpp>
 
 namespace foxglove {
@@ -10,40 +11,72 @@ void to_json(nlohmann::json& j, const Channel& c) {
     {"schemaName", c.schemaName},
     {"schema", c.schema},
   };
+
+  if (c.schemaEncoding.has_value()) {
+    j["schemaEncoding"] = c.schemaEncoding.value();
+  }
 }
 void from_json(const nlohmann::json& j, Channel& c) {
-  ChannelWithoutId channelWithoutId{
-    j["topic"].get<std::string>(),
-    j["encoding"].get<std::string>(),
-    j["schemaName"].get<std::string>(),
-    j["schema"].get<std::string>(),
-  };
+  const auto it = j.find("schemaEncoding");
+  const auto schemaEncoding = it == j.end() ? std::optional<std::string>(std::nullopt)
+                                            : std::optional<std::string>(it->get<std::string>());
+
+  ChannelWithoutId channelWithoutId{j["topic"].get<std::string>(), j["encoding"].get<std::string>(),
+                                    j["schemaName"].get<std::string>(),
+                                    j["schema"].get<std::string>(), schemaEncoding};
   c = Channel(j["id"].get<ChannelId>(), channelWithoutId);
 }
 
-void to_json(nlohmann::json& j, const Parameter& p) {
+void to_json(nlohmann::json& j, const ParameterValue& p) {
   const auto paramType = p.getType();
   if (paramType == ParameterType::PARAMETER_BOOL) {
-    j["value"] = p.getValue<bool>();
+    j = p.getValue<bool>();
   } else if (paramType == ParameterType::PARAMETER_INTEGER) {
-    j["value"] = p.getValue<int64_t>();
+    j = p.getValue<int64_t>();
   } else if (paramType == ParameterType::PARAMETER_DOUBLE) {
-    j["value"] = p.getValue<double>();
+    j = p.getValue<double>();
   } else if (paramType == ParameterType::PARAMETER_STRING) {
-    j["value"] = p.getValue<std::string>();
-  } else if (paramType == ParameterType::PARAMETER_BOOL_ARRAY) {
-    j["value"] = p.getValue<std::vector<bool>>();
-  } else if (paramType == ParameterType::PARAMETER_INTEGER_ARRAY) {
-    j["value"] = p.getValue<std::vector<int64_t>>();
-  } else if (paramType == ParameterType::PARAMETER_DOUBLE_ARRAY) {
-    j["value"] = p.getValue<std::vector<double>>();
-  } else if (paramType == ParameterType::PARAMETER_STRING_ARRAY) {
-    j["value"] = p.getValue<std::vector<std::string>>();
+    j = p.getValue<std::string>();
+  } else if (paramType == ParameterType::PARAMETER_BYTE_ARRAY) {
+    const auto& paramValue = p.getValue<std::vector<unsigned char>>();
+    const std::string_view strValue(reinterpret_cast<const char*>(paramValue.data()),
+                                    paramValue.size());
+    j = base64Encode(strValue);
+  } else if (paramType == ParameterType::PARAMETER_STRUCT) {
+    j = p.getValue<std::unordered_map<std::string, ParameterValue>>();
+  } else if (paramType == ParameterType::PARAMETER_ARRAY) {
+    j = p.getValue<std::vector<ParameterValue>>();
   } else if (paramType == ParameterType::PARAMETER_NOT_SET) {
     // empty value.
   }
+}
 
+void from_json(const nlohmann::json& j, ParameterValue& p) {
+  const auto jsonType = j.type();
+
+  if (jsonType == nlohmann::detail::value_t::string) {
+    p = ParameterValue(j.get<std::string>());
+  } else if (jsonType == nlohmann::detail::value_t::boolean) {
+    p = ParameterValue(j.get<bool>());
+  } else if (jsonType == nlohmann::detail::value_t::number_integer) {
+    p = ParameterValue(j.get<int64_t>());
+  } else if (jsonType == nlohmann::detail::value_t::number_unsigned) {
+    p = ParameterValue(j.get<int64_t>());
+  } else if (jsonType == nlohmann::detail::value_t::number_float) {
+    p = ParameterValue(j.get<double>());
+  } else if (jsonType == nlohmann::detail::value_t::object) {
+    p = ParameterValue(j.get<std::unordered_map<std::string, ParameterValue>>());
+  } else if (jsonType == nlohmann::detail::value_t::array) {
+    p = ParameterValue(j.get<std::vector<ParameterValue>>());
+  }
+}
+
+void to_json(nlohmann::json& j, const Parameter& p) {
+  to_json(j["value"], p.getValue());
   j["name"] = p.getName();
+  if (p.getType() == ParameterType::PARAMETER_BYTE_ARRAY) {
+    j["type"] = "byte_array";
+  }
 }
 
 void from_json(const nlohmann::json& j, Parameter& p) {
@@ -54,40 +87,14 @@ void from_json(const nlohmann::json& j, Parameter& p) {
     return;
   }
 
-  const auto value = j["value"];
-  const auto jsonType = j["value"].type();
+  ParameterValue pValue;
+  from_json(j["value"], pValue);
 
-  if (jsonType == nlohmann::detail::value_t::string) {
-    p = Parameter(name, value.get<std::string>());
-  } else if (jsonType == nlohmann::detail::value_t::boolean) {
-    p = Parameter(name, value.get<bool>());
-  } else if (jsonType == nlohmann::detail::value_t::number_integer) {
-    p = Parameter(name, value.get<int64_t>());
-  } else if (jsonType == nlohmann::detail::value_t::number_unsigned) {
-    p = Parameter(name, value.get<int64_t>());
-  } else if (jsonType == nlohmann::detail::value_t::number_float) {
-    p = Parameter(name, value.get<double>());
-  } else if (jsonType == nlohmann::detail::value_t::array) {
-    if (value.empty()) {
-      // We do not know the type when an empty array is received.
-      throw std::runtime_error("Setting empty arrays is currently unsupported.");
-    }
-
-    if (value.front().is_string()) {
-      p = Parameter(name, value.get<std::vector<std::string>>());
-    } else if (value.front().is_boolean()) {
-      p = Parameter(name, value.get<std::vector<bool>>());
-    } else if (value.front().is_number_integer()) {
-      p = Parameter(name, value.get<std::vector<int64_t>>());
-    } else if (value.front().is_number_unsigned()) {
-      p = Parameter(name, value.get<std::vector<int64_t>>());
-    } else if (value.front().is_number_float()) {
-      p = Parameter(name, value.get<std::vector<double>>());
-    } else {
-      throw std::runtime_error("Unsupported array type");
-    }
+  if (j.find("type") != j.end() && j["type"] == "byte_array" &&
+      pValue.getType() == ParameterType::PARAMETER_STRING) {
+    p = Parameter(name, base64Decode(pValue.getValue<std::string>()));
   } else {
-    throw std::runtime_error("Unsupported type");
+    p = Parameter(name, pValue);
   }
 }
 

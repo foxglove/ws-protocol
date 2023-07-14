@@ -4,6 +4,10 @@ default: build
 build:
 	docker compose build --build-arg CPPSTD=17
 
+.PHONY: build-boost-asio
+build-boost-asio:
+	docker compose build --build-arg CPPSTD=17 --build-arg ASIO=boost
+
 .PHONY: build-cpp20
 build-cpp20:
 	docker compose build --build-arg CPPSTD=20

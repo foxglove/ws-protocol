@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstring>
+#include <optional>
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -15,10 +16,11 @@ constexpr char CAPABILITY_PARAMETERS[] = "parameters";
 constexpr char CAPABILITY_PARAMETERS_SUBSCRIBE[] = "parametersSubscribe";
 constexpr char CAPABILITY_SERVICES[] = "services";
 constexpr char CAPABILITY_CONNECTION_GRAPH[] = "connectionGraph";
+constexpr char CAPABILITY_ASSETS[] = "assets";
 
-constexpr std::array DEFAULT_CAPABILITIES = {
+constexpr std::array<const char*, 6> DEFAULT_CAPABILITIES = {
   CAPABILITY_CLIENT_PUBLISH, CAPABILITY_CONNECTION_GRAPH, CAPABILITY_PARAMETERS_SUBSCRIBE,
-  CAPABILITY_PARAMETERS,     CAPABILITY_SERVICES,
+  CAPABILITY_PARAMETERS,     CAPABILITY_SERVICES,         CAPABILITY_ASSETS,
 };
 
 using ChannelId = uint32_t;
@@ -30,6 +32,7 @@ enum class BinaryOpcode : uint8_t {
   MESSAGE_DATA = 1,
   TIME_DATA = 2,
   SERVICE_CALL_RESPONSE = 3,
+  FETCH_ASSET_RESPONSE = 4,
 };
 
 enum class ClientBinaryOpcode : uint8_t {
@@ -50,10 +53,11 @@ struct ChannelWithoutId {
   std::string encoding;
   std::string schemaName;
   std::string schema;
+  std::optional<std::string> schemaEncoding;
 
   bool operator==(const ChannelWithoutId& other) const {
     return topic == other.topic && encoding == other.encoding && schemaName == other.schemaName &&
-           schema == other.schema;
+           schema == other.schema && schemaEncoding == other.schemaEncoding;
   }
 };
 
@@ -142,5 +146,17 @@ struct ServiceResponse {
 };
 
 using ServiceRequest = ServiceResponse;
+
+enum class FetchAssetStatus : uint8_t {
+  Success = 0,
+  Error = 1,
+};
+
+struct FetchAssetResponse {
+  uint32_t requestId;
+  FetchAssetStatus status;
+  std::string errorMessage;
+  std::vector<uint8_t> data;
+};
 
 }  // namespace foxglove

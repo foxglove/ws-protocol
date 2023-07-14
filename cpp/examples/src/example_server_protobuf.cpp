@@ -1,3 +1,4 @@
+#include <foxglove/websocket/base64.hpp>
 #include <foxglove/websocket/websocket_notls.hpp>
 #include <foxglove/websocket/websocket_server.hpp>
 
@@ -13,7 +14,6 @@
 #include <thread>
 #include <unordered_set>
 
-#include "base64.hpp"
 #include "foxglove/SceneUpdate.pb.h"
 
 namespace foxglove {
@@ -80,13 +80,13 @@ int main() {
     .topic = "example_msg",
     .encoding = "protobuf",
     .schemaName = foxglove::SceneUpdate::descriptor()->full_name(),
-    .schema = Base64Encode(SerializeFdSet(foxglove::SceneUpdate::descriptor())),
+    .schema = foxglove::base64Encode(SerializeFdSet(foxglove::SceneUpdate::descriptor())),
   }});
   const auto chanId = channelIds.front();
 
   bool running = true;
 
-  asio::signal_set signals(server->getEndpoint().get_io_service(), SIGINT);
+  websocketpp::lib::asio::signal_set signals(server->getEndpoint().get_io_service(), SIGINT);
   signals.async_wait([&](std::error_code const& ec, int sig) {
     if (ec) {
       std::cerr << "signal error: " << ec.message() << std::endl;
