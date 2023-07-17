@@ -60,6 +60,6 @@
   "dependencies": {
     "debug": "^4",
     "eventemitter3": "^5.0.1",
-    "tslib": "^2.5.3"
+    "tslib": "^2.6.0"
   }
 }
