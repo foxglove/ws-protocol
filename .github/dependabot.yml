@@ -12,6 +12,13 @@ updates:
       interval: weekly
     labels: [] # disable default labels
 
+    # Define groups of dependencies to be updated together
+    # https://github.blog/changelog/2023-06-30-grouped-version-updates-for-dependabot-public-beta/
+    groups:
+      eslint:
+        patterns:
+          - "@typescript-eslint/*"
+
   - package-ecosystem: pip
     directory: "/"
     schedule:
