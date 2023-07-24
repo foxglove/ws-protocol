@@ -34,7 +34,7 @@
     "test": "jest"
   },
   "devDependencies": {
-    "@foxglove/eslint-plugin": "0.22.1",
+    "@foxglove/eslint-plugin": "0.23.0",
     "@foxglove/tsconfig": "2.0.0",
     "@types/debug": "^4.1.8",
     "@types/jest": "^29.5.3",
