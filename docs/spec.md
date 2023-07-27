@@ -34,7 +34,7 @@
 - [Unadvertise Services](#unadvertise-services) (json)
 - [Service Call Response](#service-call-response) (binary)
 - [Connection Graph Update](#connection-graph-update) (json)
-- [Asset](#asset) (binary)
+- [Fetch Asset Response](#fetch-asset-response) (binary)
 
 ### Sent by client
 
@@ -307,7 +307,7 @@ Informs the client about updates to the connection graph. This is only sent to c
 
 #### Fields
 
-- `op`: string `"subscribe"`
+- `op`: string `"unsubscribe"`
 - `subscriptionIds`: array of number, corresponding to previous Subscribe message(s)
 
 #### Example
