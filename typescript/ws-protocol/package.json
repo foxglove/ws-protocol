@@ -45,7 +45,7 @@
     "commander": "11.0.0",
     "consumer-queue": "1.1.0",
     "eslint": "8.46.0",
-    "eslint-config-prettier": "8.9.0",
+    "eslint-config-prettier": "8.10.0",
     "eslint-plugin-es": "4.1.0",
     "eslint-plugin-filenames": "1.3.2",
     "eslint-plugin-import": "2.27.5",
