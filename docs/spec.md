@@ -189,6 +189,7 @@ Informs the client about parameters. Only supported if the server declares the `
     { "name": "/node/nested_ints_param", "value": [1, 2, 3] }
     { "name": "/byte_array_param", "value": "QUJDRA==", "type": "byte_array" },
     { "name": "/float_param_int", "value": 3, "type": "float64" },
+    { "name": "/float_array_param", "value": [1.1, 2, 3.3], "type": "float64_array" },
   ],
   "id": "request-123"
 }
@@ -416,7 +417,8 @@ Set one or more parameters. Only supported if the server previously declared tha
     { "name": "/int_param", "value": 3 },
     { "name": "/float_param", "value": 4.1 },
     { "name": "/byte_array_param", "value": "QUJDRA==", "type": "byte_array" },
-    { "name": "/float_array_param", "value": [1.1, 2, 3.3], "type": "float64_array" }
+    { "name": "/float_param_int", "value": 3, "type": "float64" },
+    { "name": "/float_array_param", "value": [1.1, 2, 3.3], "type": "float64_array" },
   ],
   "id": "request-456"
 }
