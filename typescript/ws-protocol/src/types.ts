@@ -231,7 +231,7 @@ export type ParameterValue =
 export type Parameter = {
   name: string;
   value: ParameterValue;
-  type?: "byte_array";
+  type?: "byte_array" | "float64" | "float64_array";
 };
 
 export type ServerMessage =

@@ -174,7 +174,7 @@ Informs the client about parameters. Only supported if the server declares the `
 - `parameters`: array of:
   - `name`: string, name of the parameter
   - `value`: ParameterValue, where ParameterValue is of type number | boolean | string | ParameterValue[] | { [key: string]: ParameterValue } | undefined.
-  - `type`: "byte_array" | undefined. If the type is `byte_array`, `value` shall be interpreted as base64 encoded string.
+  - `type`: "byte_array" | "float64" | "float64_array" | undefined. If the type is `byte_array`, `value` shall be interpreted as base64 encoded string. If the type is `float64` or `float64_array`, `value` shall be a 64-bit floating-point number or integer, or an array of them, respectively.
 - `id`: string | undefined. Only set when the [getParameters](#get-parameters) or [setParameters](#set-parameters) request's `id` field was set
 
 #### Example
@@ -188,6 +188,8 @@ Informs the client about parameters. Only supported if the server declares the `
     { "name": "/string_param", "value": "foo" },
     { "name": "/node/nested_ints_param", "value": [1, 2, 3] }
     { "name": "/byte_array_param", "value": "QUJDRA==", "type": "byte_array" },
+    { "name": "/float_param_int", "value": 3, "type": "float64" },
+    { "name": "/float_array_param", "value": [1.1, 2, 3.3], "type": "float64_array" },
   ],
   "id": "request-123"
 }
@@ -403,7 +405,7 @@ Set one or more parameters. Only supported if the server previously declared tha
 - `parameters`: array of:
   - `name`: string
   - `value`: number | boolean | string | number[] | boolean[] | string[] | undefined. If the value is not set (`undefined`), the parameter shall be unset (removed).
-  - `type`: "byte_array" | undefined. If the type is `byte_array`, `value` shall be a base64 encoded string.
+  - `type`: "byte_array" | "float64" | "float64_array" | undefined. If the type is `byte_array`, `value` shall be a base64 encoded string. If the type is `float64` or `float64_array`, `value` value shall be a 64-bit floating-point number or integer, or an array of them, respectively.
 - `id`: string | undefined, arbitrary string used for identifying the corresponding server [response](#parameter-values). If this field is not set, the server may not send a response to the client.
 
 #### Example
@@ -414,7 +416,9 @@ Set one or more parameters. Only supported if the server previously declared tha
   "parameters": [
     { "name": "/int_param", "value": 3 },
     { "name": "/float_param", "value": 4.1 },
-    { "name": "/byte_array_param", "value": "QUJDRA==", "type": "byte_array" }
+    { "name": "/byte_array_param", "value": "QUJDRA==", "type": "byte_array" },
+    { "name": "/float_param_int", "value": 3, "type": "float64" },
+    { "name": "/float_array_param", "value": [1.1, 2, 3.3], "type": "float64_array" },
   ],
   "id": "request-456"
 }
