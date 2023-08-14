@@ -612,6 +612,15 @@
   resolved "https://registry.yarnpkg.com/@foxglove/wasm-zstd/-/wasm-zstd-1.0.1.tgz#41f97f9c1ed5d10790603376fbecda7ce2145fe5"
   integrity sha512-hqKTO45Sl+kSq9SDqM9xi5L+GncjFEZIJgYEkGTlpJXTfhy1Gf+a+3epWMcE0tLUKmzM77dtu8snape/J+7ueQ==
 
+"@foxglove/ws-protocol@0.7.0":
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/@foxglove/ws-protocol/-/ws-protocol-0.7.0.tgz#27bb7b1c700492a9bd29c5fc69867eaf1c19b17a"
+  integrity sha512-6r6ALrCEImO3E1rPW31nbW1GR2882OiL6HCxITUXwuT1bmfpxxP1lKOc9Gab3w8e7IbwGBrvECWz7tK+lel46w==
+  dependencies:
+    debug "^4"
+    eventemitter3 "^5.0.1"
+    tslib "^2.5.3"
+
 "@humanwhocodes/config-array@^0.11.10":
   version "0.11.10"
   resolved "https://registry.yarnpkg.com/@humanwhocodes/config-array/-/config-array-0.11.10.tgz#5a3ffe32cc9306365fb3fd572596cd602d5e12d2"
@@ -3122,7 +3131,7 @@ jest@29.6.1:
     import-local "^3.0.2"
     jest-cli "^29.6.1"
 
-jpeg-js@^0.4.1:
+jpeg-js@^0.4.4:
   version "0.4.4"
   resolved "https://registry.yarnpkg.com/jpeg-js/-/jpeg-js-0.4.4.tgz#a9f1c6f1f9f0fa80cdb3484ed9635054d28936aa"
   integrity sha512-WZzeDOEtTOBK4Mdsar0IqEU5sMr3vSV2RqkAIzUEV2BHnUfKGyswWFPFwK5EeDo93K3FohSHbLAjj0s1Wzd+dg==
@@ -3536,10 +3545,10 @@ pkg-dir@^4.2.0:
   dependencies:
     find-up "^4.0.0"
 
-pngjs@^3.3.1:
-  version "3.4.0"
-  resolved "https://registry.yarnpkg.com/pngjs/-/pngjs-3.4.0.tgz#99ca7d725965fb655814eaf65f38f12bbdbf555f"
-  integrity sha512-NCrCHhWmnQklfH4MtJMRjZ2a8c80qXeMlQMv2uVp9ISJMTt562SbGd6n2oq0PaPgKm7Z6pL9E2UlLIhC+SHL3w==
+pngjs@^7.0.0:
+  version "7.0.0"
+  resolved "https://registry.yarnpkg.com/pngjs/-/pngjs-7.0.0.tgz#a8b7446020ebbc6ac739db6c5415a65d17090e26"
+  integrity sha512-LKWqWJRhstyYo9pGvgor/ivk2w94eSjE3RGVuzLGlr3NmD8bf7RcYGze1mNdEHRP6TRP6rMuDHk5t44hnTRyow==
 
 prelude-ls@^1.2.1:
   version "1.2.1"
@@ -3603,14 +3612,14 @@ pure-rand@^6.0.0:
   resolved "https://registry.yarnpkg.com/pure-rand/-/pure-rand-6.0.1.tgz#31207dddd15d43f299fdcdb2f572df65030c19af"
   integrity sha512-t+x1zEHDjBwkDGY5v5ApnZ/utcd4XYDiJsaQQoptTXgUXX95sDg1elCdJghzicm7n2mbCBJ3uYWr6M22SO19rg==
 
-pureimage@^0.3.17:
-  version "0.3.17"
-  resolved "https://registry.yarnpkg.com/pureimage/-/pureimage-0.3.17.tgz#2c349e727c212f75bb05d6e60b46c8d4039d42af"
-  integrity sha512-JV4hfYF1BXxDwbSR8hjhVEhVTxwmAXos8uIXQ7Bw2eWrUEpLDJnQoQ8WLlWAO4TMGJ7mp9n6gvLKJ6MSaGUkXQ==
+pureimage@^0.4.7:
+  version "0.4.7"
+  resolved "https://registry.yarnpkg.com/pureimage/-/pureimage-0.4.7.tgz#d3028a9d8fe7a81553bdf7059dd892cb207a5fd7"
+  integrity sha512-cQLX7lcv0WD6zAXUwC5US+lgCnDOIPvN77cdP3BADpmC3iA5eKoGVwB1C4rxNzP3rH9TbG/E9dNf1+7H9YWwUQ==
   dependencies:
-    jpeg-js "^0.4.1"
+    jpeg-js "^0.4.4"
     opentype.js "^0.4.3"
-    pngjs "^3.3.1"
+    pngjs "^7.0.0"
 
 queue-microtask@^1.2.2:
   version "1.2.3"
@@ -3986,6 +3995,11 @@ tslib@^2.5.0, tslib@^2.6.0:
   version "2.6.0"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.6.0.tgz#b295854684dbda164e181d259a22cd779dcd7bc3"
   integrity sha512-7At1WUettjcSRHXCyYtTselblcHl9PJFFVKiCAy/bY97+BPZXSQ2wbq0P9s8tK2G7dFQfNnlJnPAiArVBVBsfA==
+
+tslib@^2.5.3:
+  version "2.6.1"
+  resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.6.1.tgz#fd8c9a0ff42590b25703c0acb3de3d3f4ede0410"
+  integrity sha512-t0hLfiEKfMUoqhG+U1oid7Pva4bbDPHYfJNiB7BiIjRkj1pyC++4N3huJfqY6aRH6VTB0rvtzQwjM4K6qpfOig==
 
 tsutils@^3, tsutils@^3.21.0:
   version "3.21.0"
