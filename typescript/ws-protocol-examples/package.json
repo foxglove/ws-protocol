@@ -73,7 +73,7 @@
     "commander": "^11.0.0",
     "debug": "^4",
     "eventemitter3": "^5.0.1",
-    "protobufjs": "^7.2.4",
+    "protobufjs": "^7.2.5",
     "pureimage": "^0.3.17",
     "tslib": "^2.6.2",
     "ws": "^8.13.0"
