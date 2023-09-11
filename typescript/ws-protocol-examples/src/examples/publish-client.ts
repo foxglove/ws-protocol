@@ -31,7 +31,7 @@ async function main(url: string, args: { encoding: "json" | "ros1" | "cdr" }) {
         await sendJsonMessages(client);
       } else if (args.encoding === "ros1") {
         await sendRos1Messages(client);
-      } else if (args.encoding === "cdr") {
+      } else {
         await sendRos2Messages(client);
       }
 
