@@ -48,43 +48,45 @@ const textEncoder = new TextEncoder();
 export default class FoxgloveClient {
   static SUPPORTED_SUBPROTOCOL = "foxglove.websocket.v1";
 
-  private emitter = new EventEmitter<EventTypes>();
-  private ws: IWebSocket;
-  private nextSubscriptionId = 0;
-  private nextAdvertisementId = 0;
+  #emitter = new EventEmitter<EventTypes>();
+  #ws: IWebSocket;
+  #nextSubscriptionId = 0;
+  #nextAdvertisementId = 0;
 
   constructor({ ws }: { ws: IWebSocket }) {
-    this.ws = ws;
-    this.reconnect();
+    this.#ws = ws;
+    this.#reconnect();
   }
 
   on<E extends EventEmitter.EventNames<EventTypes>>(
     name: E,
     listener: EventEmitter.EventListener<EventTypes, E>,
   ): void {
-    this.emitter.on(name, listener);
+    this.#emitter.on(name, listener);
   }
   off<E extends EventEmitter.EventNames<EventTypes>>(
     name: E,
     listener: EventEmitter.EventListener<EventTypes, E>,
   ): void {
-    this.emitter.off(name, listener);
+    this.#emitter.off(name, listener);
   }
 
-  private reconnect() {
-    this.ws.binaryType = "arraybuffer";
-    this.ws.onerror = (event) => {
-      this.emitter.emit("error", (event as unknown as { error: Error }).error);
+  #reconnect() {
+    this.#ws.binaryType = "arraybuffer";
+    this.#ws.onerror = (event) => {
+      this.#emitter.emit("error", (event as unknown as { error: Error }).error);
     };
-    this.ws.onopen = (_event) => {
-      if (this.ws.protocol !== FoxgloveClient.SUPPORTED_SUBPROTOCOL) {
+    this.#ws.onopen = (_event) => {
+      if (this.#ws.protocol !== FoxgloveClient.SUPPORTED_SUBPROTOCOL) {
         throw new Error(
-          `Expected subprotocol ${FoxgloveClient.SUPPORTED_SUBPROTOCOL}, got '${this.ws.protocol}'`,
+          `Expected subprotocol ${FoxgloveClient.SUPPORTED_SUBPROTOCOL}, got '${
+            this.#ws.protocol
+          }'`,
         );
       }
-      this.emitter.emit("open");
+      this.#emitter.emit("open");
     };
-    this.ws.onmessage = (event: MessageEvent<ArrayBuffer | string>) => {
+    this.#ws.onmessage = (event: MessageEvent<ArrayBuffer | string>) => {
       let message: ServerMessage;
       try {
         if (event.data instanceof ArrayBuffer) {
@@ -93,109 +95,109 @@ export default class FoxgloveClient {
           message = JSON.parse(event.data) as ServerMessage;
         }
       } catch (error) {
-        this.emitter.emit("error", error as Error);
+        this.#emitter.emit("error", error as Error);
         return;
       }
 
       switch (message.op) {
         case "serverInfo":
-          this.emitter.emit("serverInfo", message);
+          this.#emitter.emit("serverInfo", message);
           return;
 
         case "status":
-          this.emitter.emit("status", message);
+          this.#emitter.emit("status", message);
           return;
 
         case "advertise":
-          this.emitter.emit("advertise", message.channels);
+          this.#emitter.emit("advertise", message.channels);
           return;
 
         case "unadvertise":
-          this.emitter.emit("unadvertise", message.channelIds);
+          this.#emitter.emit("unadvertise", message.channelIds);
           return;
 
         case "parameterValues":
-          this.emitter.emit("parameterValues", message);
+          this.#emitter.emit("parameterValues", message);
           return;
 
         case "advertiseServices":
-          this.emitter.emit("advertiseServices", message.services);
+          this.#emitter.emit("advertiseServices", message.services);
           return;
 
         case "unadvertiseServices":
-          this.emitter.emit("unadvertiseServices", message.serviceIds);
+          this.#emitter.emit("unadvertiseServices", message.serviceIds);
           return;
 
         case "connectionGraphUpdate":
-          this.emitter.emit("connectionGraphUpdate", message);
+          this.#emitter.emit("connectionGraphUpdate", message);
           return;
 
         case BinaryOpcode.MESSAGE_DATA:
-          this.emitter.emit("message", message);
+          this.#emitter.emit("message", message);
           return;
 
         case BinaryOpcode.TIME:
-          this.emitter.emit("time", message);
+          this.#emitter.emit("time", message);
           return;
 
         case BinaryOpcode.SERVICE_CALL_RESPONSE:
-          this.emitter.emit("serviceCallResponse", message);
+          this.#emitter.emit("serviceCallResponse", message);
           return;
 
         case BinaryOpcode.FETCH_ASSET_RESPONSE:
-          this.emitter.emit("fetchAssetResponse", message);
+          this.#emitter.emit("fetchAssetResponse", message);
           return;
       }
-      this.emitter.emit(
+      this.#emitter.emit(
         "error",
         new Error(`Unrecognized server opcode: ${(message as { op: number }).op}`),
       );
     };
-    this.ws.onclose = (event: CloseEvent) => {
-      this.emitter.emit("close", event);
+    this.#ws.onclose = (event: CloseEvent) => {
+      this.#emitter.emit("close", event);
     };
   }
 
   close(): void {
-    this.ws.close();
+    this.#ws.close();
   }
 
   subscribe(channelId: ChannelId): SubscriptionId {
-    const id = this.nextSubscriptionId++;
+    const id = this.#nextSubscriptionId++;
     const subscriptions = [{ id, channelId }];
-    this.send({ op: "subscribe", subscriptions });
+    this.#send({ op: "subscribe", subscriptions });
     return id;
   }
 
   unsubscribe(subscriptionId: SubscriptionId): void {
-    this.send({ op: "unsubscribe", subscriptionIds: [subscriptionId] });
+    this.#send({ op: "unsubscribe", subscriptionIds: [subscriptionId] });
   }
 
   advertise(clientChannel: ClientChannelWithoutId): ClientChannelId {
-    const id = ++this.nextAdvertisementId;
+    const id = ++this.#nextAdvertisementId;
     const channels: ClientChannel[] = [{ id, ...clientChannel }];
-    this.send({ op: "advertise", channels });
+    this.#send({ op: "advertise", channels });
     return id;
   }
 
   unadvertise(channelId: ClientChannelId): void {
-    this.send({ op: "unadvertise", channelIds: [channelId] });
+    this.#send({ op: "unadvertise", channelIds: [channelId] });
   }
 
   getParameters(parameterNames: string[], id?: string): void {
-    this.send({ op: "getParameters", parameterNames, id });
+    this.#send({ op: "getParameters", parameterNames, id });
   }
 
   setParameters(parameters: Parameter[], id?: string): void {
-    this.send({ op: "setParameters", parameters, id });
+    this.#send({ op: "setParameters", parameters, id });
   }
 
   subscribeParameterUpdates(parameterNames: string[]): void {
-    this.send({ op: "subscribeParameterUpdates", parameterNames });
+    this.#send({ op: "subscribeParameterUpdates", parameterNames });
   }
 
   unsubscribeParameterUpdates(parameterNames: string[]): void {
-    this.send({ op: "unsubscribeParameterUpdates", parameterNames });
+    this.#send({ op: "unsubscribeParameterUpdates", parameterNames });
   }
 
   sendMessage(channelId: ChannelId, data: Uint8Array): void {
@@ -204,7 +206,7 @@ export default class FoxgloveClient {
     view.setUint8(0, ClientBinaryOpcode.MESSAGE_DATA);
     view.setUint32(1, channelId, true);
     payload.set(data, 5);
-    this.ws.send(payload);
+    this.#ws.send(payload);
   }
 
   sendServiceCallRequest(request: ServiceCallPayload): void {
@@ -228,19 +230,19 @@ export default class FoxgloveClient {
       request.data.byteLength,
     );
     payload.set(data, offset);
-    this.ws.send(payload);
+    this.#ws.send(payload);
   }
 
   subscribeConnectionGraph(): void {
-    this.send({ op: "subscribeConnectionGraph" });
+    this.#send({ op: "subscribeConnectionGraph" });
   }
 
   unsubscribeConnectionGraph(): void {
-    this.send({ op: "unsubscribeConnectionGraph" });
+    this.#send({ op: "unsubscribeConnectionGraph" });
   }
 
   fetchAsset(uri: string, requestId: number): void {
-    this.send({ op: "fetchAsset", uri, requestId });
+    this.#send({ op: "fetchAsset", uri, requestId });
   }
 
   /**
@@ -250,7 +252,7 @@ export default class FoxgloveClient {
     this.sendServiceCallRequest(request);
   }
 
-  private send(message: ClientMessage) {
-    this.ws.send(JSON.stringify(message));
+  #send(message: ClientMessage) {
+    this.#ws.send(JSON.stringify(message));
   }
 }

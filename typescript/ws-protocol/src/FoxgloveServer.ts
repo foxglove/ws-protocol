@@ -99,12 +99,12 @@ export default class FoxgloveServer {
   readonly supportedEncodings?: string[];
   readonly metadata?: Record<string, string>;
   readonly sessionId?: string;
-  private emitter = new EventEmitter<EventTypes>();
-  private clients = new Map<IWebSocket, ClientInfo>();
-  private nextChannelId: ChannelId = 0;
-  private channels = new Map<ChannelId, Channel>();
-  private nextServiceId: ServiceId = 0;
-  private services = new Map<ServiceId, Service>();
+  #emitter = new EventEmitter<EventTypes>();
+  #clients = new Map<IWebSocket, ClientInfo>();
+  #nextChannelId: ChannelId = 0;
+  #channels = new Map<ChannelId, Channel>();
+  #nextServiceId: ServiceId = 0;
+  #services = new Map<ServiceId, Service>();
 
   constructor({
     name,
@@ -130,13 +130,13 @@ export default class FoxgloveServer {
     name: E,
     listener: EventEmitter.EventListener<EventTypes, E>,
   ): void {
-    this.emitter.on(name, listener);
+    this.#emitter.on(name, listener);
   }
   off<E extends EventEmitter.EventNames<EventTypes>>(
     name: E,
     listener: EventEmitter.EventListener<EventTypes, E>,
   ): void {
-    this.emitter.off(name, listener);
+    this.#emitter.off(name, listener);
   }
 
   /**
@@ -157,11 +157,11 @@ export default class FoxgloveServer {
    * @returns The id of the new channel
    */
   addChannel(channel: Omit<Channel, "id">): ChannelId {
-    const newId = ++this.nextChannelId;
+    const newId = ++this.#nextChannelId;
     const newChannel: Channel = { ...channel, id: newId };
-    this.channels.set(newId, newChannel);
-    for (const client of this.clients.values()) {
-      this.send(client.connection, { op: "advertise", channels: [newChannel] });
+    this.#channels.set(newId, newChannel);
+    for (const client of this.#clients.values()) {
+      this.#send(client.connection, { op: "advertise", channels: [newChannel] });
     }
     return newId;
   }
@@ -170,16 +170,16 @@ export default class FoxgloveServer {
    * Remove a previously advertised channel and inform any connected clients.
    */
   removeChannel(channelId: ChannelId): void {
-    if (!this.channels.delete(channelId)) {
+    if (!this.#channels.delete(channelId)) {
       throw new Error(`Channel ${channelId} does not exist`);
     }
-    for (const client of this.clients.values()) {
+    for (const client of this.#clients.values()) {
       const subId = client.subscriptionsByChannel.get(channelId);
       if (subId != undefined) {
         client.subscriptions.delete(subId);
         client.subscriptionsByChannel.delete(channelId);
       }
-      this.send(client.connection, { op: "unadvertise", channelIds: [channelId] });
+      this.#send(client.connection, { op: "unadvertise", channelIds: [channelId] });
     }
   }
 
@@ -188,11 +188,11 @@ export default class FoxgloveServer {
    * @returns The id of the new service
    */
   addService(service: Omit<Service, "id">): ServiceId {
-    const newId = ++this.nextServiceId;
+    const newId = ++this.#nextServiceId;
     const newService: Service = { ...service, id: newId };
-    this.services.set(newId, newService);
-    for (const client of this.clients.values()) {
-      this.send(client.connection, { op: "advertiseServices", services: [newService] });
+    this.#services.set(newId, newService);
+    for (const client of this.#clients.values()) {
+      this.#send(client.connection, { op: "advertiseServices", services: [newService] });
     }
     return newId;
   }
@@ -201,11 +201,11 @@ export default class FoxgloveServer {
    * Remove a previously advertised service and inform any connected clients.
    */
   removeService(serviceId: ServiceId): void {
-    if (!this.services.delete(serviceId)) {
+    if (!this.#services.delete(serviceId)) {
       throw new Error(`Service ${serviceId} does not exist`);
     }
-    for (const client of this.clients.values()) {
-      this.send(client.connection, { op: "unadvertiseServices", serviceIds: [serviceId] });
+    for (const client of this.#clients.values()) {
+      this.#send(client.connection, { op: "unadvertiseServices", serviceIds: [serviceId] });
     }
   }
 
@@ -213,12 +213,12 @@ export default class FoxgloveServer {
    * Emit a message payload to any clients subscribed to `chanId`.
    */
   sendMessage(chanId: ChannelId, timestamp: bigint, payload: BufferSource): void {
-    for (const client of this.clients.values()) {
+    for (const client of this.#clients.values()) {
       const subId = client.subscriptionsByChannel.get(chanId);
       if (subId == undefined) {
         continue;
       }
-      this.sendMessageData(client.connection, subId, timestamp, payload);
+      this.#sendMessageData(client.connection, subId, timestamp, payload);
     }
   }
 
@@ -234,8 +234,8 @@ export default class FoxgloveServer {
       return;
     }
 
-    for (const client of this.clients.values()) {
-      this.sendTimeData(client.connection, timestamp);
+    for (const client of this.#clients.values()) {
+      this.#sendTimeData(client.connection, timestamp);
     }
   }
 
@@ -282,10 +282,10 @@ export default class FoxgloveServer {
     }
 
     if (connection) {
-      this.send(connection, { op: "parameterValues", parameters, id });
+      this.#send(connection, { op: "parameterValues", parameters, id });
     } else {
-      for (const client of this.clients.values()) {
-        this.send(client.connection, { op: "parameterValues", parameters, id });
+      for (const client of this.#clients.values()) {
+        this.#send(client.connection, { op: "parameterValues", parameters, id });
       }
     }
   }
@@ -303,11 +303,11 @@ export default class FoxgloveServer {
       return;
     }
 
-    for (const client of this.clients.values()) {
+    for (const client of this.#clients.values()) {
       const parametersOfInterest = parameters.filter((p) =>
         client.parameterSubscriptions.has(p.name),
       );
-      this.send(client.connection, { op: "parameterValues", parameters: parametersOfInterest });
+      this.#send(client.connection, { op: "parameterValues", parameters: parametersOfInterest });
     }
   }
 
@@ -328,9 +328,9 @@ export default class FoxgloveServer {
       advertisements: new Map(),
       parameterSubscriptions: new Set<string>(),
     };
-    this.clients.set(connection, client);
+    this.#clients.set(connection, client);
 
-    this.send(connection, {
+    this.#send(connection, {
       op: "serverInfo",
       name: this.name,
       capabilities: this.capabilities,
@@ -338,13 +338,13 @@ export default class FoxgloveServer {
       metadata: this.metadata,
       sessionId: this.sessionId,
     });
-    if (this.channels.size > 0) {
-      this.send(connection, { op: "advertise", channels: Array.from(this.channels.values()) });
+    if (this.#channels.size > 0) {
+      this.#send(connection, { op: "advertise", channels: Array.from(this.#channels.values()) });
     }
-    if (this.services.size > 0) {
-      this.send(connection, {
+    if (this.#services.size > 0) {
+      this.#send(connection, {
         op: "advertiseServices",
-        services: Array.from(this.services.values()),
+        services: Array.from(this.#services.values()),
       });
     }
 
@@ -357,10 +357,10 @@ export default class FoxgloveServer {
         event.wasClean,
       );
       const potentialUnsubscribes = client.subscriptionsByChannel.keys();
-      this.clients.delete(connection);
+      this.#clients.delete(connection);
       for (const channelId of potentialUnsubscribes) {
-        if (!this.anySubscribed(channelId)) {
-          this.emitter.emit("unsubscribe", channelId);
+        if (!this.#anySubscribed(channelId)) {
+          this.#emitter.emit("unsubscribe", channelId);
         }
       }
     };
@@ -374,20 +374,20 @@ export default class FoxgloveServer {
           message = JSON.parse(event.data) as ClientMessage;
         }
 
-        this.handleClientMessage(client, message);
+        this.#handleClientMessage(client, message);
       } catch (error) {
-        this.emitter.emit("error", error as Error);
+        this.#emitter.emit("error", error as Error);
         return;
       }
     };
   }
 
-  private send(client: IWebSocket, message: ServerMessage): void {
+  #send(client: IWebSocket, message: ServerMessage): void {
     client.send(JSON.stringify(message));
   }
 
-  private anySubscribed(chanId: ChannelId) {
-    for (const client of this.clients.values()) {
+  #anySubscribed(chanId: ChannelId) {
+    for (const client of this.#clients.values()) {
       if (client.subscriptionsByChannel.has(chanId)) {
         return true;
       }
@@ -395,7 +395,7 @@ export default class FoxgloveServer {
     return false;
   }
 
-  private handleClientMessage(client: ClientInfo, message: ClientMessage): void {
+  #handleClientMessage(client: ClientInfo, message: ClientMessage): void {
     const requiredCapability = REQUIRED_CAPABILITY_BY_OPERATION[message.op];
     if (requiredCapability && !this.capabilities.includes(requiredCapability)) {
       log(
@@ -410,7 +410,7 @@ export default class FoxgloveServer {
       case "subscribe":
         for (const { channelId, id: subId } of message.subscriptions) {
           if (client.subscriptions.has(subId)) {
-            this.send(client.connection, {
+            this.#send(client.connection, {
               op: "status",
               level: StatusLevel.ERROR,
               message: `Client subscription id ${subId} was already used; ignoring subscription`,
@@ -418,16 +418,16 @@ export default class FoxgloveServer {
             continue;
           }
           if (client.subscriptionsByChannel.has(channelId)) {
-            this.send(client.connection, {
+            this.#send(client.connection, {
               op: "status",
               level: StatusLevel.WARNING,
               message: `Client already subscribed to channel ${channelId}; ignoring subscription`,
             });
             continue;
           }
-          const channel = this.channels.get(channelId);
+          const channel = this.#channels.get(channelId);
           if (!channel) {
-            this.send(client.connection, {
+            this.#send(client.connection, {
               op: "status",
               level: StatusLevel.WARNING,
               message: `Channel ${channelId} is not available; ignoring subscription",`,
@@ -435,11 +435,11 @@ export default class FoxgloveServer {
             continue;
           }
           log("client %s subscribed to channel %d", client.name, channelId);
-          const firstSubscription = !this.anySubscribed(channelId);
+          const firstSubscription = !this.#anySubscribed(channelId);
           client.subscriptions.set(subId, channelId);
           client.subscriptionsByChannel.set(channelId, subId);
           if (firstSubscription) {
-            this.emitter.emit("subscribe", channelId);
+            this.#emitter.emit("subscribe", channelId);
           }
         }
         break;
@@ -448,7 +448,7 @@ export default class FoxgloveServer {
         for (const subId of message.subscriptionIds) {
           const chanId = client.subscriptions.get(subId);
           if (chanId == undefined) {
-            this.send(client.connection, {
+            this.#send(client.connection, {
               op: "status",
               level: StatusLevel.WARNING,
               message: `Client subscription id ${subId} did not exist; ignoring unsubscription`,
@@ -460,8 +460,8 @@ export default class FoxgloveServer {
           if (client.subscriptionsByChannel.has(chanId)) {
             client.subscriptionsByChannel.delete(chanId);
           }
-          if (!this.anySubscribed(chanId)) {
-            this.emitter.emit("unsubscribe", chanId);
+          if (!this.#anySubscribed(chanId)) {
+            this.#emitter.emit("unsubscribe", chanId);
           }
         }
 
@@ -475,7 +475,7 @@ export default class FoxgloveServer {
               client.name,
               channel.id,
             );
-            this.send(client.connection, {
+            this.#send(client.connection, {
               op: "status",
               level: StatusLevel.ERROR,
               message: `Channel id ${channel.id} was already advertised; ignoring advertisement`,
@@ -484,7 +484,7 @@ export default class FoxgloveServer {
           }
 
           client.advertisements.set(channel.id, channel);
-          this.emitter.emit("advertise", { client, ...channel });
+          this.#emitter.emit("advertise", { client, ...channel });
         }
 
         break;
@@ -493,7 +493,7 @@ export default class FoxgloveServer {
         for (const channelId of message.channelIds) {
           if (client.advertisements.has(channelId)) {
             client.advertisements.delete(channelId);
-            this.emitter.emit("unadvertise", { client, channelId });
+            this.#emitter.emit("unadvertise", { client, channelId });
           } else {
             log("client %s unadvertised unknown channel %d", client.name, channelId);
           }
@@ -502,16 +502,16 @@ export default class FoxgloveServer {
         break;
 
       case "getParameters":
-        this.emitter.emit("getParameters", { ...message }, client.connection);
+        this.#emitter.emit("getParameters", { ...message }, client.connection);
         break;
 
       case "setParameters":
-        this.emitter.emit("setParameters", { ...message }, client.connection);
+        this.#emitter.emit("setParameters", { ...message }, client.connection);
         break;
 
       case "subscribeParameterUpdates":
         {
-          const alreadySubscribedParameters = Array.from(this.clients.values()).reduce(
+          const alreadySubscribedParameters = Array.from(this.#clients.values()).reduce(
             (acc, c) => new Set<string>([...acc, ...c.parameterSubscriptions]),
             new Set<string>(),
           );
@@ -522,7 +522,7 @@ export default class FoxgloveServer {
           message.parameterNames.forEach((p) => client.parameterSubscriptions.add(p));
 
           if (parametersToSubscribe.length > 0) {
-            this.emitter.emit("subscribeParameterUpdates", parametersToSubscribe);
+            this.#emitter.emit("subscribeParameterUpdates", parametersToSubscribe);
           }
         }
         break;
@@ -530,7 +530,7 @@ export default class FoxgloveServer {
       case "unsubscribeParameterUpdates":
         {
           message.parameterNames.forEach((p) => client.parameterSubscriptions.delete(p));
-          const subscribedParameters = Array.from(this.clients.values()).reduce(
+          const subscribedParameters = Array.from(this.#clients.values()).reduce(
             (acc, c) => new Set<string>([...acc, ...c.parameterSubscriptions]),
             new Set<string>(),
           );
@@ -539,13 +539,13 @@ export default class FoxgloveServer {
           );
 
           if (parametersToUnsubscribe.length > 0) {
-            this.emitter.emit("unsubscribeParameterUpdates", parametersToUnsubscribe);
+            this.#emitter.emit("unsubscribeParameterUpdates", parametersToUnsubscribe);
           }
         }
         break;
 
       case "fetchAsset":
-        this.emitter.emit("fetchAsset", { ...message }, client.connection);
+        this.#emitter.emit("fetchAsset", { ...message }, client.connection);
         break;
 
       case ClientBinaryOpcode.MESSAGE_DATA: {
@@ -554,18 +554,18 @@ export default class FoxgloveServer {
           throw new Error(`Client sent message data for unknown channel ${message.channelId}`);
         }
         const data = message.data;
-        this.emitter.emit("message", { client, channel, data });
+        this.#emitter.emit("message", { client, channel, data });
         break;
       }
 
       case ClientBinaryOpcode.SERVICE_CALL_REQUEST: {
-        const service = this.services.get(message.serviceId);
+        const service = this.#services.get(message.serviceId);
         if (!service) {
           throw new Error(
             `Client sent service call request for unknown service ${message.serviceId}`,
           );
         }
-        this.emitter.emit("serviceCallRequest", message, client.connection);
+        this.#emitter.emit("serviceCallRequest", message, client.connection);
         break;
       }
 
@@ -574,7 +574,7 @@ export default class FoxgloveServer {
     }
   }
 
-  private sendMessageData(
+  #sendMessageData(
     connection: IWebSocket,
     subId: SubscriptionId,
     timestamp: bigint,
@@ -602,7 +602,7 @@ export default class FoxgloveServer {
     }
   }
 
-  private sendTimeData(connection: IWebSocket, timestamp: bigint): void {
+  #sendTimeData(connection: IWebSocket, timestamp: bigint): void {
     const msg = new DataView(new ArrayBuffer(1 + 8));
     msg.setUint8(0, BinaryOpcode.TIME);
     msg.setBigUint64(1, timestamp, true);

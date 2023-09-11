@@ -53,11 +53,9 @@ export function parseServerMessage(buffer: ArrayBuffer): ServerMessage {
 
       if (status === FetchAssetStatus.ERROR) {
         return { op, requestId, status, error };
-      } else if (status === FetchAssetStatus.SUCCESS) {
+      } else {
         const data = new DataView(buffer, offset, buffer.byteLength - offset);
         return { op, requestId, status, data };
-      } else {
-        throw new Error(`Unrecognized fetch asset status: ${status as number}`);
       }
     }
   }
