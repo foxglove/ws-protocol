@@ -51,11 +51,15 @@ export function parseServerMessage(buffer: ArrayBuffer): ServerMessage {
       const error = textDecoder.decode(new DataView(buffer, offset, errorMsgLength));
       offset += errorMsgLength;
 
-      if (status === FetchAssetStatus.ERROR) {
-        return { op, requestId, status, error };
-      } else {
-        const data = new DataView(buffer, offset, buffer.byteLength - offset);
-        return { op, requestId, status, data };
+      switch (status) {
+        case FetchAssetStatus.SUCCESS: {
+          const data = new DataView(buffer, offset, buffer.byteLength - offset);
+          return { op, requestId, status, data };
+        }
+        case FetchAssetStatus.ERROR:
+          return { op, requestId, status, error };
+        default:
+          throw new Error(`Unrecognized fetch asset status: ${status as number}`);
       }
     }
   }
