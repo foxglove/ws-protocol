@@ -10,8 +10,8 @@ async function main(url: string, topics: string) {
   const address = url.startsWith("ws://") || url.startsWith("wss://") ? url : `ws://${url}`;
   const topicsRegex = new RegExp(topics);
 
-  const channelsBySubId: Map<number, Channel> = new Map();
-  const channelStatsBySubId: Map<number, { timestamp: number; bytesRcvd: number }[]> = new Map();
+  const channelsBySubId = new Map<number, Channel>();
+  const channelStatsBySubId = new Map<number, { timestamp: number; bytesRcvd: number }[]>();
 
   const printStats = () => {
     let totalKiloBytesRcvd = 0;

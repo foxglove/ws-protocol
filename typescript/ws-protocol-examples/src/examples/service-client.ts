@@ -41,7 +41,7 @@ async function main(url: string, args: { encoding: "json" | "ros1" | "cdr" }) {
     } else if (args.encoding === "ros1") {
       const writer = new Ros1MessageWriter([{ definitions: [{ name: "data", type: "bool" }] }]);
       requestData = writer.writeMessage({ data: true });
-    } else if (args.encoding === "cdr") {
+    } else {
       const writer = new Ros2MessageWriter([{ definitions: [{ name: "data", type: "bool" }] }]);
       requestData = writer.writeMessage({ data: true });
     }
