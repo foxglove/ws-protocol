@@ -1,7 +1,7 @@
 # General Info
 cmake_minimum_required(VERSION 3.15)
 
-if(NOT ${USE_CONAN})
+if(NOT ${CONAN_EXPORTED})
     set(CMD "cat ${CMAKE_CURRENT_LIST_DIR}/conanfile.py | grep -oP '(?<=version = \").*(?=\")'")
     execute_process(COMMAND bash -c "${CMD}"
         OUTPUT_VARIABLE CMD_OUT
@@ -48,7 +48,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 )
 
 # Install
-if(NOT ${USE_CONAN})
+if(NOT ${CONAN_EXPORTED})
     include(GNUInstallDirs)
     include(CMakePackageConfigHelpers)
 

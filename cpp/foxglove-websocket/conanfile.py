@@ -38,7 +38,7 @@ class FoxgloveWebSocketConan(ConanFile):
 
     def build(self):
         cmake = CMake(self)
-        cmake.configure(variables={"USE_CONAN": "ON"})
+        cmake.configure()
         cmake.build()
 
     def package(self):
