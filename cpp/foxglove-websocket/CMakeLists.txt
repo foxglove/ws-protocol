@@ -1,6 +1,7 @@
 # General Info
 cmake_minimum_required(VERSION 3.15)
-execute_process(COMMAND bash -c "cat conanfile.py | grep -oP '(?<=version = \").*(?=\")'"
+set(CMD "cat ${CMAKE_CURRENT_LIST_DIR}/conanfile.py | grep -oP '(?<=version = \").*(?=\")'")
+execute_process(COMMAND bash -c "${CMD}"
     OUTPUT_VARIABLE CMD_OUT
     RESULT_VARIABLE CMD_RES
     OUTPUT_STRIP_TRAILING_WHITESPACE
