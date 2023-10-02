@@ -1,4 +1,5 @@
 #include <foxglove/websocket/base64.hpp>
+#include <foxglove/websocket/server_factory.hpp>
 #include <foxglove/websocket/websocket_notls.hpp>
 #include <foxglove/websocket/websocket_server.hpp>
 
@@ -8,6 +9,7 @@
 #include <atomic>
 #include <chrono>
 #include <cmath>
+#include <csignal>
 #include <iostream>
 #include <memory>
 #include <queue>
@@ -16,10 +18,7 @@
 
 #include "foxglove/SceneUpdate.pb.h"
 
-namespace foxglove {
-template <>
-void Server<WebSocketNoTls>::setupTlsHandler() {}
-}  // namespace foxglove
+std::atomic<bool> running = true;
 
 static uint64_t nanosecondsSinceEpoch() {
   return uint64_t(std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -63,7 +62,7 @@ int main() {
     std::cout << msg << std::endl;
   };
   foxglove::ServerOptions serverOptions;
-  auto server = std::make_unique<foxglove::Server<foxglove::WebSocketNoTls>>(
+  auto server = foxglove::ServerFactory::createServer<websocketpp::connection_hdl>(
     "C++ Protobuf example server", logHandler, serverOptions);
 
   foxglove::ServerHandlers<foxglove::ConnHandle> hdlrs;
@@ -84,14 +83,7 @@ int main() {
   }});
   const auto chanId = channelIds.front();
 
-  bool running = true;
-
-  websocketpp::lib::asio::signal_set signals(server->getEndpoint().get_io_service(), SIGINT);
-  signals.async_wait([&](std::error_code const& ec, int sig) {
-    if (ec) {
-      std::cerr << "signal error: " << ec.message() << std::endl;
-      return;
-    }
+  std::signal(SIGINT, [](int sig) {
     std::cerr << "received signal " << sig << ", shutting down" << std::endl;
     running = false;
   });
