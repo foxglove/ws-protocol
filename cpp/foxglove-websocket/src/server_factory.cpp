@@ -19,12 +19,12 @@ std::unique_ptr<ServerInterface<websocketpp::connection_hdl>> ServerFactory::cre
 }
 
 template <>
-inline void Server<WebSocketNoTls>::setupTlsHandler() {
+void Server<WebSocketNoTls>::setupTlsHandler() {
   _server.get_alog().write(APP, "Server running without TLS");
 }
 
 template <>
-inline void Server<WebSocketTls>::setupTlsHandler() {
+void Server<WebSocketTls>::setupTlsHandler() {
   _server.set_tls_init_handler([this](ConnHandle hdl) {
     (void)hdl;
 
