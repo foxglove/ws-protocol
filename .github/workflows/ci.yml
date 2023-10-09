@@ -16,7 +16,7 @@ jobs:
         package: [ws-protocol, ws-protocol-examples]
         node-version: [16.x, 18.x]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
@@ -42,7 +42,7 @@ jobs:
       run:
         working-directory: python
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: 3.8
@@ -83,5 +83,5 @@ jobs:
         working-directory: cpp
     name: cpp (${{ matrix.make_cmd }})
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: make ${{ matrix.make_cmd }}
