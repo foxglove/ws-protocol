@@ -174,7 +174,7 @@ Informs the client about parameters. Only supported if the server declares the `
 - `parameters`: array of:
   - `name`: string, name of the parameter
   - `value`: ParameterValue, where ParameterValue is of type number | boolean | string | ParameterValue[] | { [key: string]: ParameterValue } | undefined.
-  - `type`: "byte_array" | "float64" | "float64_array" | undefined. If the type is `byte_array`, `value` shall be interpreted as base64 encoded string. If the type is `float64` or `float64_array`, `value` shall be a 64-bit floating-point number or integer, or an array of them, respectively.
+  - `type`: "byte_array" | "float64" | "float64_array" | undefined. If the type is `byte_array`, `value` shall be interpreted as base64 encoded string. If the type is `float64`, value must be a valid decimal or integer value that can be represented by a float64. If the type is `float64_array`, value must be an array of valid decimal or integer values.
 - `id`: string | undefined. Only set when the [getParameters](#get-parameters) or [setParameters](#set-parameters) request's `id` field was set
 
 #### Example
@@ -405,7 +405,7 @@ Set one or more parameters. Only supported if the server previously declared tha
 - `parameters`: array of:
   - `name`: string
   - `value`: number | boolean | string | number[] | boolean[] | string[] | undefined. If the value is not set (`undefined`), the parameter shall be unset (removed).
-  - `type`: "byte_array" | "float64" | "float64_array" | undefined. If the type is `byte_array`, `value` shall be a base64 encoded string. If the type is `float64` or `float64_array`, `value` value shall be a 64-bit floating-point number or integer, or an array of them, respectively.
+  - `type`: "byte_array" | "float64" | "float64_array" | undefined. If the type is `byte_array`, `value` shall be a base64 encoded string. If the type is `float64`, value must be a valid decimal or integer value that can be represented by a float64. If the type is `float64_array`, value must be an array of valid decimal or integer values.
 - `id`: string | undefined, arbitrary string used for identifying the corresponding server [response](#parameter-values). If this field is not set, the server may not send a response to the client.
 
 #### Example
