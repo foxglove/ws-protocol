@@ -7,7 +7,7 @@
   "editor.formatOnSave": true,
 
   "typescript.tsdk": "node_modules/typescript/lib",
-  "prettier.prettierPath": "./node_modules/prettier",
+  "prettier.prettierPath": "./node_modules/prettier/index.cjs",
   "eslint.packageManager": "yarn",
   "eslint.options": {
     "reportUnusedDisableDirectives": "error"
