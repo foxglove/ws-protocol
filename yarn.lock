@@ -3786,10 +3786,10 @@ pure-rand@^6.0.0:
   resolved "https://registry.yarnpkg.com/pure-rand/-/pure-rand-6.0.1.tgz#31207dddd15d43f299fdcdb2f572df65030c19af"
   integrity sha512-t+x1zEHDjBwkDGY5v5ApnZ/utcd4XYDiJsaQQoptTXgUXX95sDg1elCdJghzicm7n2mbCBJ3uYWr6M22SO19rg==
 
-pureimage@^0.4.10:
-  version "0.4.10"
-  resolved "https://registry.yarnpkg.com/pureimage/-/pureimage-0.4.10.tgz#058f0d0b8cc4520743df7e8819fcc93ef4e42227"
-  integrity sha512-xnzP5gQ0UnCG85PulGuvEmZCZ6J5Rh4KPn2ISnsOTcpJQaWLa+WlY4/6WQ55OXo02kZsVMOem5vdxb0G7CDuUA==
+pureimage@^0.4.13:
+  version "0.4.13"
+  resolved "https://registry.yarnpkg.com/pureimage/-/pureimage-0.4.13.tgz#82a3f21853570d15e3631c555b4ecf9b9fe9ab3e"
+  integrity sha512-P8aonTNAnXWJn2pBIqyeWw0I/D4YDOfEavCVvbDG+wx3dCujQX0ENZiW5OcHfbd8HKLfVhCf4F/3Xivf1yWDiA==
   dependencies:
     jpeg-js "^0.4.4"
     opentype.js "^0.4.3"
