@@ -206,8 +206,14 @@ Informs the client about available services. Only supported if the server declar
   - `id`: number. The server may reuse ids when services disappear and reappear, but only if the services keeps the exact same name, type, and schema. Clients will use this unique id to cache schema info and deserialization routines.
   - `name`: string
   - `type`: string
-  - `requestSchema`: string
-  - `responseSchema`: string
+  - `requestSchema`: string (schema data only) or object with the fields below. If given as string, schema name and encoding will be derived from `type` (by appending `_Request`) and the previously advertised [supportedEncodings](#server-info).
+    - `name`: string
+    - `encoding`: string
+    - `data`: string
+  - `responseSchema`: string (schema data only) or object with the fields below. If given as string, schema name and encoding will be derived from `type` (by appending `_Response`) and the previously advertised [supportedEncodings](#server-info).
+    - `name`: string
+    - `encoding`: string
+    - `data`: string
 
 #### Example
 
@@ -218,9 +224,16 @@ Informs the client about available services. Only supported if the server declar
     {
       "id": 1,
       "name": "foo",
-      "type": "std_srvs/srv/Empty",
+      "type": "std_srvs/Empty",
       "requestSchema": "",
       "responseSchema": ""
+    },
+    {
+      "id": 2,
+      "name": "set_bool",
+      "type": "std_srvs/SetBool",
+      "requestSchema": { "name": "std_srvs/SetBool_Request", "encoding": "ros1msg", "data": "bool data" },
+      "responseSchema": { "name": "std_srvs/SetBool_Response", "encoding": "ros1msg", "data": "bool success\nstring message" }
     }
   ]
 }
