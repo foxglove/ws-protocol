@@ -206,14 +206,19 @@ Informs the client about available services. Only supported if the server declar
   - `id`: number. The server may reuse ids when services disappear and reappear, but only if the services keeps the exact same name, type, and schema. Clients will use this unique id to cache schema info and deserialization routines.
   - `name`: string
   - `type`: string
-  - `requestSchema`: string (schema data only) or object with the fields below. If given as string, schema name and encoding will be derived from `type` (by appending `_Request`) and the previously advertised [supportedEncodings](#server-info).
-    - `name`: string
+  - `requestSchema`: string, required if `request` is not given. Field is present for backwards compatibilty, prefer using `request` instead.
+  - `request`: object, required if `requestSchema` is not given.
     - `encoding`: string
-    - `data`: string
-  - `responseSchema`: string (schema data only) or object with the fields below. If given as string, schema name and encoding will be derived from `type` (by appending `_Response`) and the previously advertised [supportedEncodings](#server-info).
-    - `name`: string
+    - `schemaName`: string
+    - `schemaEncoding`: string
+    - `schema`: string
+  - `responseSchema`: string, required if `response` is not given. Field is present for backwards compatibilty, prefer using `response` instead.
+  - `response`: object, required if `responseSchema` is not given.
     - `encoding`: string
-    - `data`: string
+    - `schemaName`: string
+    - `schemaEncoding`: string
+    - `schema`: string
+
 
 #### Example
 
@@ -232,8 +237,8 @@ Informs the client about available services. Only supported if the server declar
       "id": 2,
       "name": "set_bool",
       "type": "std_srvs/SetBool",
-      "requestSchema": { "name": "std_srvs/SetBool_Request", "encoding": "ros1msg", "data": "bool data" },
-      "responseSchema": { "name": "std_srvs/SetBool_Response", "encoding": "ros1msg", "data": "bool success\nstring message" }
+      "request": { "encoding": "ros1", "schemaName": "std_srvs/SetBool_Request", "schemaEncoding": "ros1msg", "schema": "bool data" },
+      "response": { "encoding": "ros1", "schemaName": "std_srvs/SetBool_Response", "schemaEncoding": "ros1msg", "schema": "bool success\nstring message" }
     }
   ]
 }
