@@ -204,20 +204,20 @@ Informs the client about available services. Only supported if the server declar
 - `op`: string `"advertiseServices"`
 - `services`: array of:
   - `id`: number. The server may reuse ids when services disappear and reappear, but only if the services keeps the exact same name, type, and schema. Clients will use this unique id to cache schema info and deserialization routines.
-  - `name`: string
-  - `type`: string
-  - `requestSchema`: string, required if `request` is not given. Field is present for backwards compatibilty, prefer using `request` instead.
-  - `request`: object, required if `requestSchema` is not given.
-    - `encoding`: string
-    - `schemaName`: string
-    - `schemaEncoding`: string
-    - `schema`: string
-  - `responseSchema`: string, required if `response` is not given. Field is present for backwards compatibilty, prefer using `response` instead.
-  - `response`: object, required if `responseSchema` is not given.
-    - `encoding`: string
-    - `schemaName`: string
-    - `schemaEncoding`: string
-    - `schema`: string
+  - `name`: string, name used to identify the service.
+  - `type`: string, type of the service. May be used to derive request & response schema names if `request` or `response` are not given.
+  - `request`: object describing the request. Required if `requestSchema` is not given.
+    - `encoding`: string, type of encoding used for request message encoding.
+    - `schemaName`: string, name of the request schema.
+    - `schemaEncoding`: string, type of encoding used for schema encoding.
+    - `schema`: string, schema definition in a format matching the `schemaEncoding`.
+  - `response`: object describing the response. Required if `responseSchema` is not given.
+    - `encoding`: string, type of encoding used for response message encoding.
+    - `schemaName`: string, name of the response schema.
+    - `schemaEncoding`: string, type of encoding used for schema encoding.
+    - `schema`: string, schema definition in a format matching the `schemaEncoding`.
+  - `requestSchema`: string | undefined, request schema definition. The schema encoding will be derived from the [`supportedEncodings`](#server-info) sent by the server. Required if `request` is not given. Field is present for backwards compatibilty, prefer using `request` instead.
+  - `responseSchema`: string | undefined, response schema definition. The schema encoding will be derived from the [`supportedEncodings`](#server-info) sent by the server. Required if `response` is not given. Field is present for backwards compatibilty, prefer using `response` instead.
 
 
 #### Example
