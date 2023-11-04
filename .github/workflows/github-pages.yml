@@ -1,8 +1,8 @@
-name: Deploy test client web app to GitHub Pages
+name: GitHub Pages
 
 on:
   push:
-    branches: [$default-branch]
+    branches: [main]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
