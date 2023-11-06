@@ -14,6 +14,6 @@ Implementations are available in the following languages:
 | C++                   | [server + examples](cpp)                    | `foxglove-websocket`             | [![](https://shields.io/conan/v/foxglove-websocket)](https://conan.io/center/foxglove-websocket)                             |
 
 ### Additional resources
-
+- https://foxglove.github.io/ws-protocol - Connect to a ws-protocol compliant server and measure data throughput
 - [eCAL Foxglove Bridge](https://github.com/eclipse-ecal/ecal-foxglove-bridge) – WebSocket bridge that allows users to connect eCAL systems to Foxglove Studio for easy visualization and debugging
 
