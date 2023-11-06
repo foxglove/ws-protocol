@@ -751,10 +751,10 @@
     "@foxglove/message-definition" "^0.2.0"
     "@foxglove/rosmsg" "^4.0.0"
 
-"@foxglove/rosmsg-serialization@^2.0.1":
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/@foxglove/rosmsg-serialization/-/rosmsg-serialization-2.0.1.tgz#c1b977364855f00fb875a055fb9bd47cd1164cbc"
-  integrity sha512-s5ITg03L+0HU6YZZ3p+tn4lUoRYdK9/FWJGfgqRmzycbV73k+LFOyyzoI30B8WmuyQkqPyoFfAHe99ZFtiehSw==
+"@foxglove/rosmsg-serialization@^2.0.2":
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/@foxglove/rosmsg-serialization/-/rosmsg-serialization-2.0.2.tgz#ae2d0a3c711ea5a2db3b8325c90a463cfe6bb30b"
+  integrity sha512-XpWOcqTTfjGGCvI94baiLTKOgKWm187KhdRNw+QIxvYq/5ornGcf0k7kbTRsOr7FuNBtpcVcU7zR8byXYavOsQ==
   dependencies:
     "@foxglove/message-definition" "^0.2.0"
 
