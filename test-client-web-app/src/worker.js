@@ -29,7 +29,10 @@ self.onmessage = (event) => {
           });
         };
         ws.onclose = (wsEvent) => {
-          send({ type: "close", data: JSON.parse(JSON.stringify(wsEvent) ?? "{}") });
+          send({
+            type: "close",
+            data: JSON.parse(JSON.stringify(wsEvent) ?? "{}"),
+          });
         };
         ws.onmessage = (wsEvent) => {
           if (wsEvent.data instanceof ArrayBuffer) {
@@ -38,7 +41,7 @@ self.onmessage = (event) => {
                 type: "message",
                 data: wsEvent.data,
               },
-              [wsEvent.data],
+              [wsEvent.data]
             );
           } else {
             send({
