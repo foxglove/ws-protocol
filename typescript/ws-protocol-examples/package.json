@@ -61,7 +61,7 @@
     "typescript": "5.1.6"
   },
   "dependencies": {
-    "@foxglove/rosmsg-serialization": "^2.0.1",
+    "@foxglove/rosmsg-serialization": "^2.0.2",
     "@foxglove/rosmsg2-serialization": "^2.0.2",
     "@foxglove/rostime": "^1.1.2",
     "@foxglove/schemas": "^1.5.1",
