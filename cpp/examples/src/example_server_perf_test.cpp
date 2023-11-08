@@ -1,3 +1,8 @@
+#include <foxglove/websocket/server_factory.hpp>
+
+#include <boost/program_options.hpp>
+#include <nlohmann/json.hpp>
+
 #include <atomic>
 #include <chrono>
 #include <csignal>
@@ -7,11 +12,6 @@
 #include <shared_mutex>
 #include <thread>
 #include <unordered_map>
-
-#include <boost/program_options.hpp>
-#include <nlohmann/json.hpp>
-
-#include <foxglove/websocket/server_factory.hpp>
 
 namespace po = boost::program_options;
 using ConnectionHandle = websocketpp::connection_hdl;

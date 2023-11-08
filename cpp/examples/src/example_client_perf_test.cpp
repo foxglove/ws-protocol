@@ -1,12 +1,12 @@
+#include <foxglove/websocket/websocket_client.hpp>
+#include <foxglove/websocket/websocket_notls.hpp>
+
 #include <atomic>
 #include <chrono>
 #include <iostream>
 #include <memory>
 #include <regex>
 #include <unordered_map>
-
-#include <foxglove/websocket/websocket_client.hpp>
-#include <foxglove/websocket/websocket_notls.hpp>
 
 struct ChannelStats {
   std::string topic;
