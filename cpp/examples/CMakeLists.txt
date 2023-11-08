@@ -25,3 +25,9 @@ target_link_libraries(example_server_protobuf
 add_executable(example_server_flatbuffers src/example_server_flatbuffers.cpp ${flatbuffer_sources})
 add_dependencies(example_server_flatbuffers flatbuffers_generated_schemas)
 target_link_libraries(example_server_flatbuffers foxglove-websocket::foxglove-websocket flatbuffers::flatbuffers)
+
+find_package(Boost COMPONENTS program_options REQUIRED)
+add_executable(example_server_perf_test src/example_server_perf_test.cpp)
+target_link_libraries(example_server_perf_test foxglove-websocket::foxglove-websocket Boost::program_options)
+add_executable(example_client_perf_test src/example_client_perf_test.cpp)
+target_link_libraries(example_client_perf_test foxglove-websocket::foxglove-websocket Boost::program_options)

@@ -26,3 +26,17 @@ services:
       target: example_server_flatbuffers
     ports:
       - "8765:8765"
+
+  example_server_perf_test:
+    build:
+      context: .
+      dockerfile: dev.Dockerfile
+      target: example_server_perf_test
+    network_mode: "host"  # Use host network for better perfomance
+
+  example_client_perf_test:
+    build:
+      context: .
+      dockerfile: dev.Dockerfile
+      target: example_client_perf_test
+    network_mode: "host"  # Use host network for better perfomance

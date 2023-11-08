@@ -14,6 +14,7 @@ class FoxgloveWebSocketExamplesConan(ConanFile):
         self.requires("foxglove-schemas-protobuf/0.1.0")
         self.requires("foxglove-websocket/1.1.0")
         self.requires("zlib/1.2.13")
+        self.requires("boost/1.83.0", transitive_headers=True)
 
     def layout(self):
         cmake_layout(self)
