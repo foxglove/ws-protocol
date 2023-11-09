@@ -21,7 +21,7 @@ function delay(durationMs: number) {
 function drawImage(time: number) {
   const width = 200;
   const height = 150;
-  const image = PImage.make(width, height, undefined);
+  const image = PImage.make(width, height);
   const ctx = image.getContext("2d");
 
   ctx.fillStyle = "#eeeeee";
