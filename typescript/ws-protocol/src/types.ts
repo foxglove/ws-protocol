@@ -54,8 +54,16 @@ export type Service = {
   type: string;
   request?: ServiceRequestDefinition; // Must be given if requestSchema is not given.
   response?: ServiceResponseDefinition; // Must be given if responseSchema is not given.
-  requestSchema?: string; // Must be given if request is not given.
-  responseSchema?: string; // Must be given if response is not given.
+  /**
+   * Must be given if request is not given.
+   * @deprecated Use request instead.
+   */
+  requestSchema?: string;
+  /**
+   * Must be given if response is not given.
+   * @deprecated Use response instead.
+   */
+  responseSchema?: string;
 };
 
 export type Subscribe = {
