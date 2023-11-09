@@ -188,6 +188,13 @@ export default class FoxgloveServer {
    * @returns The id of the new service
    */
   addService(service: Omit<Service, "id">): ServiceId {
+    if (service.request == undefined && service.requestSchema == undefined) {
+      throw new Error("Either 'request' or 'requestSchema' has to be given.");
+    }
+    if (service.response == undefined && service.responseSchema == undefined) {
+      throw new Error("Either 'response' or 'responseSchema' has to be given.");
+    }
+
     const newId = ++this.#nextServiceId;
     const newService: Service = { ...service, id: newId };
     this.#services.set(newId, newService);

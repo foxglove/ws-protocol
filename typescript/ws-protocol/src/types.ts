@@ -40,12 +40,30 @@ export type Channel = {
   schema: string;
   schemaEncoding?: string;
 };
+
+type ServiceRequestDefinition = {
+  encoding: string;
+  schemaName: string;
+  schemaEncoding: string;
+  schema: string;
+};
+type ServiceResponseDefinition = ServiceRequestDefinition;
 export type Service = {
   id: number;
   name: string;
   type: string;
-  requestSchema: string;
-  responseSchema: string;
+  request?: ServiceRequestDefinition; // Must be given if requestSchema is not given.
+  response?: ServiceResponseDefinition; // Must be given if responseSchema is not given.
+  /**
+   * Must be given if request is not given.
+   * @deprecated Use request instead.
+   */
+  requestSchema?: string;
+  /**
+   * Must be given if response is not given.
+   * @deprecated Use response instead.
+   */
+  responseSchema?: string;
 };
 
 export type Subscribe = {
