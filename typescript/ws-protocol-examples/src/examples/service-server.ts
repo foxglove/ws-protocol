@@ -52,26 +52,26 @@ async function main(): Promise<void> {
       encoding: "json",
       schemaName: "SetBoolJsonRequest",
       schemaEncoding: "jsonschema",
-      schema: `{
-        "$schema": "https://json-schema.org/draft/2019-09/schema",
-          "type": "object",
-          "properties": {
-             "data": { "type": "boolean"}
-          }
-      }`,
+      schema: JSON.stringify({
+        $schema: "https://json-schema.org/draft/2019-09/schema",
+        type: "object",
+        properties: {
+          data: { type: "boolean" },
+        },
+      }),
     },
     response: {
       encoding: "json",
       schemaName: "SetBoolJsonResponse",
       schemaEncoding: "jsonschema",
-      schema: `{
-        "$schema": "https://json-schema.org/draft/2019-09/schema",
-          "type": "object",
-          "properties": {
-             "success": { "type": "boolean"},
-             "message": { "type": "string"}
-          }
-      }`,
+      schema: JSON.stringify({
+        $schema: "https://json-schema.org/draft/2019-09/schema",
+        type: "object",
+        properties: {
+          success: { type: "boolean" },
+          message: { type: "string" },
+        },
+      }),
     },
   };
 

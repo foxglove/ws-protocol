@@ -36,8 +36,9 @@ async function main(url: string) {
 
     const msgEncoding = service.request?.encoding ?? fallbackMsgEncoding;
     if (msgEncoding == undefined) {
+      const supportedEndingsStr = SUPPORTED_MSG_ENCODINGS.join(", ");
       throw new Error(
-        `Unable to call servicd ${service.name}: No supported message encoding found.`,
+        `Unable to call service ${service.name}: No supported message encoding found. Supported encodings: [${supportedEndingsStr}]`,
       );
     }
 
