@@ -1,15 +1,19 @@
 import { MessageWriter as Ros1MessageWriter } from "@foxglove/rosmsg-serialization";
 import { MessageWriter as Ros2MessageWriter } from "@foxglove/rosmsg2-serialization";
 import { FoxgloveClient } from "@foxglove/ws-protocol";
-import { Command, Option } from "commander";
+import { Command } from "commander";
 import Debug from "debug";
 import WebSocket from "ws";
 
 const log = Debug("foxglove:service-client");
 Debug.enable("foxglove:*");
 
-async function main(url: string, args: { encoding: "json" | "ros1" | "cdr" }) {
+const SUPPORTED_MSG_ENCODINGS = ["json", "ros1", "cdr"];
+
+async function main(url: string) {
   const address = url.startsWith("ws://") || url.startsWith("wss://") ? url : `ws://${url}`;
+  let fallbackMsgEncoding: string | undefined;
+
   log(`Client connecting to ${address}`);
   const client = new FoxgloveClient({
     ws: new WebSocket(address, [FoxgloveClient.SUPPORTED_SUBPROTOCOL]),
@@ -20,14 +24,9 @@ async function main(url: string, args: { encoding: "json" | "ros1" | "cdr" }) {
   });
   client.on("serverInfo", (serverInfo) => {
     const supportedEncodings = serverInfo.supportedEncodings ?? [];
-    if (!supportedEncodings.includes(args.encoding)) {
-      log(
-        "Error",
-        "Chosen encoding is not supported by the server. Server only supports the following encodings: ",
-        supportedEncodings,
-      );
-      client.close();
-    }
+    fallbackMsgEncoding = supportedEncodings.find((encoding) =>
+      SUPPORTED_MSG_ENCODINGS.includes(encoding),
+    );
   });
   client.on("advertiseServices", (services) => {
     const service = services.find((s) => /std_srvs(\/srv)?\/SetBool/.test(s.type));
@@ -35,10 +34,18 @@ async function main(url: string, args: { encoding: "json" | "ros1" | "cdr" }) {
       return;
     }
 
+    const msgEncoding = service.request?.encoding ?? fallbackMsgEncoding;
+    if (msgEncoding == undefined) {
+      const supportedEndingsStr = SUPPORTED_MSG_ENCODINGS.join(", ");
+      throw new Error(
+        `Unable to call service ${service.name}: No supported message encoding found. Supported encodings: [${supportedEndingsStr}]`,
+      );
+    }
+
     let requestData: Uint8Array = new Uint8Array();
-    if (args.encoding === "json") {
+    if (msgEncoding === "json") {
       requestData = new Uint8Array(Buffer.from(JSON.stringify({ data: true })));
-    } else if (args.encoding === "ros1") {
+    } else if (msgEncoding === "ros1") {
       const writer = new Ros1MessageWriter([{ definitions: [{ name: "data", type: "bool" }] }]);
       requestData = writer.writeMessage({ data: true });
     } else {
@@ -49,7 +56,7 @@ async function main(url: string, args: { encoding: "json" | "ros1" | "cdr" }) {
     client.sendServiceCallRequest({
       serviceId: service.id,
       callId: 123,
-      encoding: args.encoding,
+      encoding: msgEncoding,
       data: new DataView(requestData.buffer),
     });
   });
@@ -70,10 +77,5 @@ async function main(url: string, args: { encoding: "json" | "ros1" | "cdr" }) {
 
 export default new Command("service-client")
   .description("connect to a server and call the first advertised SetBool service")
-  .addOption(
-    new Option("-e, --encoding <encoding>", "message encoding")
-      .choices(["json", "ros1", "cdr"])
-      .default("json"),
-  )
   .argument("[url]", "ws(s)://host:port", "ws://localhost:8765")
   .action(main);
