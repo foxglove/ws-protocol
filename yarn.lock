@@ -719,10 +719,10 @@
   resolved "https://registry.yarnpkg.com/@fontsource/roboto/-/roboto-5.0.8.tgz#613b477a56f21b5705db1a67e995c033ef317f76"
   integrity sha512-XxPltXs5R31D6UZeLIV1td3wTXU3jzd3f2DLsXI8tytMGBkIsGcc9sIyiupRtA8y73HAhuSCeweOoBqf6DbWCA==
 
-"@foxglove/cdr@^2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@foxglove/cdr/-/cdr-2.0.0.tgz#12bade26e1525e522fc9f0366830e65e5cb52e27"
-  integrity sha512-Zu00eJyO05bX9js7/E2QfQNjG8p7jNhE/vUuTF2lO+MS89/kLDb/b6fle8krLy7Bnd7ClKv6G4JAmiqy6wKwEA==
+"@foxglove/cdr@^3.0.0":
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/@foxglove/cdr/-/cdr-3.1.0.tgz#ab1013102b841f2677935dbd5a22437dfd190400"
+  integrity sha512-odE1WW8KZlvU0ia/VG99I0cUFN7gikv/8eDO03GAGZM673opSWyL4QFC2mewFTaN1/PydHxTXuJESllcgieyfw==
 
 "@foxglove/crc@^0.0.3":
   version "0.0.3"
@@ -758,12 +758,12 @@
   dependencies:
     "@foxglove/message-definition" "^0.2.0"
 
-"@foxglove/rosmsg2-serialization@^2.0.2":
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/@foxglove/rosmsg2-serialization/-/rosmsg2-serialization-2.0.2.tgz#f3ad6fca44bec62cbae885925dbdeef8b325b7b5"
-  integrity sha512-rkaavyCh3gxk7r7+TsWigA96dCwTVgdUHBeXUpufyosXzFylxW2/4qkSKPUKyq0pW5tbOSAlmrH3aJsHZSY0UQ==
+"@foxglove/rosmsg2-serialization@^2.0.3":
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/@foxglove/rosmsg2-serialization/-/rosmsg2-serialization-2.0.3.tgz#4d5c73d73597f8f8720af5ab6380e5d5a9ef7871"
+  integrity sha512-atNKdzO8aYJLFbqd8OblUo1V5faWSmM2mlKkDfA/4wI65phGiq+SJOfElbj5nNNtRGgC60BkdIxcRyMQgxym2g==
   dependencies:
-    "@foxglove/cdr" "^2.0.0"
+    "@foxglove/cdr" "^3.0.0"
     "@foxglove/message-definition" "^0.2.0"
     "@foxglove/rostime" "^1.1.2"
 
