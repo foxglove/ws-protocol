@@ -132,6 +132,7 @@ async function main(file: string, options: { loop: boolean; rate: number }): Pro
               topic: record.topic,
               schemaName: schema.name,
               encoding: record.messageEncoding,
+              schemaEncoding: schema.encoding,
               schema:
                 schema.encoding === "protobuf"
                   ? Buffer.from(schema.data).toString("base64")
