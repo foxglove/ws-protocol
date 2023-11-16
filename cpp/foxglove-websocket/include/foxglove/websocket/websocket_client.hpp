@@ -122,7 +122,10 @@ public:
       return;  // Already disconnected
     }
 
-    _endpoint.close(_con, websocketpp::close::status::going_away, "");
+    // We pass an error code to close() such that it doesn't throw an exception
+    // in case the endpoint has already been closed.
+    websocketpp::lib::error_code ec;
+    _endpoint.close(_con, websocketpp::close::status::going_away, "", ec);
     _con.reset();
   }
 

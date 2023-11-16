@@ -27,3 +27,11 @@ example_server_protobuf:
 .PHONY: example_server_flatbuffers
 example_server_flatbuffers:
 	docker compose run --service-ports example_server_flatbuffers
+
+.PHONY: example_server_perf_test
+example_server_perf_test:
+	docker compose run --service-ports example_server_perf_test
+
+.PHONY: example_client_perf_test
+example_client_perf_test:
+	docker compose run example_client_perf_test
