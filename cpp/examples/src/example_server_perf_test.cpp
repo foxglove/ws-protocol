@@ -102,17 +102,20 @@ int main(int argc, char** argv) {
   std::string keyfile;
 
   po::options_description desc("Options");
-  desc.add_options()("address", po::value<std::string>(&address)->default_value("0.0.0.0"),
-                     "Address to bind to")("port", po::value<int>(&port)->default_value(8765),
-                                           "Port to listen to")(
-    "send-buffer-limit", po::value<int>(&sendBufferLimit)->default_value(2e7),
-    "Send buffer limit in bytes")("channel-config", po::value<std::string>(&channelConfigFile),
-                                  "Path to JSON file with custom channels in the format "
-                                  "{topic: string, frequency: number, sizeInBytes:number}[].")(
-    "compression", "Enable per-message deflate compression")(
-    "certfile", po::value<std::string>(&certfile), "Path to the certificate to use for TLS")(
-    "keyfile", po::value<std::string>(&keyfile), "Path to the private key to use for TLS")(
-    "help", "Produce help message");
+  auto&& addOptions = desc.add_options();
+  addOptions("address", po::value<std::string>(&address)->default_value("0.0.0.0"),
+             "Address to bind to");
+  addOptions("port", po::value<int>(&port)->default_value(8765), "Port to listen to");
+  addOptions("send-buffer-limit", po::value<int>(&sendBufferLimit)->default_value(2e7),
+             "Send buffer limit in bytes");
+  addOptions("channel-config", po::value<std::string>(&channelConfigFile),
+             "Path to JSON file with custom channels in the format "
+             "{topic: string, frequency: number, sizeInBytes:number}[].");
+  addOptions("compression", "Enable per-message deflate compression");
+  addOptions("certfile", po::value<std::string>(&certfile),
+             "Path to the certificate to use for TLS");
+  addOptions("keyfile", po::value<std::string>(&keyfile), "Path to the private key to use for TLS");
+  addOptions("help", "Produce help message");
 
   po::variables_map vm;
   try {

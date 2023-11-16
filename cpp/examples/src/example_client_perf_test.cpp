@@ -3,6 +3,7 @@
 
 #include <atomic>
 #include <chrono>
+#include <cmath>
 #include <iostream>
 #include <memory>
 #include <regex>
@@ -115,7 +116,7 @@ int main(int argc, char** argv) {
               << std::endl;
     totalBytesRcvd += stats.bytesReceived;
     totalMsgsRcvd += stats.msgsReceived;
-    if (std::isnormal(bandwidth)) {
+    if (std::isfinite(bandwidth)) {
       totalBandwidth += bandwidth;
     }
   }
