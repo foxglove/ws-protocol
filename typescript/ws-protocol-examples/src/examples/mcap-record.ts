@@ -86,6 +86,7 @@ async function main(
   const textEncoder = new TextEncoder();
   const maxPendingPromises = 1;
   const maxQueuedPromises = options.queueLimit > 0 ? options.queueLimit : Infinity;
+  /** Used to ensure all operations on the McapWriter are sequential */
   const writeMsgQueue = new Queue(maxPendingPromises, maxQueuedPromises);
 
   const writer = new McapWriter({
