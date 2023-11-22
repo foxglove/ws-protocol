@@ -1,6 +1,7 @@
 import * as Zstd from "@foxglove/wasm-zstd";
 import { FoxgloveClient } from "@foxglove/ws-protocol";
 import { IWritable, McapWriter } from "@mcap/core";
+import { tryAcquire, Mutex, E_ALREADY_LOCKED } from "async-mutex";
 import { Command } from "commander";
 import Debug from "debug";
 import fs, { FileHandle } from "fs/promises";
@@ -80,6 +81,7 @@ async function main(address: string, options: { output: string }): Promise<void>
   const fileHandle = await fs.open(options.output, "w");
   const fileHandleWritable = new FileHandleWritable(fileHandle);
   const textEncoder = new TextEncoder();
+  const addMessageLock = new Mutex();
 
   const writer = new McapWriter({
     writable: fileHandleWritable,
@@ -190,13 +192,25 @@ async function main(address: string, options: { output: string }): Promise<void>
           log("received message for unknown subscription %s", event.subscriptionId);
           return;
         }
-        void writer.addMessage({
-          channelId: subscription.mcapChannelId,
-          sequence: subscription.messageCount++,
-          logTime: BigInt(Date.now()) * 1_000_000n,
-          publishTime: event.timestamp,
-          data: new Uint8Array(event.data.buffer, event.data.byteOffset, event.data.byteLength),
-        });
+
+        // If we can't acquire the lock, we will drop the message to avoid potential OOM issues.
+        tryAcquire(addMessageLock)
+          .runExclusive(async () => {
+            await writer.addMessage({
+              channelId: subscription.mcapChannelId,
+              sequence: subscription.messageCount++,
+              logTime: BigInt(Date.now()) * 1_000_000n,
+              publishTime: event.timestamp,
+              data: new Uint8Array(event.data.buffer, event.data.byteOffset, event.data.byteLength),
+            });
+          })
+          .catch((e) => {
+            if (e === E_ALREADY_LOCKED) {
+              log(`Dropping message as previous message is still being written.`);
+            } else {
+              log(e);
+            }
+          });
       });
 
       client.on("close", (event) => {
