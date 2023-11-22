@@ -1,7 +1,6 @@
 import * as Zstd from "@foxglove/wasm-zstd";
 import { FoxgloveClient } from "@foxglove/ws-protocol";
 import { IWritable, McapWriter } from "@mcap/core";
-import { tryAcquire, Mutex, E_ALREADY_LOCKED } from "async-mutex";
 import { Command } from "commander";
 import Debug from "debug";
 import fs, { FileHandle } from "fs/promises";
@@ -77,14 +76,16 @@ async function waitForServer(
 
 async function main(
   address: string,
-  options: { output: string; compression: boolean },
+  options: { output: string; compression: boolean; queueLimit: number },
 ): Promise<void> {
   await Zstd.isLoaded;
   await fs.mkdir(path.dirname(options.output), { recursive: true });
   const fileHandle = await fs.open(options.output, "w");
   const fileHandleWritable = new FileHandleWritable(fileHandle);
   const textEncoder = new TextEncoder();
-  const addMessageLock = new Mutex();
+  const messageQueue: Parameters<McapWriter["addMessage"]>[0][] = [];
+  const messageQueueLimit = options.queueLimit;
+  let isProcessing = true;
 
   const writer = new McapWriter({
     writable: fileHandleWritable,
@@ -105,13 +106,28 @@ async function main(
   process.on("SIGINT", () => {
     log("shutting down...");
     controller.abort();
+    isProcessing = false;
   });
+
+  async function processMsgQueue() {
+    while (isProcessing) {
+      let message = messageQueue.shift();
+      while (message != undefined) {
+        await writer.addMessage(message);
+        message = messageQueue.shift();
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+  }
 
   try {
     const client = await waitForServer(address, controller.signal);
     if (!client) {
       return;
     }
+
+    const processQueuePromise = processMsgQueue();
     await new Promise<void>((resolve) => {
       const wsChannelsByMcapChannel = new Map<McapChannelId, WsChannelId>();
       const subscriptionsById = new Map<
@@ -198,24 +214,17 @@ async function main(
           return;
         }
 
-        // If we can't acquire the lock, we will drop the message to avoid potential OOM issues.
-        tryAcquire(addMessageLock)
-          .runExclusive(async () => {
-            await writer.addMessage({
-              channelId: subscription.mcapChannelId,
-              sequence: subscription.messageCount++,
-              logTime: BigInt(Date.now()) * 1_000_000n,
-              publishTime: event.timestamp,
-              data: new Uint8Array(event.data.buffer, event.data.byteOffset, event.data.byteLength),
-            });
-          })
-          .catch((e) => {
-            if (e === E_ALREADY_LOCKED) {
-              log(`Dropping message as previous message is still being written.`);
-            } else {
-              log(e);
-            }
+        if (messageQueueLimit === 0 || messageQueue.length < messageQueueLimit) {
+          messageQueue.push({
+            channelId: subscription.mcapChannelId,
+            sequence: subscription.messageCount++,
+            logTime: BigInt(Date.now()) * 1_000_000n,
+            publishTime: event.timestamp,
+            data: new Uint8Array(event.data.buffer, event.data.byteOffset, event.data.byteLength),
           });
+        } else {
+          log(`Dropping message due to queue limit (${messageQueueLimit}) reached.`);
+        }
       });
 
       client.on("close", (event) => {
@@ -228,6 +237,8 @@ async function main(
         resolve();
       });
     });
+    isProcessing = false;
+    await processQueuePromise;
   } finally {
     await writer.end();
   }
@@ -238,4 +249,10 @@ export default new Command("mcap-record")
   .argument("<address>", "WebSocket address, e.g. ws://localhost:8765")
   .option("-o, --output <file>", "path to write MCAP file")
   .option("-n, --no-compression", "do not compress chunks")
+  .option(
+    "-q, --queue-limit <value>",
+    "limit of incoming message queue. Choose 0 for unlimited queue length (default)",
+    parseInt,
+    0,
+  )
   .action(main);
