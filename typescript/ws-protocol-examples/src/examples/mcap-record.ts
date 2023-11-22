@@ -5,6 +5,7 @@ import { Command } from "commander";
 import Debug from "debug";
 import fs, { FileHandle } from "fs/promises";
 import path from "path";
+import Queue from "promise-queue";
 import { WebSocket } from "ws";
 
 const log = Debug("foxglove:mcap-record");
@@ -83,9 +84,9 @@ async function main(
   const fileHandle = await fs.open(options.output, "w");
   const fileHandleWritable = new FileHandleWritable(fileHandle);
   const textEncoder = new TextEncoder();
-  const messageQueue: Parameters<McapWriter["addMessage"]>[0][] = [];
-  const messageQueueLimit = options.queueLimit;
-  let isProcessing = true;
+  const maxPendingPromises = 1;
+  const maxQueuedPromises = options.queueLimit > 0 ? options.queueLimit : Infinity;
+  const writeMsgQueue = new Queue(maxPendingPromises, maxQueuedPromises);
 
   const writer = new McapWriter({
     writable: fileHandleWritable,
@@ -106,20 +107,7 @@ async function main(
   process.on("SIGINT", () => {
     log("shutting down...");
     controller.abort();
-    isProcessing = false;
   });
-
-  async function processMsgQueue() {
-    while (isProcessing) {
-      let message = messageQueue.shift();
-      while (message != undefined) {
-        await writer.addMessage(message);
-        message = messageQueue.shift();
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, 10));
-    }
-  }
 
   try {
     const client = await waitForServer(address, controller.signal);
@@ -127,7 +115,6 @@ async function main(
       return;
     }
 
-    const processQueuePromise = processMsgQueue();
     await new Promise<void>((resolve) => {
       const wsChannelsByMcapChannel = new Map<McapChannelId, WsChannelId>();
       const subscriptionsById = new Map<
@@ -214,17 +201,19 @@ async function main(
           return;
         }
 
-        if (messageQueueLimit === 0 || messageQueue.length < messageQueueLimit) {
-          messageQueue.push({
-            channelId: subscription.mcapChannelId,
-            sequence: subscription.messageCount++,
-            logTime: BigInt(Date.now()) * 1_000_000n,
-            publishTime: event.timestamp,
-            data: new Uint8Array(event.data.buffer, event.data.byteOffset, event.data.byteLength),
+        writeMsgQueue
+          .add(async () => {
+            await writer.addMessage({
+              channelId: subscription.mcapChannelId,
+              sequence: subscription.messageCount++,
+              logTime: BigInt(Date.now()) * 1_000_000n,
+              publishTime: event.timestamp,
+              data: new Uint8Array(event.data.buffer, event.data.byteOffset, event.data.byteLength),
+            });
+          })
+          .catch(() => {
+            log(`Dropping message due to queue limit (${options.queueLimit}) reached.`);
           });
-        } else {
-          log(`Dropping message due to queue limit (${messageQueueLimit}) reached.`);
-        }
       });
 
       client.on("close", (event) => {
@@ -237,8 +226,13 @@ async function main(
         resolve();
       });
     });
-    isProcessing = false;
-    await processQueuePromise;
+
+    const waitForWriteQueue = async () => {
+      while (writeMsgQueue.getPendingLength() + writeMsgQueue.getQueueLength() > 0) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+    };
+    await waitForWriteQueue();
   } finally {
     await writer.end();
   }
