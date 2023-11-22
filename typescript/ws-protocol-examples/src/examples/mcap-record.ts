@@ -75,7 +75,10 @@ async function waitForServer(
   return undefined;
 }
 
-async function main(address: string, options: { output: string }): Promise<void> {
+async function main(
+  address: string,
+  options: { output: string; compression: boolean },
+): Promise<void> {
   await Zstd.isLoaded;
   await fs.mkdir(path.dirname(options.output), { recursive: true });
   const fileHandle = await fs.open(options.output, "w");
@@ -85,10 +88,12 @@ async function main(address: string, options: { output: string }): Promise<void>
 
   const writer = new McapWriter({
     writable: fileHandleWritable,
-    compressChunk: (data) => ({
-      compression: "zstd",
-      compressedData: Zstd.compress(data, 19),
-    }),
+    compressChunk: options.compression
+      ? (data) => ({
+          compression: "zstd",
+          compressedData: Zstd.compress(data, 19),
+        })
+      : undefined,
   });
 
   await writer.start({
@@ -232,4 +237,5 @@ export default new Command("mcap-record")
   .description("connect to a WebSocket server and record an MCAP file")
   .argument("<address>", "WebSocket address, e.g. ws://localhost:8765")
   .option("-o, --output <file>", "path to write MCAP file")
+  .option("-n, --no-compression", "do not compress chunks")
   .action(main);
