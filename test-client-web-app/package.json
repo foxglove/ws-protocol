@@ -30,7 +30,7 @@
     "eslint-plugin-jest": "27.4.2",
     "eslint-plugin-prettier": "4.2.1",
     "html-webpack-plugin": "^5.5.3",
-    "prettier": "2.8.8",
+    "prettier": "3.1.0",
     "style-loader": "^3.3.3",
     "ts-loader": "^9.5.0",
     "tsconfig-paths-webpack-plugin": "^4.1.0",
