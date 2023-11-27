@@ -213,7 +213,7 @@ async function main(
             });
           })
           .catch((error) => {
-            log(error);
+            log((error as Error).message);
           });
       });
 
