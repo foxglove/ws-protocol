@@ -22,7 +22,7 @@ class FoxgloveWebSocketConan(ConanFile):
         check_min_cppstd(self, "17")
 
     def requirements(self):
-        self.requires("nlohmann_json/3.10.5")
+        self.requires("nlohmann_json/3.10.5", transitive_headers=True)
         self.requires("websocketpp/0.8.2", transitive_headers=True)
 
     def configure(self):
