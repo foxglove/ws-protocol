@@ -77,7 +77,7 @@ async function waitForServer(
 
 async function main(
   address: string,
-  options: { output: string; compression: boolean; queueLimit: number },
+  options: { output: string; compression: boolean; queueSize: number },
 ): Promise<void> {
   await Zstd.isLoaded;
   await fs.mkdir(path.dirname(options.output), { recursive: true });
@@ -85,7 +85,7 @@ async function main(
   const fileHandleWritable = new FileHandleWritable(fileHandle);
   const textEncoder = new TextEncoder();
   const maxPendingPromises = 1;
-  const maxQueuedPromises = options.queueLimit > 0 ? options.queueLimit : Infinity;
+  const maxQueuedPromises = options.queueSize > 0 ? options.queueSize : Infinity;
   /** Used to ensure all operations on the McapWriter are sequential */
   const writeMsgQueue = new Queue(maxPendingPromises, maxQueuedPromises);
 
@@ -212,8 +212,8 @@ async function main(
               data: new Uint8Array(event.data.buffer, event.data.byteOffset, event.data.byteLength),
             });
           })
-          .catch(() => {
-            log(`Dropping message due to queue limit (${options.queueLimit}) reached.`);
+          .catch((error) => {
+            log(error);
           });
       });
 
@@ -228,12 +228,10 @@ async function main(
       });
     });
 
-    const waitForWriteQueue = async () => {
-      while (writeMsgQueue.getPendingLength() + writeMsgQueue.getQueueLength() > 0) {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      }
-    };
-    await waitForWriteQueue();
+    // Wait until all queued messages have been written.
+    while (writeMsgQueue.getPendingLength() + writeMsgQueue.getQueueLength() > 0) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
   } finally {
     await writer.end();
   }
@@ -245,8 +243,8 @@ export default new Command("mcap-record")
   .option("-o, --output <file>", "path to write MCAP file")
   .option("-n, --no-compression", "do not compress chunks")
   .option(
-    "-q, --queue-limit <value>",
-    "limit of incoming message queue. Choose 0 for unlimited queue length (default)",
+    "-q, --queue-size <value>",
+    "Size of incoming message queue. Choose 0 for unlimited queue length (default)",
     parseInt,
     0,
   )
