@@ -5,6 +5,7 @@ import { Command } from "commander";
 import Debug from "debug";
 import fs, { FileHandle } from "fs/promises";
 import path from "path";
+import Queue from "promise-queue";
 import { WebSocket } from "ws";
 
 const log = Debug("foxglove:mcap-record");
@@ -74,19 +75,28 @@ async function waitForServer(
   return undefined;
 }
 
-async function main(address: string, options: { output: string }): Promise<void> {
+async function main(
+  address: string,
+  options: { output: string; compression: boolean; queueSize: number },
+): Promise<void> {
   await Zstd.isLoaded;
   await fs.mkdir(path.dirname(options.output), { recursive: true });
   const fileHandle = await fs.open(options.output, "w");
   const fileHandleWritable = new FileHandleWritable(fileHandle);
   const textEncoder = new TextEncoder();
+  const maxPendingPromises = 1;
+  const maxQueuedPromises = options.queueSize > 0 ? options.queueSize : Infinity;
+  /** Used to ensure all operations on the McapWriter are sequential */
+  const writeMsgQueue = new Queue(maxPendingPromises, maxQueuedPromises);
 
   const writer = new McapWriter({
     writable: fileHandleWritable,
-    compressChunk: (data) => ({
-      compression: "zstd",
-      compressedData: Zstd.compress(data, 19),
-    }),
+    compressChunk: options.compression
+      ? (data) => ({
+          compression: "zstd",
+          compressedData: Zstd.compress(data, 19),
+        })
+      : undefined,
   });
 
   await writer.start({
@@ -105,6 +115,7 @@ async function main(address: string, options: { output: string }): Promise<void>
     if (!client) {
       return;
     }
+
     await new Promise<void>((resolve) => {
       const wsChannelsByMcapChannel = new Map<McapChannelId, WsChannelId>();
       const subscriptionsById = new Map<
@@ -190,13 +201,20 @@ async function main(address: string, options: { output: string }): Promise<void>
           log("received message for unknown subscription %s", event.subscriptionId);
           return;
         }
-        void writer.addMessage({
-          channelId: subscription.mcapChannelId,
-          sequence: subscription.messageCount++,
-          logTime: BigInt(Date.now()) * 1_000_000n,
-          publishTime: event.timestamp,
-          data: new Uint8Array(event.data.buffer, event.data.byteOffset, event.data.byteLength),
-        });
+
+        writeMsgQueue
+          .add(async () => {
+            await writer.addMessage({
+              channelId: subscription.mcapChannelId,
+              sequence: subscription.messageCount++,
+              logTime: BigInt(Date.now()) * 1_000_000n,
+              publishTime: event.timestamp,
+              data: new Uint8Array(event.data.buffer, event.data.byteOffset, event.data.byteLength),
+            });
+          })
+          .catch((error) => {
+            log((error as Error).message);
+          });
       });
 
       client.on("close", (event) => {
@@ -209,6 +227,11 @@ async function main(address: string, options: { output: string }): Promise<void>
         resolve();
       });
     });
+
+    // Wait until all queued messages have been written.
+    while (writeMsgQueue.getPendingLength() + writeMsgQueue.getQueueLength() > 0) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
   } finally {
     await writer.end();
   }
@@ -218,4 +241,11 @@ export default new Command("mcap-record")
   .description("connect to a WebSocket server and record an MCAP file")
   .argument("<address>", "WebSocket address, e.g. ws://localhost:8765")
   .option("-o, --output <file>", "path to write MCAP file")
+  .option("-n, --no-compression", "do not compress chunks")
+  .option(
+    "-q, --queue-size <value>",
+    "Size of incoming message queue. Choose 0 for unlimited queue length (default)",
+    parseInt,
+    0,
+  )
   .action(main);
