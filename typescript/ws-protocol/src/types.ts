@@ -140,7 +140,7 @@ export type ServerInfo = {
 export type StatusMessage = {
   op: "status";
   level: StatusLevel;
-  message: string;
+  message?: string;
 };
 export type Advertise = {
   op: "advertise";
