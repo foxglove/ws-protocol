@@ -107,11 +107,14 @@ async function main(file: string, options: { loop: boolean; rate: number }): Pro
     let firstIteration = true;
     outer: do {
       log("starting playback");
-      let currentTime: bigint | undefined;
+      let startTime: number | undefined;
+      let firstMessageTime: number | undefined;
+
       for await (const record of readMcapFile(file)) {
         if (!running || signal.aborted) {
           break outer;
         }
+
         switch (record.type) {
           case "Schema":
             if (!firstIteration) {
@@ -148,13 +151,20 @@ async function main(file: string, options: { loop: boolean; rate: number }): Pro
               log("Message on unknown channel %d", record.channelId);
               break;
             }
-            if (currentTime != undefined) {
-              const msToWait = Number(record.logTime - currentTime) / 1_000_000 / options.rate;
-              if (msToWait > 1) {
-                await delay(msToWait);
-              }
+
+            if (firstMessageTime == undefined || startTime == undefined) {
+              startTime = performance.now();
+              firstMessageTime = Number(record.logTime) / 1_000_000;
             }
-            currentTime = record.logTime;
+
+            const elapsedMessageTime = Number(record.logTime) / 1_000_000 - firstMessageTime;
+            const elapsedWallTime = performance.now() - startTime;
+            const timeToWait = elapsedMessageTime - elapsedWallTime;
+
+            if (timeToWait > 0) {
+              await delay(timeToWait);
+            }
+
             if (subscribedChannels.has(wsChannelId)) {
               server.sendMessage(wsChannelId, record.logTime, record.data);
             }
