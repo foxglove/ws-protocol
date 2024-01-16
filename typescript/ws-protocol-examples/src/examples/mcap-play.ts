@@ -108,7 +108,7 @@ async function main(file: string, options: { loop: boolean; rate: number }): Pro
     outer: do {
       log("starting playback");
       let startTime: number | undefined;
-      let firstMessageTime: number | undefined;
+      let firstMessageTime: bigint | undefined;
 
       for await (const record of readMcapFile(file)) {
         if (!running || signal.aborted) {
@@ -154,12 +154,14 @@ async function main(file: string, options: { loop: boolean; rate: number }): Pro
 
             if (firstMessageTime == undefined || startTime == undefined) {
               startTime = performance.now();
-              firstMessageTime = Number(record.logTime) / 1_000_000;
+              firstMessageTime = record.logTime;
             }
 
-            const elapsedMessageTime = Number(record.logTime) / 1_000_000 - firstMessageTime;
+            // Time from the first message to this message
+            const elapsedMessageTime = Number(record.logTime - firstMessageTime) / 1_000_000;
+            // Wall time from start until now
             const elapsedWallTime = performance.now() - startTime;
-            const timeToWait = elapsedMessageTime - elapsedWallTime;
+            const timeToWait = (elapsedMessageTime - elapsedWallTime) / options.rate;
 
             if (timeToWait > 0) {
               await delay(timeToWait);
