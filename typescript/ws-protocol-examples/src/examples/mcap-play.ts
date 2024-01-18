@@ -158,13 +158,13 @@ async function main(file: string, options: { loop: boolean; rate: number }): Pro
             }
 
             // Time from the first message to this message
-            const elapsedMessageTime = Number(record.logTime - firstMessageTime) / 1_000_000;
+            const elapsedMessageTimeMs = Number(record.logTime - firstMessageTime) / 1_000_000;
             // Wall time from start until now
-            const elapsedWallTime = performance.now() - startTime;
-            const timeToWait = (elapsedMessageTime - elapsedWallTime) / options.rate;
+            const elapsedWallTimeMs = performance.now() - startTime;
+            const timeToWaitMs = (elapsedMessageTimeMs - elapsedWallTimeMs) / options.rate;
 
-            if (timeToWait > 0) {
-              await delay(timeToWait);
+            if (timeToWaitMs > 0) {
+              await delay(timeToWaitMs);
             }
 
             if (subscribedChannels.has(wsChannelId)) {
