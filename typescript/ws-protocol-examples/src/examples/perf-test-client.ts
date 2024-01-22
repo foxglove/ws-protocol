@@ -41,7 +41,7 @@ async function main(url: string, topics: string) {
       totalKiloBytesRcvd += sumBytesReceived;
       const topicStr = channel.topic.padEnd(topicWidth);
       const nMsgsStr = `${stats?.length ?? 0}`.padEnd(nMsgsWidth);
-      const sumBytesReceivedStr = `${sumBytesReceived.toFixed(2)}`.padEnd(nKbRcvdWidth);
+      const sumBytesReceivedStr = sumBytesReceived.toFixed(2).padEnd(nKbRcvdWidth);
 
       console.log(`| ${topicStr} | ${nMsgsStr} | ${sumBytesReceivedStr} |`);
     });
