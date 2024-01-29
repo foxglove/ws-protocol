@@ -44,7 +44,7 @@
     "@foxglove/eslint-plugin": "1.0.1",
     "@foxglove/tsconfig": "2.0.0",
     "@types/debug": "^4.1.9",
-    "@types/lodash": "^4.14.200",
+    "@types/lodash": "^4.14.202",
     "@types/node": "^20.6.2",
     "@types/promise-queue": "^2.2.3",
     "@types/ws": "^8.5.5",
