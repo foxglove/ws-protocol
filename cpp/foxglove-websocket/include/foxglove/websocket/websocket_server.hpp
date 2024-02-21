@@ -121,7 +121,7 @@ public:
   using Tcp = websocketpp::lib::asio::ip::tcp;
 
   explicit Server(std::string name, LogCallback logger, const ServerOptions& options);
-  virtual ~Server();
+  virtual ~Server() override;
 
   Server(const Server&) = delete;
   Server(Server&&) = delete;
@@ -970,7 +970,7 @@ inline void Server<ServerConfiguration>::sendMessage(ConnHandle clientHandle, Ch
     const auto logFn = [this, clientHandle]() {
       sendStatusAndLogMsg(clientHandle, StatusLevel::Warning, "Send buffer limit reached");
     };
-    FOXGLOVE_DEBOUNCE(logFn, 2500);
+    FOXGLOVE_DEBOUNCE(logFn, 2500)
     return;
   }
 
