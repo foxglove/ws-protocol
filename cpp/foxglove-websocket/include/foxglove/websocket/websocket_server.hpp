@@ -145,6 +145,8 @@ public:
                         size_t payloadSize) override;
   void sendMessage(ConnHandle clientHandle, ChannelId chanId, uint64_t timestamp,
                    const uint8_t* payload, size_t payloadSize) override;
+  void sendStatusAndLogMsg(ConnHandle clientHandle, const StatusLevel level,
+                           const std::string& message);
   void broadcastTime(uint64_t timestamp) override;
   void sendServiceResponse(ConnHandle clientHandle, const ServiceResponse& response) override;
   void updateConnectionGraph(const MapOfSets& publishedTopics, const MapOfSets& subscribedTopics,
@@ -220,8 +222,6 @@ private:
   void sendJson(ConnHandle hdl, json&& payload);
   void sendJsonRaw(ConnHandle hdl, const std::string& payload);
   void sendBinary(ConnHandle hdl, const uint8_t* payload, size_t payloadSize);
-  void sendStatusAndLogMsg(ConnHandle clientHandle, const StatusLevel level,
-                           const std::string& message);
   void unsubscribeParamsWithoutSubscriptions(ConnHandle hdl,
                                              const std::unordered_set<std::string>& paramNames);
   bool isParameterSubscribed(const std::string& paramName) const;
