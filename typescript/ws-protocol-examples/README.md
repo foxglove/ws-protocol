@@ -30,7 +30,7 @@ $ npx @foxglove/ws-protocol-examples@latest mcap-play <file> [--rate 1.0] [--loo
 
 _Note:_ You must exit each server (<kbd>control</kbd> + <kbd>c</kbd>) before starting up another.
 
-To see data from any server, open [Foxglove Studio](https://studio.foxglove.dev?ds=foxglove-websocket&ds.url=ws://localhost:8765/) with a Foxglove WebSocket connection to `ws://localhost:8765/`:
+To see data from any server, open [Foxglove Studio](https://app.foxglove.dev/~/view?ds=foxglove-websocket&ds.url=ws://localhost:8765/) with a Foxglove WebSocket connection to `ws://localhost:8765/`:
 
 <img width="500" alt="Foxglove Studio displaying memory and CPU usage from the system monitor example" src="https://user-images.githubusercontent.com/14237/145313065-85c05645-6b29-4eb2-a498-849c83f8792d.png">
 <img width="500" alt="Foxglove Studio displaying images from the image server example" src="https://user-images.githubusercontent.com/14237/146500927-4a1408c7-0725-49e7-8185-71b0280c0a8b.png">

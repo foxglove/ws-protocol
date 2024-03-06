@@ -32,7 +32,7 @@ Run a simple example server that publishes messages on a single `example_msg` to
 
 _Note:_ You must exit each server (<kbd>control</kbd> + <kbd>c</kbd>) before starting up another.
 
-To see data from any server, open [Foxglove Studio](https://studio.foxglove.dev?ds=foxglove-websocket&ds.url=ws://localhost:8765/) with a Foxglove WebSocket connection to `ws://localhost:8765/`:
+To see data from any server, open [Foxglove Studio](https://app.foxglove.dev/~/view?ds=foxglove-websocket&ds.url=ws://localhost:8765/) with a Foxglove WebSocket connection to `ws://localhost:8765/`:
 
 <img width="676" alt="Foxglove Studio displaying data from the example server" src="https://user-images.githubusercontent.com/14237/145260376-ddda98c5-7ed0-4239-9ce4-10778ee8240b.png">
 

@@ -67,7 +67,7 @@ async function main(): Promise<void> {
   ws.on("listening", () => {
     void boxen(
       `📡 Server listening on localhost:${port}. To see data, visit:\n` +
-        `https://studio.foxglove.dev/?ds=foxglove-websocket&ds.url=ws://localhost:${port}/`,
+        `https://app.foxglove.dev/~/view?ds=foxglove-websocket&ds.url=ws://localhost:${port}/`,
       { borderStyle: "round", padding: 1 },
     ).then(log);
   });
