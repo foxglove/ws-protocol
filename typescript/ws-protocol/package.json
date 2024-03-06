@@ -1,7 +1,7 @@
 {
   "name": "@foxglove/ws-protocol",
   "version": "0.7.2",
-  "description": "Foxglove Studio WebSocket protocol",
+  "description": "Foxglove WebSocket protocol",
   "keywords": [
     "foxglove",
     "websocket",

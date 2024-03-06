@@ -1,8 +1,8 @@
 # Foxglove WebSocket Protocol
 
-This repository provides a [protocol specification](docs/spec.md) and reference implementations enabling [Foxglove Studio](https://github.com/foxglove/studio) to ingest arbitrary “live” streamed data.
+This repository provides a [protocol specification](docs/spec.md) and reference implementations enabling [Foxglove](https://foxglove.dev/) to ingest arbitrary “live” streamed data.
 
-A Foxglove WebSocket server can provide multiple data streams, called _channels_. When a client subscribes to a channel, it begins receiving _messages_ on that channel. This protocol does not prescribe the messages' data format. Instead, the server specifies each channel's _encoding_, and the client uses this information to determine whether it can decode that channel's messages. Read the [Foxglove Studio documentation](https://foxglove.dev/docs/studio/connection/custom#live-connection) for more information on which encodings Studio supports.
+A Foxglove WebSocket server can provide multiple data streams, called _channels_. When a client subscribes to a channel, it begins receiving _messages_ on that channel. This protocol does not prescribe the messages' data format. Instead, the server specifies each channel's _encoding_, and the client uses this information to determine whether it can decode that channel's messages. Read the [Foxglove documentation](https://docs.foxglove.dev/docs/connecting-to-data/frameworks/custom/#live-connection) for more information on which encodings Foxglove supports.
 
 Implementations are available in the following languages:
 
@@ -15,5 +15,5 @@ Implementations are available in the following languages:
 
 ### Additional resources
 - https://foxglove.github.io/ws-protocol - Connect to a ws-protocol compliant server and measure data throughput
-- [eCAL Foxglove Bridge](https://github.com/eclipse-ecal/ecal-foxglove-bridge) – WebSocket bridge that allows users to connect eCAL systems to Foxglove Studio for easy visualization and debugging
+- [eCAL Foxglove Bridge](https://github.com/eclipse-ecal/ecal-foxglove-bridge) – WebSocket bridge that allows users to connect eCAL systems to Foxglove for easy visualization and debugging
 

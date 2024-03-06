@@ -1,6 +1,6 @@
 # Foxglove WebSocket server and client
 
-This package provides a server implementation of the [Foxglove WebSocket protocol](https://github.com/foxglove/ws-protocol). This protocol enables [Foxglove Studio](https://github.com/foxglove/studio) to ingest arbitrary “live” streamed data.
+This package provides a server implementation of the [Foxglove WebSocket protocol](https://github.com/foxglove/ws-protocol). This protocol enables [Foxglove](https://foxglove.dev/) to ingest arbitrary “live” streamed data.
 
 ## Installation
 

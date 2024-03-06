@@ -1,6 +1,6 @@
 # Foxglove WebSocket server
 
-This package provides a server implementation of the [Foxglove WebSocket protocol](https://github.com/foxglove/ws-protocol) with examples. The protocol enables [Foxglove Studio](https://github.com/foxglove/studio) to ingest arbitrary “live” streamed data.
+This package provides a server implementation of the [Foxglove WebSocket protocol](https://github.com/foxglove/ws-protocol) with examples. The protocol enables [Foxglove](https://foxglove.dev/) to ingest arbitrary “live” streamed data.
 
 ## Installation
 
@@ -32,9 +32,9 @@ Run a simple example server that publishes messages on a single `example_msg` to
 
 _Note:_ You must exit each server (<kbd>control</kbd> + <kbd>c</kbd>) before starting up another.
 
-To see data from any server, open [Foxglove Studio](https://app.foxglove.dev/~/view?ds=foxglove-websocket&ds.url=ws://localhost:8765/) with a Foxglove WebSocket connection to `ws://localhost:8765/`:
+To see data from any server, open [Foxglove](https://app.foxglove.dev/~/view?ds=foxglove-websocket&ds.url=ws://localhost:8765/) with a Foxglove WebSocket connection to `ws://localhost:8765/`:
 
-<img width="676" alt="Foxglove Studio displaying data from the example server" src="https://user-images.githubusercontent.com/14237/145260376-ddda98c5-7ed0-4239-9ce4-10778ee8240b.png">
+<img width="676" alt="Foxglove displaying data from the example server" src="https://user-images.githubusercontent.com/14237/145260376-ddda98c5-7ed0-4239-9ce4-10778ee8240b.png">
 
 To customize each server for your specifications, copy either server into a separate file like `server.py` and make the desired adjustments to this template. Start up your server from the command line, using `python3 server.py`.
 
@@ -46,7 +46,7 @@ The [`threaded_server` example](https://github.com/foxglove/ws-protocol/blob/mai
 python -m foxglove_websocket.examples.threaded_server
 ```
 
-When connected to the server in Foxglove Studio, use the [Data Source Info](https://foxglove.dev/docs/studio/panels/data-source-info) panel to see channels appearing and disappearing, and a [Plot](https://foxglove.dev/docs/studio/panels/plot) panel to visualize data on each channel.
+When connected to the server in Foxglove, use the [Data Source Info](https://docs.foxglove.dev/docs/visualization/panels/data-source-info/) panel to see channels appearing and disappearing, and a [Plot](https://docs.foxglove.dev/docs/visualization/panels/plot/) panel to visualize data on each channel.
 
 <img width="869" alt="image" src="https://user-images.githubusercontent.com/14237/154611361-37f87c06-b85f-4117-8bfe-e1bbbc31f7f4.png">
 
