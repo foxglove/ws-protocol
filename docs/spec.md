@@ -1,10 +1,10 @@
-# Foxglove Studio WebSocket protocol v1
+# Foxglove WebSocket protocol v1
 
 ## Protocol overview
 
-- An application wishing to provide data for streamed consumption by Foxglove Studio hosts a [WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) server.
+- An application wishing to provide data for streamed consumption by Foxglove hosts a [WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) server.
 
-- The client (Foxglove Studio) will specify supported subprotocols (a standard part of the WebSocket handshake) when establishing the connection. The current version of this document corresponds to subprotocol `foxglove.websocket.v1`. The server must select a subprotocol with which it is compatible for the connection to continue.
+- The client (Foxglove) will specify supported subprotocols (a standard part of the WebSocket handshake) when establishing the connection. The current version of this document corresponds to subprotocol `foxglove.websocket.v1`. The server must select a subprotocol with which it is compatible for the connection to continue.
 
   - Example client code in JavaScript:
     ```js
@@ -123,10 +123,10 @@ Each JSON message must be an object containing a field called `op` which identif
   - `id`: number. The server may reuse ids when channels disappear and reappear, but only if the channel keeps the exact same topic, encoding, schemaName, and schema. Clients will use this unique id to cache schema info and deserialization routines.
   - `topic`: string
   - `encoding`: string, type of encoding used for message encoding
-    > Note: Encodings currently supported by Foxglove Studio are `json`, `protobuf`, `ros1`, and `cdr` (ROS 2). For more information, see the [Foxglove Studio documentation](https://foxglove.dev/docs/studio/connection/custom#foxglove-websocket).
+    > Note: Encodings currently supported by Foxglove are `json`, `protobuf`, `ros1`, and `cdr` (ROS 2). For more information, see the [Foxglove documentation](https://docs.foxglove.dev/docs/connecting-to-data/frameworks/custom/#foxglove-websocket).
   - `schemaName`: string
   - `schema`: string
-    > Note: Foxglove Studio expects the schema to be in a format matching the `schemaEncoding` or alternatively the `encoding` if `schemaEncoding` is not specified. For more information, see the [Foxglove Studio documentation](https://foxglove.dev/docs/studio/connection/custom#foxglove-websocket).
+    > Note: Foxglove expects the schema to be in a format matching the `schemaEncoding` or alternatively the `encoding` if `schemaEncoding` is not specified. For more information, see the [Foxglove documentation](https://docs.foxglove.dev/docs/connecting-to-data/frameworks/custom/#foxglove-websocket).
   - `schemaEncoding`: string | undefined, type of encoding used for schema encoding. May be used if the schema encoding can't be uniquely deduced from the message encoding.
 
 #### Example
