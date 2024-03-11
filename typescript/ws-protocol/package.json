@@ -42,7 +42,7 @@
     "@types/node": "^20.11.10",
     "@typescript-eslint/eslint-plugin": "7.1.0",
     "@typescript-eslint/parser": "7.1.0",
-    "commander": "11.1.0",
+    "commander": "12.0.0",
     "consumer-queue": "1.1.0",
     "eslint": "8.56.0",
     "eslint-config-prettier": "9.1.0",
