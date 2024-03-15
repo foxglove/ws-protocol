@@ -99,21 +99,78 @@ void from_json(const nlohmann::json& j, Parameter& p) {
 }
 
 void to_json(nlohmann::json& j, const Service& service) {
+  if (!service.request.has_value() && !service.requestSchema.has_value()) {
+    throw std::runtime_error("Invalid service definition: Either `request` or `requestSchema` must be defined");
+  }
+  if (!service.response.has_value() && !service.responseSchema.has_value()) {
+    throw std::runtime_error("Invalid service definition: Either `response` or `responseSchema` must be defined");
+  }
+
   j = {
     {"id", service.id},
     {"name", service.name},
     {"type", service.type},
-    {"requestSchema", service.requestSchema},
-    {"responseSchema", service.responseSchema},
   };
+
+  if (service.request.has_value()) {
+    j["request"] = service.request.value();
+  }
+  if (service.response.has_value()) {
+    j["response"] = service.response.value();
+  }
+  if (service.requestSchema.has_value()) {
+    j["requestSchema"] = service.requestSchema.value();
+  }
+  if (service.responseSchema.has_value()) {
+    j["responseSchema"] = service.responseSchema.value();
+  }
 }
 
 void from_json(const nlohmann::json& j, Service& p) {
   p.id = j["id"].get<ServiceId>();
   p.name = j["name"].get<std::string>();
   p.type = j["type"].get<std::string>();
-  p.requestSchema = j["requestSchema"].get<std::string>();
-  p.responseSchema = j["responseSchema"].get<std::string>();
+
+{
+  const auto it = j.find("request");
+  p.request = it == j.end() ? std::optional<ServiceRequestDefinition>(std::nullopt)
+                                  : std::make_optional(it->get<ServiceRequestDefinition>());
+
+}
+{
+  const auto it = j.find("response");
+  p.response = it == j.end() ? std::optional<ServiceResponseDefinition>(std::nullopt)
+                                  : std::make_optional(it->get<ServiceResponseDefinition>());
+
+}
+{
+  const auto it = j.find("requestSchema");
+  p.requestSchema = it == j.end() ? std::optional<std::string>(std::nullopt)
+                                  : std::make_optional(it->get<std::string>());
+
+}
+{
+  const auto it = j.find("responseSchema");
+  p.responseSchema = it == j.end() ? std::optional<std::string>(std::nullopt)
+                                  : std::make_optional(it->get<std::string>());
+
+}
+}
+
+void to_json(nlohmann::json& j, const ServiceRequestDefinition& r) {
+  j = {
+    {"encoding",   r.encoding},
+    {"schemaName", r.schemaName},
+    {"schemaEncoding", r.schemaEncoding},
+    {"schema", r.schema},
+  };
+}
+
+void from_json(const nlohmann::json& j, ServiceRequestDefinition& r) {
+  r.encoding = j["encoding"].get<std::string>();
+  r.schemaName = j["schemaName"].get<std::string>();
+  r.schemaEncoding = j["schemaEncoding"].get<std::string>();
+  r.schema = j["schema"].get<std::string>();
 }
 
 void ServiceResponse::read(const uint8_t* data, size_t dataLength) {
