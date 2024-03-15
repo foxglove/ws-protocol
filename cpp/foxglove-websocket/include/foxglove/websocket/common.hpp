@@ -126,7 +126,7 @@ struct ServiceWithoutId {
   std::optional<ServiceRequestDefinition> request;
   std::optional<ServiceResponseDefinition> response;
 
-  std::optional<std::string> requestSchema;  // Prefer request instead
+  std::optional<std::string> requestSchema;   // Prefer request instead
   std::optional<std::string> responseSchema;  // Prefer response instead
 };
 
