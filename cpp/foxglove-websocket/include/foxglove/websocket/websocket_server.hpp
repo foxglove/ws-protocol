@@ -906,6 +906,15 @@ inline std::vector<ServiceId> Server<ServerConfiguration>::addServices(
   std::vector<ServiceId> serviceIds;
   json newServices;
   for (const auto& service : services) {
+    if (!service.request.has_value() && !service.requestSchema.has_value()) {
+      throw std::runtime_error(
+        "Invalid service definition: Either `request` or `requestSchema` must be defined");
+    }
+    if (!service.response.has_value() && !service.responseSchema.has_value()) {
+      throw std::runtime_error(
+        "Invalid service definition: Either `response` or `responseSchema` must be defined");
+    }
+
     const ServiceId serviceId = ++_nextServiceId;
     _services.emplace(serviceId, service);
     serviceIds.push_back(serviceId);

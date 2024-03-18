@@ -99,15 +99,6 @@ void from_json(const nlohmann::json& j, Parameter& p) {
 }
 
 void to_json(nlohmann::json& j, const Service& service) {
-  if (!service.request.has_value() && !service.requestSchema.has_value()) {
-    throw std::runtime_error(
-      "Invalid service definition: Either `request` or `requestSchema` must be defined");
-  }
-  if (!service.response.has_value() && !service.responseSchema.has_value()) {
-    throw std::runtime_error(
-      "Invalid service definition: Either `response` or `responseSchema` must be defined");
-  }
-
   j = {
     {"id", service.id},
     {"name", service.name},
