@@ -311,22 +311,34 @@ async def test_service_call():
         service: ServiceWithoutId = {
             "name": "set_bool",
             "type": "set_bool",
-            "requestSchema": json.dumps(
-                {
-                    "type": "object",
-                    "properties": {
-                        "data": {"type": "boolean"},
-                    },
-                }
-            ),
-            "responseSchema": json.dumps(
-                {
-                    "type": "object",
-                    "properties": {
-                        "success": {"type": "boolean"},
-                    },
-                }
-            ),
+            "request": {
+                "encoding": "json",
+                "schemaName": "requestSchema",
+                "schemaEncoding": "jsonschema",
+                "schema": json.dumps(
+                    {
+                        "type": "object",
+                        "properties": {
+                            "data": {"type": "boolean"},
+                        },
+                    }
+                ),
+            },
+            "response": {
+                "encoding": "json",
+                "schemaName": "responseSchema",
+                "schemaEncoding": "jsonschema",
+                "schema": json.dumps(
+                    {
+                        "type": "object",
+                        "properties": {
+                            "success": {"type": "boolean"},
+                        },
+                    }
+                ),
+            },
+            "requestSchema": None,
+            "responseSchema": None,
         }
         service_id = await server.add_service(service)
 

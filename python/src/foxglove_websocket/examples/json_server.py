@@ -87,23 +87,35 @@ async def main():
         await server.add_service(
             {
                 "name": "example_set_bool",
-                "requestSchema": json.dumps(
-                    {
-                        "type": "object",
-                        "properties": {
-                            "data": {"type": "boolean"},
-                        },
-                    }
-                ),
-                "responseSchema": json.dumps(
-                    {
-                        "type": "object",
-                        "properties": {
-                            "success": {"type": "boolean"},
-                            "message": {"type": "string"},
-                        },
-                    }
-                ),
+                "request": {
+                    "encoding": "json",
+                    "schemaName": "requestSchema",
+                    "schemaEncoding": "jsonschema",
+                    "schema": json.dumps(
+                        {
+                            "type": "object",
+                            "properties": {
+                                "data": {"type": "boolean"},
+                            },
+                        }
+                    ),
+                },
+                "response": {
+                    "encoding": "json",
+                    "schemaName": "responseSchema",
+                    "schemaEncoding": "jsonschema",
+                    "schema": json.dumps(
+                        {
+                            "type": "object",
+                            "properties": {
+                                "success": {"type": "boolean"},
+                                "message": {"type": "string"},
+                            },
+                        }
+                    ),
+                },
+                "requestSchema": None,
+                "responseSchema": None,
                 "type": "example_set_bool",
             }
         )

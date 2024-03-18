@@ -271,6 +271,15 @@ class FoxgloveServer:
             )
 
     async def add_service(self, service: ServiceWithoutId) -> ServiceId:
+        if "request" not in service.keys() and "requestSchema" not in service.keys():
+            raise ValueError(
+                f"Invalid service definition: Either 'request' or 'requestSchema' must be defined"
+            )
+        if "response" not in service.keys() and "responseSchema" not in service.keys():
+            raise ValueError(
+                f"Invalid service definition: Either 'response' or 'responseSchema' must be defined"
+            )
+
         new_id = self._next_service_id
         self._next_service_id = ServiceId(new_id + 1)
         new_service = Service(id=new_id, **service)
