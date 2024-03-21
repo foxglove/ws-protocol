@@ -158,8 +158,8 @@ class ServiceWithoutId(TypedDict):
     type: str
     request: Optional[ServiceRequestDefinition]
     response: Optional[ServiceResponseDefinition]
-    requestSchema: Optional[str]
-    responseSchema: Optional[str]
+    requestSchema: Optional[str]  # Prefer request instead
+    responseSchema: Optional[str]  # Prefer response instead
 
 
 class Service(ServiceWithoutId):

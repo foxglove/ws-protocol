@@ -105,17 +105,17 @@ void to_json(nlohmann::json& j, const Service& service) {
     {"type", service.type},
   };
 
-  if (service.request.has_value()) {
-    j["request"] = service.request.value();
+  if (service.request) {
+    j["request"] = *service.request;
   }
-  if (service.response.has_value()) {
-    j["response"] = service.response.value();
+  if (service.response) {
+    j["response"] = *service.response;
   }
-  if (service.requestSchema.has_value()) {
-    j["requestSchema"] = service.requestSchema.value();
+  if (service.requestSchema) {
+    j["requestSchema"] = *service.requestSchema;
   }
-  if (service.responseSchema.has_value()) {
-    j["responseSchema"] = service.responseSchema.value();
+  if (service.responseSchema) {
+    j["responseSchema"] = *service.responseSchema;
   }
 }
 
@@ -124,25 +124,20 @@ void from_json(const nlohmann::json& j, Service& p) {
   p.name = j["name"].get<std::string>();
   p.type = j["type"].get<std::string>();
 
-  {
-    const auto it = j.find("request");
-    p.request = it == j.end() ? std::optional<ServiceRequestDefinition>(std::nullopt)
-                              : std::make_optional(it->get<ServiceRequestDefinition>());
+  if (const auto it = j.find("request"); it != j.end()) {
+    p.request = it->get<ServiceRequestDefinition>();
   }
-  {
-    const auto it = j.find("response");
-    p.response = it == j.end() ? std::optional<ServiceResponseDefinition>(std::nullopt)
-                               : std::make_optional(it->get<ServiceResponseDefinition>());
+
+  if (const auto it = j.find("response"); it != j.end()) {
+    p.response = it->get<ServiceResponseDefinition>();
   }
-  {
-    const auto it = j.find("requestSchema");
-    p.requestSchema = it == j.end() ? std::optional<std::string>(std::nullopt)
-                                    : std::make_optional(it->get<std::string>());
+
+  if (const auto it = j.find("requestSchema"); it != j.end()) {
+    p.requestSchema = it->get<std::string>();
   }
-  {
-    const auto it = j.find("responseSchema");
-    p.responseSchema = it == j.end() ? std::optional<std::string>(std::nullopt)
-                                     : std::make_optional(it->get<std::string>());
+
+  if (const auto it = j.find("responseSchema"); it != j.end()) {
+    p.responseSchema = it->get<std::string>();
   }
 }
 
