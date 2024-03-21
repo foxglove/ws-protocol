@@ -52,5 +52,7 @@ void to_json(nlohmann::json& j, const Parameter& p);
 void from_json(const nlohmann::json& j, Parameter& p);
 void to_json(nlohmann::json& j, const Service& p);
 void from_json(const nlohmann::json& j, Service& p);
+void to_json(nlohmann::json& j, const ServiceRequestDefinition& p);
+void from_json(const nlohmann::json& j, ServiceRequestDefinition& p);
 
 }  // namespace foxglove

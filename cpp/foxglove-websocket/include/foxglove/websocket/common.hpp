@@ -111,11 +111,23 @@ struct ClientMessage {
   }
 };
 
+struct ServiceRequestDefinition {
+  std::string encoding;
+  std::string schemaName;
+  std::string schemaEncoding;
+  std::string schema;
+};
+
+using ServiceResponseDefinition = ServiceRequestDefinition;
+
 struct ServiceWithoutId {
   std::string name;
   std::string type;
-  std::string requestSchema;
-  std::string responseSchema;
+  std::optional<ServiceRequestDefinition> request;
+  std::optional<ServiceResponseDefinition> response;
+
+  std::optional<std::string> requestSchema;   // Prefer request instead
+  std::optional<std::string> responseSchema;  // Prefer response instead
 };
 
 struct Service : ServiceWithoutId {

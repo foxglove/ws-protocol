@@ -103,17 +103,58 @@ void to_json(nlohmann::json& j, const Service& service) {
     {"id", service.id},
     {"name", service.name},
     {"type", service.type},
-    {"requestSchema", service.requestSchema},
-    {"responseSchema", service.responseSchema},
   };
+
+  if (service.request) {
+    j["request"] = *service.request;
+  }
+  if (service.response) {
+    j["response"] = *service.response;
+  }
+  if (service.requestSchema) {
+    j["requestSchema"] = *service.requestSchema;
+  }
+  if (service.responseSchema) {
+    j["responseSchema"] = *service.responseSchema;
+  }
 }
 
 void from_json(const nlohmann::json& j, Service& p) {
   p.id = j["id"].get<ServiceId>();
   p.name = j["name"].get<std::string>();
   p.type = j["type"].get<std::string>();
-  p.requestSchema = j["requestSchema"].get<std::string>();
-  p.responseSchema = j["responseSchema"].get<std::string>();
+
+  if (const auto it = j.find("request"); it != j.end()) {
+    p.request = it->get<ServiceRequestDefinition>();
+  }
+
+  if (const auto it = j.find("response"); it != j.end()) {
+    p.response = it->get<ServiceResponseDefinition>();
+  }
+
+  if (const auto it = j.find("requestSchema"); it != j.end()) {
+    p.requestSchema = it->get<std::string>();
+  }
+
+  if (const auto it = j.find("responseSchema"); it != j.end()) {
+    p.responseSchema = it->get<std::string>();
+  }
+}
+
+void to_json(nlohmann::json& j, const ServiceRequestDefinition& r) {
+  j = {
+    {"encoding", r.encoding},
+    {"schemaName", r.schemaName},
+    {"schemaEncoding", r.schemaEncoding},
+    {"schema", r.schema},
+  };
+}
+
+void from_json(const nlohmann::json& j, ServiceRequestDefinition& r) {
+  r.encoding = j["encoding"].get<std::string>();
+  r.schemaName = j["schemaName"].get<std::string>();
+  r.schemaEncoding = j["schemaEncoding"].get<std::string>();
+  r.schema = j["schema"].get<std::string>();
 }
 
 void ServiceResponse::read(const uint8_t* data, size_t dataLength) {

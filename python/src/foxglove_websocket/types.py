@@ -142,11 +142,24 @@ class Channel(ChannelWithoutId):
     id: ChannelId
 
 
+class ServiceRequestDefinition(TypedDict):
+    encoding: str
+    schemaName: str
+    schemaEncoding: str
+    schema: str
+
+
+class ServiceResponseDefinition(ServiceRequestDefinition):
+    pass
+
+
 class ServiceWithoutId(TypedDict):
     name: str
     type: str
-    requestSchema: str
-    responseSchema: str
+    request: Optional[ServiceRequestDefinition]
+    response: Optional[ServiceResponseDefinition]
+    requestSchema: Optional[str]  # Prefer request instead
+    responseSchema: Optional[str]  # Prefer response instead
 
 
 class Service(ServiceWithoutId):
