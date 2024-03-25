@@ -626,12 +626,12 @@
         },
         "pytest-asyncio": {
             "hashes": [
-                "sha256:30f54d27774e79ac409778889880242b0403d09cabd65b727ce90fe92dd5d80e",
-                "sha256:b9a8806bea78c21276bc34321bbf234ba1b2ea5b30d9f0ce0f2dea45e4685813"
+                "sha256:68516fdd1018ac57b846c9846b954f0393b26f094764a28c955eabb0536a4e8a",
+                "sha256:ffe523a89c1c222598c76856e76852b787504ddb72dd5d9b6617ffa8aa2cde5f"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.8'",
-            "version": "==0.23.5.post1"
+            "version": "==0.23.6"
         },
         "setuptools": {
             "hashes": [
