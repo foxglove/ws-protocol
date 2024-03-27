@@ -64,11 +64,13 @@ int main(int argc, char** argv) {
     "C++ FlatBuffers example server", logHandler, serverOptions);
 
   foxglove::ServerHandlers<foxglove::ConnHandle> hdlrs;
-  hdlrs.subscribeHandler = [&](foxglove::ChannelId chanId, foxglove::ConnHandle) {
-    std::cout << "first client subscribed to " << chanId << std::endl;
+  hdlrs.subscribeHandler = [&](foxglove::ChannelId chanId, foxglove::ConnHandle clientHandle) {
+    const auto clientStr = server->remoteEndpointString(clientHandle);
+    std::cout << "Client " << clientStr << " subscribed to " << chanId << std::endl;
   };
-  hdlrs.unsubscribeHandler = [&](foxglove::ChannelId chanId, foxglove::ConnHandle) {
-    std::cout << "last client unsubscribed from " << chanId << std::endl;
+  hdlrs.unsubscribeHandler = [&](foxglove::ChannelId chanId, foxglove::ConnHandle clientHandle) {
+    const auto clientStr = server->remoteEndpointString(clientHandle);
+    std::cout << "Client " << clientStr << " unsubscribed from " << chanId << std::endl;
   };
   server->setHandlers(std::move(hdlrs));
   server->start("0.0.0.0", 8765);
