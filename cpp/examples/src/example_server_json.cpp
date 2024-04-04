@@ -19,59 +19,53 @@ std::atomic<bool> running = true;
 
 static uint64_t nanosecondsSinceEpoch() {
   return uint64_t(std::chrono::duration_cast<std::chrono::nanoseconds>(
-                      std::chrono::system_clock::now().time_since_epoch())
-                      .count());
+                    std::chrono::system_clock::now().time_since_epoch())
+                    .count());
 }
 
 int main() {
-  const auto logHandler = [](foxglove::WebSocketLogLevel, char const *msg) {
+  const auto logHandler = [](foxglove::WebSocketLogLevel, char const* msg) {
     std::cout << msg << std::endl;
   };
   foxglove::ServerOptions serverOptions;
-  auto server =
-      foxglove::ServerFactory::createServer<websocketpp::connection_hdl>(
-          "C++ JSON example server", logHandler, serverOptions);
+  auto server = foxglove::ServerFactory::createServer<websocketpp::connection_hdl>(
+    "C++ JSON example server", logHandler, serverOptions);
 
   foxglove::ServerHandlers<foxglove::ConnHandle> hdlrs;
-  hdlrs.subscribeHandler = [&](foxglove::ChannelId chanId,
-                               foxglove::ConnHandle clientHandle) {
+  hdlrs.subscribeHandler = [&](foxglove::ChannelId chanId, foxglove::ConnHandle clientHandle) {
     const auto clientStr = server->remoteEndpointString(clientHandle);
-    std::cout << "Client " << clientStr << " subscribed to " << chanId
-              << std::endl;
+    std::cout << "Client " << clientStr << " subscribed to " << chanId << std::endl;
   };
-  hdlrs.unsubscribeHandler = [&](foxglove::ChannelId chanId,
-                                 foxglove::ConnHandle clientHandle) {
+  hdlrs.unsubscribeHandler = [&](foxglove::ChannelId chanId, foxglove::ConnHandle clientHandle) {
     const auto clientStr = server->remoteEndpointString(clientHandle);
-    std::cout << "Client " << clientStr << " unsubscribed from " << chanId
-              << std::endl;
+    std::cout << "Client " << clientStr << " unsubscribed from " << chanId << std::endl;
   };
   server->setHandlers(std::move(hdlrs));
   server->start("0.0.0.0", 8765);
 
   // Advertise two channels: One with schema and one without.
-  const auto channelIds =
-      server->addChannels({{
-                               .topic = "example_msg",
-                               .encoding = "json",
-                               .schemaName = "some_schema",
-                               .schema =
-                                   nlohmann::json{
-                                       {"type", "object"},
-                                       {"properties",
-                                        {
-                                            {"seq", {{"type", "number"}}},
-                                            {"x", {{"type", "number"}}},
-                                            {"y", {{"type", "number"}}},
-                                        }},
-                                   }
-                                       .dump(),
-                           },
-                           {
-                               .topic = "example_msg_schemaless",
-                               .encoding = "json",
-                               .schemaName = "",
-                               .schema = "",
-                           }});
+  const auto channelIds = server->addChannels({{
+                                                 .topic = "example_msg",
+                                                 .encoding = "json",
+                                                 .schemaName = "some_schema",
+                                                 .schema =
+                                                   nlohmann::json{
+                                                     {"type", "object"},
+                                                     {"properties",
+                                                      {
+                                                        {"seq", {{"type", "number"}}},
+                                                        {"x", {{"type", "number"}}},
+                                                        {"y", {{"type", "number"}}},
+                                                      }},
+                                                   }
+                                                     .dump(),
+                                               },
+                                               {
+                                                 .topic = "example_msg_schemaless",
+                                                 .encoding = "json",
+                                                 .schemaName = "",
+                                                 .schema = "",
+                                               }});
 
   std::signal(SIGINT, [](int sig) {
     std::cerr << "received signal " << sig << ", shutting down" << std::endl;
@@ -84,16 +78,15 @@ int main() {
 
     // We publish the same message on both channels.
     const auto serializedMsg = nlohmann::json({
-                                                  {"seq", ++seq},
-                                                  {"x", std::sin(seq / 10.0)},
-                                                  {"y", std::cos(seq / 10.0)},
+                                                {"seq", ++seq},
+                                                {"x", std::sin(seq / 10.0)},
+                                                {"y", std::cos(seq / 10.0)},
                                               })
-                                   .dump();
+                                 .dump();
 
-    for (const auto &chanId : channelIds) {
-      server->broadcastMessage(
-          chanId, now, reinterpret_cast<const uint8_t *>(serializedMsg.data()),
-          serializedMsg.size());
+    for (const auto& chanId : channelIds) {
+      server->broadcastMessage(chanId, now, reinterpret_cast<const uint8_t*>(serializedMsg.data()),
+                               serializedMsg.size());
     }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
