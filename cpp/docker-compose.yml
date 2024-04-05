@@ -27,6 +27,14 @@ services:
     ports:
       - "8765:8765"
 
+  example_server_json:
+    build:
+      context: .
+      dockerfile: dev.Dockerfile
+      target: example_server_json
+    ports:
+      - "8765:8765"
+
   example_server_perf_test:
     build:
       context: .
