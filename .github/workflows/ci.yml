@@ -43,6 +43,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
       - name: Publish to NPM
+        # prevent trying to publish the same package twice with different node versions
         if: ${{ matrix.node-version == '18.x' && startsWith(github.ref, format('refs/tags/releases/typescript/{0}/v', matrix.package)) }}
         # `yarn publish` does not support --provenance
         run: npm publish typescript/${{ matrix.package }}/*.tgz --provenance --access public
