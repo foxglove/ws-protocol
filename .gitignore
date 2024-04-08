@@ -4,6 +4,7 @@ dist
 node_modules
 *.hdf5
 yarn-error.log
+*.tgz
 
 # Python
 __pycache__

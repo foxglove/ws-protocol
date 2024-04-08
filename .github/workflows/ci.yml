@@ -10,6 +10,11 @@ on:
 jobs:
   typescript:
     runs-on: ubuntu-latest
+
+    permissions:
+      # https://docs.npmjs.com/generating-provenance-statements#publishing-packages-with-provenance-via-github-actions
+      id-token: write
+
     strategy:
       fail-fast: false
       matrix:
@@ -30,9 +35,19 @@ jobs:
       - run: yarn workspace @foxglove/${{ matrix.package }} lint:ci
       - run: yarn workspace @foxglove/${{ matrix.package }} test
 
+      - if: ${{ matrix.package != 'test-client-web-app' }}
+        run: yarn workspace @foxglove/${{ matrix.package }} pack
+      - name: Publish to NPM (dry run)
+        if: ${{ matrix.node-version == '18.x' && matrix.package != 'test-client-web-app' }}
+        # `yarn publish` does not support --provenance
+        run: npm publish typescript/${{ matrix.package }}/*.tgz --provenance --access public --dry-run
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
       - name: Publish to NPM
-        if: ${{ startsWith(github.ref, format('refs/tags/releases/typescript/{0}/v', matrix.package)) }}
-        run: yarn workspace @foxglove/${{ matrix.package }} publish --access public
+        # prevent trying to publish the same package twice with different node versions
+        if: ${{ matrix.node-version == '18.x' && matrix.package != 'test-client-web-app' && startsWith(github.ref, format('refs/tags/releases/typescript/{0}/v', matrix.package)) }}
+        # `yarn publish` does not support --provenance
+        run: npm publish typescript/${{ matrix.package }}/*.tgz --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
 
