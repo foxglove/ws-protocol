@@ -17,6 +17,7 @@ import {
   ParameterValues,
   ServerMessage,
   Service,
+  ServiceCallFailure,
   ServiceCallPayload,
   ServiceCallResponse,
   ServiceId,
@@ -41,6 +42,7 @@ type EventTypes = {
   serviceCallResponse: (event: ServiceCallResponse) => void;
   connectionGraphUpdate: (event: ConnectionGraphUpdate) => void;
   fetchAssetResponse: (event: FetchAssetResponse) => void;
+  serviceCallFailure: (event: ServiceCallFailure) => void;
 };
 
 const textEncoder = new TextEncoder();
@@ -130,6 +132,10 @@ export default class FoxgloveClient {
 
         case "connectionGraphUpdate":
           this.#emitter.emit("connectionGraphUpdate", message);
+          return;
+
+        case "serviceCallFailure":
+          this.#emitter.emit("serviceCallFailure", message);
           return;
 
         case BinaryOpcode.MESSAGE_DATA:

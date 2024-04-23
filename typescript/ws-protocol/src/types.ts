@@ -235,6 +235,12 @@ export type FetchAssetErrorResponse = {
   error: string;
 };
 export type FetchAssetResponse = FetchAssetSuccessResponse | FetchAssetErrorResponse;
+export type ServiceCallFailure = {
+  op: "serviceCallFailure";
+  serviceId: number;
+  callId: number;
+  message: string;
+};
 export type ClientPublish = {
   channel: ClientChannel;
   data: DataView;
@@ -264,7 +270,8 @@ export type ServerMessage =
   | ServiceCallResponse
   | ParameterValues
   | ConnectionGraphUpdate
-  | FetchAssetResponse;
+  | FetchAssetResponse
+  | ServiceCallFailure;
 
 /**
  * Abstraction that supports both browser and Node WebSocket clients.

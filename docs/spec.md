@@ -35,6 +35,7 @@
 - [Service Call Response](#service-call-response) (binary)
 - [Connection Graph Update](#connection-graph-update) (json)
 - [Fetch Asset Response](#fetch-asset-response) (binary)
+- [Service Call Failure](#service-call-failure) (json)
 
 ### Sent by client
 
@@ -294,6 +295,29 @@ Informs the client about updates to the connection graph. This is only sent to c
   "advertisedServices": [{ "name": "/set_bool", "providerIds": ["/node_2"] }],
   "removedTopics": ["/baz"],
   "removedServices": []
+}
+```
+
+### Service call failure
+
+Informs the client about failure to [call a service](#service-call-request).
+Only supported if the server previously declared that it has the `services` [capability](#server-info).
+
+#### Fields
+
+- `op`: string `"serviceCallFailure"`
+- `serviceId`: number
+- `callId`: number
+- `message`: string
+
+#### Example
+
+```json
+{
+  "op": "serviceCallFailure",
+  "serviceId": 1,
+  "callId": 1,
+  "message": "Service does not exist",
 }
 ```
 
@@ -574,6 +598,7 @@ All integer types explicitly specified (uint32, uint64, etc.) in this section ar
 ### Service Call Response
 
 - Provides the response to a previous [service call](#service-call-request).
+- If the service call failed, a [service call failure](#service-call-failure) response will be sent instead.
 - Only supported if the server previously declared the `services` [capability](#server-info).
 
 | Bytes             | Type    | Description                                           |

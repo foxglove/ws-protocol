@@ -73,6 +73,11 @@ async function main(url: string) {
 
     client.close();
   });
+
+  client.on("serviceCallFailure", (event) => {
+    console.error(`Failed to call service ${event.serviceId}: ${event.message}`);
+    client.close();
+  });
 }
 
 export default new Command("service-client")
