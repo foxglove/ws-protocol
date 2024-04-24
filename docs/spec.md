@@ -298,7 +298,7 @@ Informs the client about updates to the connection graph. This is only sent to c
 }
 ```
 
-### Service call failure
+### Service Call Failure
 
 Informs the client about failure to [call a service](#service-call-request).
 Only supported if the server previously declared that it has the `services` [capability](#server-info).
