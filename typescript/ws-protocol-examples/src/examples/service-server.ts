@@ -95,14 +95,34 @@ async function main(): Promise<void> {
   server.on("serviceCallRequest", (request, clientConnection) => {
     const service = serviceById.get(request.serviceId);
     if (!service) {
-      throw new Error(`Received invalid serviceId: "${request.serviceId}"`);
+      const err = new Error(`Received invalid serviceId: "${request.serviceId}"`);
+      server.sendServiceCallFailure(
+        {
+          op: "serviceCallFailure",
+          serviceId: request.serviceId,
+          callId: request.callId,
+          message: err.message,
+        },
+        clientConnection,
+      );
+      throw err;
     }
     if (service.request!.encoding !== request.encoding) {
-      throw new Error(
+      const err = new Error(
         `Service ${service.name} called with invalid message encoding. Expected ${
           service.request!.encoding
         }, got ${request.encoding}`,
       );
+      server.sendServiceCallFailure(
+        {
+          op: "serviceCallFailure",
+          serviceId: request.serviceId,
+          callId: request.callId,
+          message: err.message,
+        },
+        clientConnection,
+      );
+      throw err;
     }
 
     log("Received service call request with %d bytes", request.data.byteLength);

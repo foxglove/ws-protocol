@@ -19,6 +19,7 @@ import {
   ServerCapability,
   ServerMessage,
   Service,
+  ServiceCallFailure,
   ServiceCallPayload,
   ServiceCallRequest,
   ServiceId,
@@ -271,6 +272,15 @@ export default class FoxgloveServer {
       offset,
     );
     connection.send(payload);
+  }
+
+  /**
+   * Send a service call failure response to the client
+   * @param response Response to send to the client
+   * @param connection Connection of the client that called the service
+   */
+  sendServiceCallFailure(response: ServiceCallFailure, connection: IWebSocket): void {
+    this.#send(connection, response);
   }
 
   /**
