@@ -75,8 +75,8 @@ export default class FoxgloveClient {
 
   #reconnect() {
     this.#ws.binaryType = "arraybuffer";
-    this.#ws.onerror = (event) => {
-      this.#emitter.emit("error", (event as unknown as { error: Error }).error);
+    this.#ws.onerror = (event: { error?: Error }) => {
+      this.#emitter.emit("error", event.error ?? new Error("WebSocket error"));
     };
     this.#ws.onopen = (_event) => {
       if (this.#ws.protocol !== FoxgloveClient.SUPPORTED_SUBPROTOCOL) {
