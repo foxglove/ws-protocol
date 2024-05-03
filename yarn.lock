@@ -796,15 +796,6 @@
   resolved "https://registry.yarnpkg.com/@foxglove/wasm-zstd/-/wasm-zstd-1.0.1.tgz#41f97f9c1ed5d10790603376fbecda7ce2145fe5"
   integrity sha512-hqKTO45Sl+kSq9SDqM9xi5L+GncjFEZIJgYEkGTlpJXTfhy1Gf+a+3epWMcE0tLUKmzM77dtu8snape/J+7ueQ==
 
-"@foxglove/ws-protocol@0.7.2":
-  version "0.7.2"
-  resolved "https://registry.yarnpkg.com/@foxglove/ws-protocol/-/ws-protocol-0.7.2.tgz#e9cdb2ea0181d2b197fd008d02b36b2733950c6e"
-  integrity sha512-HBRh9h8GVpBAxieQM8cD6OX4FSDM+t0mHgNjr8/nlls93hKblFuFDfqeHWgApht8qdG5wY36KgJ7KOLH52nHmA==
-  dependencies:
-    debug "^4"
-    eventemitter3 "^5.0.1"
-    tslib "^2.6.2"
-
 "@humanwhocodes/config-array@^0.11.13":
   version "0.11.13"
   resolved "https://registry.yarnpkg.com/@humanwhocodes/config-array/-/config-array-0.11.13.tgz#075dc9684f40a531d9b26b0822153c1e832ee297"
