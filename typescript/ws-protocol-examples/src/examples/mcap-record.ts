@@ -77,7 +77,13 @@ async function waitForServer(
 
 async function main(
   address: string,
-  options: { output: string; compression: boolean; queueSize: number },
+  options: {
+    output: string;
+    compression: boolean;
+    chunkSize: number;
+    compressionLevel: number;
+    queueSize: number;
+  },
 ): Promise<void> {
   await Zstd.isLoaded;
   await fs.mkdir(path.dirname(options.output), { recursive: true });
@@ -91,10 +97,11 @@ async function main(
 
   const writer = new McapWriter({
     writable: fileHandleWritable,
+    chunkSize: options.chunkSize,
     compressChunk: options.compression
       ? (data) => ({
           compression: "zstd",
-          compressedData: Zstd.compress(data, 19),
+          compressedData: Zstd.compress(data, options.compressionLevel),
         })
       : undefined,
   });
@@ -173,20 +180,29 @@ async function main(
               case undefined:
                 break;
             }
-            const schemaId =
-              schemaData != undefined && schemaEncoding != undefined
-                ? await writer.registerSchema({
+            let schemaId = 0;
+            if (schemaData != undefined && schemaEncoding != undefined) {
+              // workaround to help TS type refinement
+              const nonnullSchemaData = schemaData;
+              const nonnullSchemaEncoding = schemaEncoding;
+              schemaId = await writeMsgQueue.add(
+                async () =>
+                  await writer.registerSchema({
                     name: channel.schemaName,
-                    encoding: schemaEncoding,
-                    data: schemaData,
-                  })
-                : 0;
-            const mcapChannelId = (await writer.registerChannel({
-              schemaId,
-              topic: channel.topic,
-              messageEncoding: channel.encoding,
-              metadata: new Map(),
-            })) as McapChannelId;
+                    encoding: nonnullSchemaEncoding,
+                    data: nonnullSchemaData,
+                  }),
+              );
+            }
+            const mcapChannelId = (await writeMsgQueue.add(
+              async () =>
+                await writer.registerChannel({
+                  schemaId,
+                  topic: channel.topic,
+                  messageEncoding: channel.encoding,
+                  metadata: new Map(),
+                }),
+            )) as McapChannelId;
             wsChannelsByMcapChannel.set(mcapChannelId, channel.id as WsChannelId);
 
             log("subscribing to %s", channel.topic);
@@ -242,6 +258,8 @@ export default new Command("mcap-record")
   .argument("<address>", "WebSocket address, e.g. ws://localhost:8765")
   .option("-o, --output <file>", "path to write MCAP file")
   .option("-n, --no-compression", "do not compress chunks")
+  .option("--chunk-size <value>", "chunk size in bytes", parseInt, 5 * 1024 * 1024)
+  .option("--compression-level <value>", "Zstandard compression level", parseInt, 3)
   .option(
     "-q, --queue-size <value>",
     "Size of incoming message queue. Choose 0 for unlimited queue length (default)",
