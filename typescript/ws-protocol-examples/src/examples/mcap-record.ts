@@ -180,17 +180,20 @@ async function main(
               case undefined:
                 break;
             }
-            const schemaId =
-              schemaData != undefined && schemaEncoding != undefined
-                ? await writeMsgQueue.add(
-                    async () =>
-                      await writer.registerSchema({
-                        name: channel.schemaName,
-                        encoding: schemaEncoding,
-                        data: schemaData,
-                      }),
-                  )
-                : 0;
+            let schemaId = 0;
+            if (schemaData != undefined && schemaEncoding != undefined) {
+              // workaround to help TS type refinement
+              const nonnullSchemaData = schemaData;
+              const nonnullSchemaEncoding = schemaEncoding;
+              schemaId = await writeMsgQueue.add(
+                async () =>
+                  await writer.registerSchema({
+                    name: channel.schemaName,
+                    encoding: nonnullSchemaEncoding,
+                    data: nonnullSchemaData,
+                  }),
+              );
+            }
             const mcapChannelId = (await writeMsgQueue.add(
               async () =>
                 await writer.registerChannel({
