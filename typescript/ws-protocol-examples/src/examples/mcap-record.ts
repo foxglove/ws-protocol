@@ -129,6 +129,7 @@ async function main(
         SubscriptionId,
         { messageCount: number; mcapChannelId: McapChannelId }
       >();
+      const knownChannelIds = new Set<WsChannelId>();
 
       client.on("serverInfo", (event) => {
         log(event);
@@ -143,6 +144,16 @@ async function main(
       client.on("advertise", (newChannels) => {
         void Promise.all(
           newChannels.map(async (channel) => {
+            if (knownChannelIds.has(channel.id as WsChannelId)) {
+              log(
+                "skipping channel %d on topic %s as a channel with the same id has been advertised before.",
+                channel.id,
+                channel.topic,
+              );
+              return;
+            }
+            knownChannelIds.add(channel.id as WsChannelId);
+
             let schemaEncoding = channel.schemaEncoding;
             if (schemaEncoding == undefined) {
               schemaEncoding = {
@@ -205,12 +216,20 @@ async function main(
             )) as McapChannelId;
             wsChannelsByMcapChannel.set(mcapChannelId, channel.id as WsChannelId);
 
-            log("subscribing to %s", channel.topic);
+            log("subscribing to %s (channel %d)", channel.topic, channel.id);
             const subscriptionId = client.subscribe(channel.id) as SubscriptionId;
             subscriptionsById.set(subscriptionId, { messageCount: 0, mcapChannelId });
           }),
         );
       });
+
+      client.on("unadvertise", (channelIds) => {
+        for (const channelId of channelIds) {
+          log("channel %d has been unadvertised", channelId);
+          knownChannelIds.delete(channelId as WsChannelId);
+        }
+      });
+
       client.on("message", (event) => {
         const subscription = subscriptionsById.get(event.subscriptionId as SubscriptionId);
         if (subscription == undefined) {
