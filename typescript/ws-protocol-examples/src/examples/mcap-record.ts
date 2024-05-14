@@ -129,7 +129,7 @@ async function main(
         SubscriptionId,
         { messageCount: number; mcapChannelId: McapChannelId }
       >();
-      const knownChannelIds = new Set<WsChannelId>();
+      const activeChannelIds = new Set<WsChannelId>();
 
       client.on("serverInfo", (event) => {
         log(event);
@@ -144,7 +144,7 @@ async function main(
       client.on("advertise", (newChannels) => {
         void Promise.all(
           newChannels.map(async (channel) => {
-            if (knownChannelIds.has(channel.id as WsChannelId)) {
+            if (activeChannelIds.has(channel.id as WsChannelId)) {
               log(
                 "skipping channel %d on topic %s as a channel with the same id has been advertised before.",
                 channel.id,
@@ -152,7 +152,7 @@ async function main(
               );
               return;
             }
-            knownChannelIds.add(channel.id as WsChannelId);
+            activeChannelIds.add(channel.id as WsChannelId);
 
             let schemaEncoding = channel.schemaEncoding;
             if (schemaEncoding == undefined) {
@@ -226,7 +226,7 @@ async function main(
       client.on("unadvertise", (channelIds) => {
         for (const channelId of channelIds) {
           log("channel %d has been unadvertised", channelId);
-          knownChannelIds.delete(channelId as WsChannelId);
+          activeChannelIds.delete(channelId as WsChannelId);
         }
       });
 
