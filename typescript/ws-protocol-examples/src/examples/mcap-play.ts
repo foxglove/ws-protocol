@@ -101,7 +101,7 @@ async function main(file: string, options: { loop: boolean; rate: number }): Pro
   const mcapChannelsByWsChannel = new Map<WsChannelId, McapChannelId>();
   const wsChannelsByMcapChannel = new Map<McapChannelId, WsChannelId>();
   const subscribedChannels = new Set<WsChannelId>();
-  const skippedChannelIds = new Set<number>();
+  const skippedChannelIds = new Set<McapChannelId>();
 
   let running = false;
   const runLoop = async () => {
@@ -151,7 +151,7 @@ async function main(file: string, options: { loop: boolean; rate: number }): Pro
                   schema.encoding,
                   record.id,
                 );
-                skippedChannelIds.add(record.id);
+                skippedChannelIds.add(record.id as McapChannelId);
                 continue;
             }
             const wsChannelId = server.addChannel({
@@ -168,7 +168,7 @@ async function main(file: string, options: { loop: boolean; rate: number }): Pro
           case "Message": {
             const wsChannelId = wsChannelsByMcapChannel.get(record.channelId as McapChannelId);
             if (wsChannelId == undefined) {
-              if (!skippedChannelIds.has(record.channelId)) {
+              if (!skippedChannelIds.has(record.channelId as McapChannelId)) {
                 log("Message on unknown channel %d", record.channelId);
               }
               break;
