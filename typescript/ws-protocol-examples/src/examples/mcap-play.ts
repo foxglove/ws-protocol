@@ -101,6 +101,7 @@ async function main(file: string, options: { loop: boolean; rate: number }): Pro
   const mcapChannelsByWsChannel = new Map<WsChannelId, McapChannelId>();
   const wsChannelsByMcapChannel = new Map<McapChannelId, WsChannelId>();
   const subscribedChannels = new Set<WsChannelId>();
+  const skippedChannelIds = new Set<McapChannelId>();
 
   let running = false;
   const runLoop = async () => {
@@ -131,15 +132,34 @@ async function main(file: string, options: { loop: boolean; rate: number }): Pro
               log("Channel %d has unknown schema %d", record.id, record.schemaId);
               break;
             }
+            let schemaData: string;
+            switch (schema.encoding) {
+              case "ros1msg":
+              case "ros2msg":
+              case "ros2idl":
+              case "omgidl":
+              case "jsonschema":
+                schemaData = new TextDecoder().decode(schema.data);
+                break;
+              case "protobuf":
+              case "flatbuffer":
+                schemaData = Buffer.from(schema.data).toString("base64");
+                break;
+              default:
+                log(
+                  "Unknown schema encoding %s for channel %d, skipping",
+                  schema.encoding,
+                  record.id,
+                );
+                skippedChannelIds.add(record.id as McapChannelId);
+                continue;
+            }
             const wsChannelId = server.addChannel({
               topic: record.topic,
               schemaName: schema.name,
               encoding: record.messageEncoding,
               schemaEncoding: schema.encoding,
-              schema:
-                schema.encoding === "protobuf"
-                  ? Buffer.from(schema.data).toString("base64")
-                  : new TextDecoder().decode(schema.data),
+              schema: schemaData,
             }) as WsChannelId;
             mcapChannelsByWsChannel.set(wsChannelId, record.id as McapChannelId);
             wsChannelsByMcapChannel.set(record.id as McapChannelId, wsChannelId);
@@ -148,7 +168,9 @@ async function main(file: string, options: { loop: boolean; rate: number }): Pro
           case "Message": {
             const wsChannelId = wsChannelsByMcapChannel.get(record.channelId as McapChannelId);
             if (wsChannelId == undefined) {
-              log("Message on unknown channel %d", record.channelId);
+              if (!skippedChannelIds.has(record.channelId as McapChannelId)) {
+                log("Message on unknown channel %d", record.channelId);
+              }
               break;
             }
 
