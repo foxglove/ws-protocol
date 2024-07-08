@@ -9,7 +9,7 @@
     "@fontsource/roboto": "^5.0.12",
     "@foxglove/ws-protocol": "^0.7.1",
     "@mui/material": "^5.15.10",
-    "chart.js": "^4.4.1",
+    "chart.js": "^4.4.3",
     "react": "^18.3.1",
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.2.0"
