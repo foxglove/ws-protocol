@@ -26,4 +26,6 @@ program.addCommand(ParamServer);
 program.addCommand(ServiceClient);
 program.addCommand(ServiceServer);
 
-program.parseAsync().catch(console.error);
+program.parseAsync().catch((error: unknown) => {
+  console.error(error);
+});
