@@ -19,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         package: [ws-protocol, ws-protocol-examples, test-client-web-app]
-        node-version: [16.x, 18.x]
+        node-version: [18.x]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
