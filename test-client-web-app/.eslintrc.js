@@ -11,6 +11,9 @@ module.exports = {
         project: "./tsconfig.json",
         tsconfigRootDir: __dirname,
       },
+      rules: {
+        "@typescript-eslint/restrict-template-expressions": "off",
+      },
     },
   ],
   rules: {

@@ -247,8 +247,8 @@ async function main(
               data: new Uint8Array(event.data.buffer, event.data.byteOffset, event.data.byteLength),
             });
           })
-          .catch((error) => {
-            log((error as Error).message);
+          .catch((error: unknown) => {
+            log(error);
           });
       });
 

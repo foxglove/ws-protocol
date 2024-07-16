@@ -36,7 +36,9 @@ async function main(url: string, args: { encoding: "json" | "ros1" | "cdr" }) {
       }
 
       client.close();
-    })().catch(console.error);
+    })().catch((error: unknown) => {
+      console.error(error);
+    });
   });
 }
 
