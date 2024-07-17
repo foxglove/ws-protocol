@@ -23,6 +23,7 @@ import {
   ServiceCallPayload,
   ServiceCallRequest,
   ServiceId,
+  StatusMessage,
   SubscriptionId,
 } from "./types";
 
@@ -658,5 +659,43 @@ export default class FoxgloveServer {
     }
 
     connection.send(msg);
+  }
+
+  /**
+   * Send a status message to one or all clients.
+   *
+   * @param status Status message
+   * @param connection Optional connection. If undefined, the status message will be sent to all clients.
+   */
+  sendStatus(status: Omit<StatusMessage, "op">, connection?: IWebSocket): void {
+    if (connection) {
+      // Send the status to a single client.
+      this.#send(connection, { op: "status", ...status });
+      return;
+    }
+
+    // Send status message to all clients.
+    for (const client of this.#clients.values()) {
+      this.sendStatus(status, client.connection);
+    }
+  }
+
+  /**
+   * Clear a status for one or for all clients.
+
+   * @param id Id of the status to be cleared.
+   * @param connection Optional connection. If undefined, the status will be cleared for all clients.
+   */
+  clearStatus(id: string, connection?: IWebSocket): void {
+    if (connection) {
+      // Clear the status for a single client.
+      this.#send(connection, { op: "clearStatus", id });
+      return;
+    }
+
+    // CLear status for all clients.
+    for (const client of this.#clients.values()) {
+      this.#send(client.connection, { op: "clearStatus", id });
+    }
   }
 }

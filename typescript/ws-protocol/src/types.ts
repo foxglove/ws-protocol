@@ -141,6 +141,11 @@ export type StatusMessage = {
   op: "status";
   level: StatusLevel;
   message: string;
+  id?: string;
+};
+export type ClearStatusMessage = {
+  op: "clearStatus";
+  id: string;
 };
 export type Advertise = {
   op: "advertise";
@@ -261,6 +266,7 @@ export type Parameter = {
 export type ServerMessage =
   | ServerInfo
   | StatusMessage
+  | ClearStatusMessage
   | Advertise
   | Unadvertise
   | AdvertiseServices
