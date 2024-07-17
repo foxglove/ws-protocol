@@ -25,6 +25,7 @@
 
 - [Server Info](#server-info) (json)
 - [Status](#status) (json)
+- [Clear Status](#clear-status) (json)
 - [Advertise](#advertise) (json)
 - [Unadvertise](#unadvertise) (json)
 - [Message Data](#message-data) (binary)
@@ -101,6 +102,7 @@ Each JSON message must be an object containing a field called `op` which identif
 - `op`: string `"status"`
 - `level`: 0 (info), 1 (warning), 2 (error)
 - `message`: string
+- `id`: string | undefined. Optional unique identifier that can be used for clearing the status.
 
 #### Example
 
@@ -108,7 +110,26 @@ Each JSON message must be an object containing a field called `op` which identif
 {
   "op": "status",
   "level": 0,
-  "message": "Some info"
+  "message": "Some info",
+  "id": "someId"
+}
+```
+
+### Clear Status
+
+- Informs the client that a previously sent status message shall be cleared.
+
+#### Fields
+
+- `op`: string `"clearStatus"`
+- `id`: string, the id of the status message to be cleared.
+
+#### Example
+
+```json
+{
+  "op": "clearStatus",
+  "id": "someId"
 }
 ```
 
