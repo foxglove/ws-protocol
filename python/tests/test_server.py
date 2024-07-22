@@ -81,6 +81,7 @@ async def test_warn_invalid_channel():
                 "op": "status",
                 "level": 1,
                 "message": "Channel 999 is not available; ignoring subscription",
+                "id": None,
             }
 
 
