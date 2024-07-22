@@ -455,7 +455,11 @@ class FoxgloveServer:
                             await result
 
     async def _send_status(
-        self, connection: WebSocketServerProtocol, level: StatusLevel, msg: str, id: Optional[str] = None
+        self,
+        connection: WebSocketServerProtocol,
+        level: StatusLevel,
+        msg: str,
+        id: Optional[str] = None,
     ) -> None:
         await self._send_json(
             connection,
