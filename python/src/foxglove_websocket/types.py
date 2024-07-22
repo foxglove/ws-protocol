@@ -128,6 +128,12 @@ class StatusMessage(TypedDict):
     op: Literal["status"]
     level: StatusLevel
     message: str
+    id: Optional[str]
+
+
+class ClearStatusMessages(TypedDict):
+    op: Literal["clearStatus"]
+    statusIds: List[str]
 
 
 class ChannelWithoutId(TypedDict):
@@ -195,6 +201,7 @@ class ParameterValues(TypedDict):
 ServerJsonMessage = Union[
     ServerInfo,
     StatusMessage,
+    ClearStatusMessages,
     Advertise,
     Unadvertise,
     AdvertiseServices,

@@ -143,9 +143,9 @@ export type StatusMessage = {
   message: string;
   id?: string;
 };
-export type ClearStatusMessage = {
+export type ClearStatusMessages = {
   op: "clearStatus";
-  id: string;
+  statusIds: string[];
 };
 export type Advertise = {
   op: "advertise";
@@ -266,7 +266,7 @@ export type Parameter = {
 export type ServerMessage =
   | ServerInfo
   | StatusMessage
-  | ClearStatusMessage
+  | ClearStatusMessages
   | Advertise
   | Unadvertise
   | AdvertiseServices

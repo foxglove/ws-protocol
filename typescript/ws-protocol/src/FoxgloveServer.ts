@@ -681,21 +681,21 @@ export default class FoxgloveServer {
   }
 
   /**
-   * Clear a status for one or for all clients.
+   * Clear status message(s) for one or for all clients.
 
-   * @param id Id of the status to be cleared.
+   * @param statusIds Status ids to be cleared.
    * @param connection Optional connection. If undefined, the status will be cleared for all clients.
    */
-  clearStatus(id: string, connection?: IWebSocket): void {
+  clearStatus(statusIds: string[], connection?: IWebSocket): void {
     if (connection) {
       // Clear the status for a single client.
-      this.#send(connection, { op: "clearStatus", id });
+      this.#send(connection, { op: "clearStatus", statusIds });
       return;
     }
 
     // CLear status for all clients.
     for (const client of this.#clients.values()) {
-      this.#send(client.connection, { op: "clearStatus", id });
+      this.#send(client.connection, { op: "clearStatus", statusIds });
     }
   }
 }

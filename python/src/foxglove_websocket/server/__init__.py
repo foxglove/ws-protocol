@@ -349,6 +349,20 @@ class FoxgloveServer:
             except ConnectionClosed:
                 pass
 
+    async def send_status(self, level: StatusLevel, msg: str, id: Optional[str] = None):
+        for client in self._clients:
+            try:
+                await self._send_status(client.connection, level, msg, id)
+            except ConnectionClosed:
+                pass
+
+    async def clear_status(self, statusIds: List[str]):
+        for client in self._clients:
+            try:
+                await self._clear_status(client.connection, statusIds)
+            except ConnectionClosed:
+                pass
+
     async def _send_json(
         self, connection: WebSocketServerProtocol, msg: ServerJsonMessage
     ):
@@ -441,7 +455,7 @@ class FoxgloveServer:
                             await result
 
     async def _send_status(
-        self, connection: WebSocketServerProtocol, level: StatusLevel, msg: str
+        self, connection: WebSocketServerProtocol, level: StatusLevel, msg: str, id: Optional[str] = None
     ) -> None:
         await self._send_json(
             connection,
@@ -449,6 +463,18 @@ class FoxgloveServer:
                 "op": "status",
                 "level": level,
                 "message": msg,
+                "id": id,
+            },
+        )
+
+    async def _clear_status(
+        self, connection: WebSocketServerProtocol, statusIds: List[str]
+    ) -> None:
+        await self._send_json(
+            connection,
+            {
+                "op": "clearStatus",
+                "statusIds": statusIds,
             },
         )
 
