@@ -162,7 +162,7 @@ async function main(): Promise<void> {
         id: "statusFoo",
       });
     } else {
-      server.clearStatus(["statusFoo"]);
+      server.removeStatus(["statusFoo"]);
     }
     callCount++;
   });

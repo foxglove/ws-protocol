@@ -356,10 +356,10 @@ class FoxgloveServer:
             except ConnectionClosed:
                 pass
 
-    async def clear_status(self, statusIds: List[str]):
+    async def remove_status(self, statusIds: List[str]):
         for client in self._clients:
             try:
-                await self._clear_status(client.connection, statusIds)
+                await self._remove_status(client.connection, statusIds)
             except ConnectionClosed:
                 pass
 
@@ -471,13 +471,13 @@ class FoxgloveServer:
             },
         )
 
-    async def _clear_status(
+    async def _remove_status(
         self, connection: WebSocketServerProtocol, statusIds: List[str]
     ) -> None:
         await self._send_json(
             connection,
             {
-                "op": "clearStatus",
+                "op": "removeStatus",
                 "statusIds": statusIds,
             },
         )

@@ -131,8 +131,8 @@ class StatusMessage(TypedDict):
     id: Optional[str]
 
 
-class ClearStatusMessages(TypedDict):
-    op: Literal["clearStatus"]
+class RemoveStatusMessages(TypedDict):
+    op: Literal["removeStatus"]
     statusIds: List[str]
 
 
@@ -201,7 +201,7 @@ class ParameterValues(TypedDict):
 ServerJsonMessage = Union[
     ServerInfo,
     StatusMessage,
-    ClearStatusMessages,
+    RemoveStatusMessages,
     Advertise,
     Unadvertise,
     AdvertiseServices,

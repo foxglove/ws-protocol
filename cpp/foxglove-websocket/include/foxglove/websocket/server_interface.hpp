@@ -121,7 +121,7 @@ public:
   virtual void sendFetchAssetResponse(ConnectionHandle clientHandle,
                                       const FetchAssetResponse& response) = 0;
   virtual void sendStatus(const Status& status) = 0;
-  virtual void clearStatus(const std::vector<std::string>& statusIds) = 0;
+  virtual void removeStatus(const std::vector<std::string>& statusIds) = 0;
 
   virtual uint16_t getPort() = 0;
   virtual std::string remoteEndpointString(ConnectionHandle clientHandle) = 0;

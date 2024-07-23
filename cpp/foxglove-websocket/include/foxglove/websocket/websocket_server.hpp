@@ -151,7 +151,7 @@ public:
   void sendFetchAssetResponse(ConnHandle clientHandle, const FetchAssetResponse& response) override;
   void sendStatus(ConnHandle clientHandle, const Status& status);
   void sendStatus(const Status& status) override;
-  void clearStatus(const std::vector<std::string>& statusIds) override;
+  void removeStatus(const std::vector<std::string>& statusIds) override;
 
   uint16_t getPort() override;
   std::string remoteEndpointString(ConnHandle clientHandle) override;
@@ -1554,12 +1554,12 @@ inline void Server<ServerConfiguration>::sendStatus(const Status& status) {
 }
 
 template <typename ServerConfiguration>
-inline void Server<ServerConfiguration>::clearStatus(const std::vector<std::string>& statusIds) {
+inline void Server<ServerConfiguration>::removeStatus(const std::vector<std::string>& statusIds) {
   std::shared_lock<std::shared_mutex> lock(_clientsMutex);
   for (const auto& [hdl, clientInfo] : _clients) {
     (void)clientInfo;
     sendJson(hdl, json{
-                    {"op", "clearStatus"},
+                    {"op", "removeStatus"},
                     {"statusIds", statusIds},
                   });
   }

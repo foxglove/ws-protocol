@@ -25,7 +25,7 @@
 
 - [Server Info](#server-info) (json)
 - [Status](#status) (json)
-- [Clear Status](#clear-status) (json)
+- [Remove Status](#remove-status) (json)
 - [Advertise](#advertise) (json)
 - [Unadvertise](#unadvertise) (json)
 - [Message Data](#message-data) (binary)
@@ -102,7 +102,7 @@ Each JSON message must be an object containing a field called `op` which identif
 - `op`: string `"status"`
 - `level`: 0 (info), 1 (warning), 2 (error)
 - `message`: string
-- `id`: string | undefined. Optional identifier for the status message. Newer status messages with the same identifier should replace previous messages. [clearStatus](#clear-status) can reference the identifier to indicate a status message is no longer valid.
+- `id`: string | undefined. Optional identifier for the status message. Newer status messages with the same identifier should replace previous messages. [removeStatus](#remove-status) can reference the identifier to indicate a status message is no longer valid.
 
 #### Example
 
@@ -115,20 +115,20 @@ Each JSON message must be an object containing a field called `op` which identif
 }
 ```
 
-### Clear Status
+### Remove Status
 
 - Informs the client that previously sent status message(s) are no longer valid.
 
 #### Fields
 
-- `op`: string `"clearStatus"`
-- `statusIds`: array of string, ids of the status messages to be cleared. The array must not be empty.
+- `op`: string `"removeStatus"`
+- `statusIds`: array of string, ids of the status messages to be removed. The array must not be empty.
 
 #### Example
 
 ```json
 {
-  "op": "clearStatus",
+  "op": "removeStatus",
   "statusIds": ["status-123"]
 }
 ```
