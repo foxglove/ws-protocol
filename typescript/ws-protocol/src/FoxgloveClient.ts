@@ -5,6 +5,7 @@ import { parseServerMessage } from "./parse";
 import {
   BinaryOpcode,
   Channel,
+  RemoveStatusMessages,
   ClientBinaryOpcode,
   ClientChannel,
   ClientChannelId,
@@ -32,6 +33,7 @@ type EventTypes = {
 
   serverInfo: (event: ServerInfo) => void;
   status: (event: StatusMessage) => void;
+  removeStatus: (event: RemoveStatusMessages) => void;
   message: (event: MessageData) => void;
   time: (event: Time) => void;
   advertise: (newChannels: Channel[]) => void;
@@ -108,6 +110,10 @@ export default class FoxgloveClient {
 
         case "status":
           this.#emitter.emit("status", message);
+          return;
+
+        case "removeStatus":
+          this.#emitter.emit("removeStatus", message);
           return;
 
         case "advertise":

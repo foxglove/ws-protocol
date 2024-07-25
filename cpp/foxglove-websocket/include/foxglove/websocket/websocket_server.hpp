@@ -93,12 +93,6 @@ const std::unordered_map<ClientBinaryOpcode, std::string> CAPABILITY_BY_CLIENT_B
   {ClientBinaryOpcode::SERVICE_CALL_REQUEST, CAPABILITY_SERVICES},
 };
 
-enum class StatusLevel : uint8_t {
-  Info = 0,
-  Warning = 1,
-  Error = 2,
-};
-
 constexpr websocketpp::log::level StatusLevelToLogLevel(StatusLevel level) {
   switch (level) {
     case StatusLevel::Info:
@@ -146,7 +140,8 @@ public:
   void sendMessage(ConnHandle clientHandle, ChannelId chanId, uint64_t timestamp,
                    const uint8_t* payload, size_t payloadSize) override;
   void sendStatusAndLogMsg(ConnHandle clientHandle, const StatusLevel level,
-                           const std::string& message);
+                           const std::string& message,
+                           const std::optional<std::string>& id = std::nullopt);
   void broadcastTime(uint64_t timestamp) override;
   void sendServiceResponse(ConnHandle clientHandle, const ServiceResponse& response) override;
   void sendServiceFailure(ConnHandle clientHandle, ServiceId serviceId, uint32_t callId,
@@ -154,13 +149,12 @@ public:
   void updateConnectionGraph(const MapOfSets& publishedTopics, const MapOfSets& subscribedTopics,
                              const MapOfSets& advertisedServices) override;
   void sendFetchAssetResponse(ConnHandle clientHandle, const FetchAssetResponse& response) override;
+  void sendStatus(ConnHandle clientHandle, const Status& status);
+  void sendStatus(const Status& status) override;
+  void removeStatus(const std::vector<std::string>& statusIds) override;
 
   uint16_t getPort() override;
   std::string remoteEndpointString(ConnHandle clientHandle) override;
-
-  typename ServerType::endpoint_type& getEndpoint() & {
-    return _server;
-  }
 
 private:
   struct ClientInfo {
@@ -592,20 +586,32 @@ inline void Server<ServerConfiguration>::sendBinary(ConnHandle hdl, const uint8_
 }
 
 template <typename ServerConfiguration>
+inline void Server<ServerConfiguration>::sendStatus(ConnHandle clientHandle, const Status& status) {
+  json statusPayload = {
+    {"op", "status"},
+    {"level", static_cast<uint8_t>(status.level)},
+    {"message", status.message},
+  };
+
+  if (status.id) {
+    statusPayload["id"] = status.id.value();
+  }
+
+  sendJson(clientHandle, std::move(statusPayload));
+}
+
+template <typename ServerConfiguration>
 inline void Server<ServerConfiguration>::sendStatusAndLogMsg(ConnHandle clientHandle,
                                                              const StatusLevel level,
-                                                             const std::string& message) {
+                                                             const std::string& message,
+                                                             const std::optional<std::string>& id) {
   const std::string endpoint = remoteEndpointString(clientHandle);
   const std::string logMessage = endpoint + ": " + message;
   const auto logLevel = StatusLevelToLogLevel(level);
   auto logger = level == StatusLevel::Info ? _server.get_alog() : _server.get_elog();
   logger.write(logLevel, logMessage);
 
-  sendJson(clientHandle, json{
-                           {"op", "status"},
-                           {"level", static_cast<uint8_t>(level)},
-                           {"message", message},
-                         });
+  sendStatus(clientHandle, {level, message, id});
 }
 
 template <typename ServerConfiguration>
@@ -1066,7 +1072,7 @@ inline void Server<ServerConfiguration>::sendServiceFailure(ConnHandle clientHan
                               {"serviceId", serviceId},
                               {"callId", callId},
                               {"message", message}});
-};
+}
 
 template <typename ServerConfiguration>
 inline void Server<ServerConfiguration>::updateConnectionGraph(
@@ -1536,6 +1542,27 @@ inline void Server<ServerConfiguration>::sendFetchAssetResponse(
 
   message->append_payload(response.data.data(), dataSize);
   con->send(message);
+}
+
+template <typename ServerConfiguration>
+inline void Server<ServerConfiguration>::sendStatus(const Status& status) {
+  std::shared_lock<std::shared_mutex> lock(_clientsMutex);
+  for (const auto& [hdl, clientInfo] : _clients) {
+    (void)clientInfo;
+    sendStatus(hdl, status);
+  }
+}
+
+template <typename ServerConfiguration>
+inline void Server<ServerConfiguration>::removeStatus(const std::vector<std::string>& statusIds) {
+  std::shared_lock<std::shared_mutex> lock(_clientsMutex);
+  for (const auto& [hdl, clientInfo] : _clients) {
+    (void)clientInfo;
+    sendJson(hdl, json{
+                    {"op", "removeStatus"},
+                    {"statusIds", statusIds},
+                  });
+  }
 }
 
 }  // namespace foxglove

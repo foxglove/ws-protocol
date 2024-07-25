@@ -4,6 +4,7 @@ import {
   ServerCapability,
   Service,
   ServiceCallPayload,
+  StatusLevel,
 } from "@foxglove/ws-protocol";
 import { Command } from "commander";
 import Debug from "debug";
@@ -28,6 +29,8 @@ async function main(): Promise<void> {
     handleProtocols: (protocols) => server.handleProtocols(protocols),
   });
   setupSigintHandler(log, ws);
+
+  let callCount = 0;
 
   const serviceDefRos: Omit<Service, "id"> = {
     name: "/set_bool_ros",
@@ -125,7 +128,11 @@ async function main(): Promise<void> {
       throw err;
     }
 
-    log("Received service call request with %d bytes", request.data.byteLength);
+    log(
+      "Received service call request with %d bytes, call count %d",
+      request.data.byteLength,
+      callCount,
+    );
 
     const responseMsg = {
       success: true,
@@ -147,6 +154,17 @@ async function main(): Promise<void> {
       data: new DataView(responseData.buffer),
     };
     server.sendServiceCallResponse(response, clientConnection);
+
+    if (callCount % 2 === 0) {
+      server.sendStatus({
+        level: StatusLevel.INFO,
+        message: "Service was called :)",
+        id: "statusFoo",
+      });
+    } else {
+      server.removeStatus(["statusFoo"]);
+    }
+    callCount++;
   });
   server.on("error", (err) => {
     log("server error: %o", err);
