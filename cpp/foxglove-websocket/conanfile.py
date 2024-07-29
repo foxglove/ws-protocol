@@ -5,7 +5,7 @@ from conan.tools.build import check_min_cppstd
 
 class FoxgloveWebSocketConan(ConanFile):
     name = "foxglove-websocket"
-    version = "1.2.0"
+    version = "1.1.0"
     url = "https://github.com/foxglove/ws-protocol"
     homepage = "https://github.com/foxglove/ws-protocol"
     description = "A C++ server implementation of the Foxglove WebSocket Protocol"
