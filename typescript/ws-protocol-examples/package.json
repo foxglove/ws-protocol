@@ -68,7 +68,7 @@
     "@foxglove/schemas": "^1.6.2",
     "@foxglove/wasm-lz4": "^1.0.2",
     "@foxglove/wasm-zstd": "^1.0.1",
-    "@foxglove/ws-protocol": "0.7.3",
+    "@foxglove/ws-protocol": "0.7.4",
     "@mcap/core": "^2.1.2",
     "boxen": "^7.1.1",
     "commander": "^11.1.0",
