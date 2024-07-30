@@ -148,8 +148,8 @@ struct ServiceResponse {
   size_t size() const {
     return 4 + 4 + 4 + encoding.size() + data.size();
   }
-  void read(const uint8_t* data, size_t size);
-  void write(uint8_t* data) const;
+  void read(const uint8_t* payload, size_t payloadSize);
+  void write(uint8_t* payload) const;
 
   bool operator==(const ServiceResponse& other) const {
     return serviceId == other.serviceId && callId == other.callId && encoding == other.encoding &&
