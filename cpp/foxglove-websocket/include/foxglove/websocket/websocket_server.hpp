@@ -1536,7 +1536,7 @@ inline void Server<ServerConfiguration>::sendFetchAssetResponse(
   const uint8_t status = static_cast<uint8_t>(response.status);
   message->append_payload(&status, 1);
 
-  foxglove::WriteUint32LE(uint32Data.data(), response.errorMessage.size());
+  foxglove::WriteUint32LE(uint32Data.data(), static_cast<uint32_t>(response.errorMessage.size()));
   message->append_payload(uint32Data.data(), uint32Data.size());
   message->append_payload(response.errorMessage.data(), errMsgSize);
 

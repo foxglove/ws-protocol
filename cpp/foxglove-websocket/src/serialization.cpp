@@ -157,32 +157,32 @@ void from_json(const nlohmann::json& j, ServiceRequestDefinition& r) {
   r.schema = j["schema"].get<std::string>();
 }
 
-void ServiceResponse::read(const uint8_t* data, size_t dataLength) {
+void ServiceResponse::read(const uint8_t* payload, size_t payloadSize) {
   size_t offset = 0;
-  this->serviceId = ReadUint32LE(data + offset);
+  this->serviceId = ReadUint32LE(payload + offset);
   offset += 4;
-  this->callId = ReadUint32LE(data + offset);
+  this->callId = ReadUint32LE(payload + offset);
   offset += 4;
-  const size_t encondingLength = static_cast<size_t>(ReadUint32LE(data + offset));
+  const size_t encondingLength = static_cast<size_t>(ReadUint32LE(payload + offset));
   offset += 4;
-  this->encoding = std::string(reinterpret_cast<const char*>(data + offset), encondingLength);
+  this->encoding = std::string(reinterpret_cast<const char*>(payload + offset), encondingLength);
   offset += encondingLength;
-  const auto payloadLength = dataLength - offset;
-  this->data.resize(payloadLength);
-  std::memcpy(this->data.data(), data + offset, payloadLength);
+  const auto dataSize = payloadSize - offset;
+  this->data.resize(dataSize);
+  std::memcpy(this->data.data(), payload + offset, dataSize);
 }
 
-void ServiceResponse::write(uint8_t* data) const {
+void ServiceResponse::write(uint8_t* payload) const {
   size_t offset = 0;
-  foxglove::WriteUint32LE(data + offset, this->serviceId);
+  foxglove::WriteUint32LE(payload + offset, this->serviceId);
   offset += 4;
-  foxglove::WriteUint32LE(data + offset, this->callId);
+  foxglove::WriteUint32LE(payload + offset, this->callId);
   offset += 4;
-  foxglove::WriteUint32LE(data + offset, static_cast<uint32_t>(this->encoding.size()));
+  foxglove::WriteUint32LE(payload + offset, static_cast<uint32_t>(this->encoding.size()));
   offset += 4;
-  std::memcpy(data + offset, this->encoding.data(), this->encoding.size());
+  std::memcpy(payload + offset, this->encoding.data(), this->encoding.size());
   offset += this->encoding.size();
-  std::memcpy(data + offset, this->data.data(), this->data.size());
+  std::memcpy(payload + offset, this->data.data(), this->data.size());
 }
 
 }  // namespace foxglove
