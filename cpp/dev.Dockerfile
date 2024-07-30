@@ -21,7 +21,7 @@ ENV CXX=clang++
 
 WORKDIR /src
 
-FROM base as build
+FROM base AS build
 RUN pip --no-cache-dir install conan
 RUN conan profile detect --force
 COPY ./foxglove-websocket /src/foxglove-websocket/
@@ -29,7 +29,7 @@ ARG CPPSTD=17
 ARG ASIO=standalone
 RUN conan create foxglove-websocket -s compiler.cppstd=$CPPSTD --build=missing -o foxglove-websocket*:asio=$ASIO
 
-FROM build as build_examples
+FROM build AS build_examples
 COPY --from=build /root/.conan2 /root/.conan2
 COPY ./examples /src/examples
 RUN conan build examples --output-folder examples/ -s compiler.cppstd=$CPPSTD --build=missing
