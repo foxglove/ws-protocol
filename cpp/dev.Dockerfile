@@ -27,7 +27,7 @@ RUN conan profile detect --force
 COPY ./foxglove-websocket/conanfile.py /src/foxglove-websocket/conanfile.py
 ARG CPPSTD=17
 ARG ASIO=standalone
-RUN conan install foxglove-websocket -s compiler.cppstd=$CPPSTD --build=missing
+RUN conan install foxglove-websocket -s compiler.cppstd=$CPPSTD -o foxglove-websocket*:asio=$ASIO --build=missing
 COPY ./foxglove-websocket /src/foxglove-websocket/
 RUN conan create foxglove-websocket -s compiler.cppstd=$CPPSTD -o foxglove-websocket*:asio=$ASIO -c tools.build:cxxflags="['-Werror']"
 
