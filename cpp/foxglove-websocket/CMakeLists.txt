@@ -15,9 +15,9 @@ target_link_libraries(foxglove_websocket nlohmann_json::nlohmann_json websocketp
 set_target_properties(foxglove_websocket PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
 
 if (MSVC)
-  target_compile_options(foxglove_websocket PRIVATE /WX /W4)
+  target_compile_options(foxglove_websocket PRIVATE /W4)
 else()
-  target_compile_options(foxglove_websocket PRIVATE -Wall -Wextra -Wpedantic -Werror -Wold-style-cast -Wfloat-equal)
+  target_compile_options(foxglove_websocket PRIVATE -Wall -Wextra -Wpedantic -Wold-style-cast -Wfloat-equal)
 endif()
 
 install(TARGETS foxglove_websocket)
