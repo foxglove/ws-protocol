@@ -24,10 +24,12 @@ WORKDIR /src
 FROM base AS build
 RUN pip --no-cache-dir install conan
 RUN conan profile detect --force
-COPY ./foxglove-websocket /src/foxglove-websocket/
+COPY ./foxglove-websocket/conanfile.py /src/foxglove-websocket/conanfile.py
 ARG CPPSTD=17
 ARG ASIO=standalone
-RUN conan create foxglove-websocket -s compiler.cppstd=$CPPSTD --build=missing -o foxglove-websocket*:asio=$ASIO
+RUN conan install foxglove-websocket -s compiler.cppstd=$CPPSTD --build=missing
+COPY ./foxglove-websocket /src/foxglove-websocket/
+RUN conan create foxglove-websocket -s compiler.cppstd=$CPPSTD -o foxglove-websocket*:asio=$ASIO -c tools.build:cxxflags="['-Wall']"
 
 FROM build AS build_examples
 COPY --from=build /root/.conan2 /root/.conan2
