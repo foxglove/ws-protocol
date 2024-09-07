@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>FoxgloveWebSocket</name>
+  <version>1.3.0</version>
+  <description>Websocket protocol librory for use with foxglove studio</description>
+  <maintainer email="help@foxglove.com">maintainer_name</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>libwebsocketpp-dev</depend>
+  <depend>zlib</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
