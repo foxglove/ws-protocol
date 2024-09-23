@@ -624,12 +624,12 @@
         },
         "pyright": {
             "hashes": [
-                "sha256:a6404392053d8848bacc7aebcbd9d318bb46baf1a1a000359305481920f43879",
-                "sha256:e6ceb1a5f7e9f03106e0aa1d6fbb4d97735a5e7ffb59f3de6b2db590baf935b2"
+                "sha256:314cf0c1351c189524fb10c7ac20688ecd470e8cc505c394d642c9c80bf7c3a5",
+                "sha256:5dc0aa80a265675d36abab59c674ae01dbe476714f91845b61b841d34aa99081"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.7'",
-            "version": "==1.1.380"
+            "version": "==1.1.381"
         },
         "pytest": {
             "hashes": [
