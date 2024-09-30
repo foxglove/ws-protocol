@@ -65,7 +65,7 @@
     "@foxglove/rosmsg-serialization": "^2.0.3",
     "@foxglove/rosmsg2-serialization": "^2.0.4",
     "@foxglove/rostime": "^1.1.2",
-    "@foxglove/schemas": "^1.6.2",
+    "@foxglove/schemas": "^1.6.4",
     "@foxglove/wasm-lz4": "^1.0.2",
     "@foxglove/wasm-zstd": "^1.0.1",
     "@foxglove/ws-protocol": "0.7.4",

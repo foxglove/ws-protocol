@@ -757,10 +757,10 @@
   resolved "https://registry.yarnpkg.com/@foxglove/rostime/-/rostime-1.1.2.tgz#f8e1f10bff115c22be8a3e06791c2ac800449ee8"
   integrity sha512-vWuTJCuGv0xvgwOlrZ1y2MevmNMVxWcUU/HwlmYXi/jUq/kRaACStU18uyuZ3LzdNKaffkti0rTcXWESaQjwQw==
 
-"@foxglove/schemas@^1.6.2":
-  version "1.6.2"
-  resolved "https://registry.yarnpkg.com/@foxglove/schemas/-/schemas-1.6.2.tgz#87874df0010fe8ce9d7bb871578a36e4fb8665d5"
-  integrity sha512-Gfk9lZByCqUgKdDBI5EvEwVMRvQUEUbbdxxr/FVkCgm1cmmIX45mns+giLa8HXX4eUg8lFxekuA3k+YXzLlInw==
+"@foxglove/schemas@^1.6.4":
+  version "1.6.4"
+  resolved "https://registry.yarnpkg.com/@foxglove/schemas/-/schemas-1.6.4.tgz#3890c668de8910f3e063ad3980e4d9146a8393b3"
+  integrity sha512-lKjF4QEYN7hSS64bG5izdix3ngfnWqaHy6XHVeUZ2gBy9QIuzFGAeIATXXbw1I2ICY6Of+Ri1Iu4OAAyizGiGg==
   dependencies:
     "@foxglove/rosmsg-msgs-common" "^3.0.0"
     tslib "^2.5.0"
