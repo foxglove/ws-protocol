@@ -757,10 +757,10 @@
   resolved "https://registry.yarnpkg.com/@foxglove/rostime/-/rostime-1.1.2.tgz#f8e1f10bff115c22be8a3e06791c2ac800449ee8"
   integrity sha512-vWuTJCuGv0xvgwOlrZ1y2MevmNMVxWcUU/HwlmYXi/jUq/kRaACStU18uyuZ3LzdNKaffkti0rTcXWESaQjwQw==
 
-"@foxglove/schemas@^1.6.2":
-  version "1.6.2"
-  resolved "https://registry.yarnpkg.com/@foxglove/schemas/-/schemas-1.6.2.tgz#87874df0010fe8ce9d7bb871578a36e4fb8665d5"
-  integrity sha512-Gfk9lZByCqUgKdDBI5EvEwVMRvQUEUbbdxxr/FVkCgm1cmmIX45mns+giLa8HXX4eUg8lFxekuA3k+YXzLlInw==
+"@foxglove/schemas@^1.6.4":
+  version "1.6.4"
+  resolved "https://registry.yarnpkg.com/@foxglove/schemas/-/schemas-1.6.4.tgz#3890c668de8910f3e063ad3980e4d9146a8393b3"
+  integrity sha512-lKjF4QEYN7hSS64bG5izdix3ngfnWqaHy6XHVeUZ2gBy9QIuzFGAeIATXXbw1I2ICY6Of+Ri1Iu4OAAyizGiGg==
   dependencies:
     "@foxglove/rosmsg-msgs-common" "^3.0.0"
     tslib "^2.5.0"
@@ -6461,15 +6461,10 @@ tslib@^1.8.1:
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.14.1.tgz#cf2d38bdc34a134bcaf1091c41f6619e2f672d00"
   integrity sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==
 
-tslib@^2.0.0:
+tslib@^2.0.0, tslib@^2.0.3, tslib@^2.5.0, tslib@^2.6.3:
   version "2.7.0"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.7.0.tgz#d9b40c5c40ab59e8738f297df3087bf1a2690c01"
   integrity sha512-gLXCKdN1/j47AiHiOkJN69hJmcbGTHI0ImLmbYLHykhgeN0jVGola9yVjFgzCUklsZQMW55o+dW7IXv3RCXDzA==
-
-tslib@^2.0.3, tslib@^2.5.0, tslib@^2.6.3:
-  version "2.6.3"
-  resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.6.3.tgz#0438f810ad7a9edcde7a241c3d80db693c8cbfe0"
-  integrity sha512-xNvxJEOUiWPGhUuUdQgAJPKOOJfGnIyKySOc09XkKsgdUV/3E2zvwZYdejjmRgPCgcym1juLH3226yA7sEFJKQ==
 
 tsutils@^3:
   version "3.21.0"
