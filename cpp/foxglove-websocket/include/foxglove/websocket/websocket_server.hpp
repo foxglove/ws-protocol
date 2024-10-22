@@ -1340,10 +1340,10 @@ void Server<ServerConfiguration>::handleAdvertise(const nlohmann::json& payload,
     advertisement.encoding = chan.at("encoding").get<std::string>();
     advertisement.schemaName = chan.at("schemaName").get<std::string>();
 
+    clientPublications.emplace(channelId, advertisement);
     {
       std::unique_lock<std::shared_mutex> clientsLock(_clientsMutex);
       _clients.at(hdl).advertisedChannels.emplace(channelId);
-      clientPublications.emplace(channelId, advertisement);
     }
     _handlers.clientAdvertiseHandler(advertisement, hdl);
   }
