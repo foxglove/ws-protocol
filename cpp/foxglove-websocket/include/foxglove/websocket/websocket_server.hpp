@@ -1267,9 +1267,11 @@ void Server<ServerConfiguration>::handleSubscribe(const nlohmann::json& payload,
       continue;
     }
 
+    {
+      std::unique_lock<std::shared_mutex> clientsLock(_clientsMutex);
+      _clients.at(hdl).subscriptionsByChannel.emplace(channelId, subId);
+    }
     _handlers.subscribeHandler(channelId, hdl);
-    std::unique_lock<std::shared_mutex> clientsLock(_clientsMutex);
-    _clients.at(hdl).subscriptionsByChannel.emplace(channelId, subId);
   }
 }
 
@@ -1301,9 +1303,11 @@ void Server<ServerConfiguration>::handleUnsubscribe(const nlohmann::json& payloa
     }
 
     ChannelId chanId = sub->first;
+    {
+      std::unique_lock<std::shared_mutex> clientsLock(_clientsMutex);
+      _clients.at(hdl).subscriptionsByChannel.erase(chanId);
+    }
     _handlers.unsubscribeHandler(chanId, hdl);
-    std::unique_lock<std::shared_mutex> clientsLock(_clientsMutex);
-    _clients.at(hdl).subscriptionsByChannel.erase(chanId);
   }
 }
 
@@ -1336,10 +1340,12 @@ void Server<ServerConfiguration>::handleAdvertise(const nlohmann::json& payload,
     advertisement.encoding = chan.at("encoding").get<std::string>();
     advertisement.schemaName = chan.at("schemaName").get<std::string>();
 
+    {
+      std::unique_lock<std::shared_mutex> clientsLock(_clientsMutex);
+      _clients.at(hdl).advertisedChannels.emplace(channelId);
+      clientPublications.emplace(channelId, advertisement);
+    }
     _handlers.clientAdvertiseHandler(advertisement, hdl);
-    std::unique_lock<std::shared_mutex> clientsLock(_clientsMutex);
-    _clients.at(hdl).advertisedChannels.emplace(channelId);
-    clientPublications.emplace(channelId, advertisement);
   }
 }
 
@@ -1361,14 +1367,16 @@ void Server<ServerConfiguration>::handleUnadvertise(const nlohmann::json& payloa
       continue;
     }
 
-    _handlers.clientUnadvertiseHandler(channelId, hdl);
-    std::unique_lock<std::shared_mutex> clientsLock(_clientsMutex);
-    auto& clientInfo = _clients.at(hdl);
-    clientPublications.erase(channelIt);
-    const auto advertisedChannelIt = clientInfo.advertisedChannels.find(channelId);
-    if (advertisedChannelIt != clientInfo.advertisedChannels.end()) {
-      clientInfo.advertisedChannels.erase(advertisedChannelIt);
+    {
+      std::unique_lock<std::shared_mutex> clientsLock(_clientsMutex);
+      auto& clientInfo = _clients.at(hdl);
+      clientPublications.erase(channelIt);
+      const auto advertisedChannelIt = clientInfo.advertisedChannels.find(channelId);
+      if (advertisedChannelIt != clientInfo.advertisedChannels.end()) {
+        clientInfo.advertisedChannels.erase(advertisedChannelIt);
+      }
     }
+    _handlers.clientUnadvertiseHandler(channelId, hdl);
   }
 }
 
@@ -1443,9 +1451,11 @@ void Server<ServerConfiguration>::handleSubscribeConnectionGraph(ConnHandle hdl)
   if (subscribeToConnnectionGraph) {
     // First subscriber, let the handler know that we are interested in updates.
     _server.get_alog().write(APP, "Subscribing to connection graph updates.");
+    {
+      std::unique_lock<std::shared_mutex> clientsLock(_clientsMutex);
+      _clients.at(hdl).subscribedToConnectionGraph = true;
+    }
     _handlers.subscribeConnectionGraphHandler(true);
-    std::unique_lock<std::shared_mutex> clientsLock(_clientsMutex);
-    _clients.at(hdl).subscribedToConnectionGraph = true;
   }
 
   json::array_t publishedTopicsJson, subscribedTopicsJson, advertisedServicesJson;
