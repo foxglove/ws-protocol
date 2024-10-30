@@ -1,4 +1,4 @@
-# Automatically approve dependabot PRs.
+# Automatically approve and merge dependabot PRs.
 
 name: Dependabot
 
@@ -11,13 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     if: github.actor == 'dependabot[bot]'
 
-    # IMPORTANT: setting YARN_ENABLE_SCRIPTS=false is critical to ensure that untrusted
-    # PRs can't add an npm package and then use that to execute untrusted code in
-    # a trusted context. See links at the top of this workflow for further details.
-    # See also: https://github.com/yarnpkg/berry/issues/1679#issuecomment-669937860
-    env:
-      YARN_ENABLE_SCRIPTS: false
-
     steps:
       - uses: octokit/request-action@v2.4.0
         if: contains(fromJSON('["opened", "reopened"]'), github.event.action)
@@ -28,3 +21,14 @@ jobs:
           owner_and_repo: ${{ github.repository }}
           pull_number: ${{ github.event.pull_request.number }}
           event: "APPROVE"
+
+      - uses: octokit/request-action@v2.4.0
+        if: contains(fromJSON('["opened", "reopened"]'), github.event.action)
+        env:
+          GITHUB_TOKEN: ${{ secrets.FOXGLOVEBOT_GITHUB_TOKEN }}
+        with:
+          route: POST /repos/{owner_and_repo}/issues/{pull_number}/comments
+          owner_and_repo: ${{ github.repository }}
+          pull_number: ${{ github.event.pull_request.number }}
+          # two quotes are needed to avoid a syntax error when running the action
+          body: "'@dependabot squash and merge'"
