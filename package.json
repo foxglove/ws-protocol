@@ -5,5 +5,9 @@
       "typescript/*",
       "test-client-web-app"
     ]
+  },
+  "devDependencies": {
+    "@types/node": "22.8.4",
+    "globals": "15.11.0"
   }
 }

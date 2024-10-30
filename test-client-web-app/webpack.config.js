@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const path = require("path");
 const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
