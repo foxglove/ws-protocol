@@ -1,0 +1,34 @@
+# Automatically approve and merge dependabot PRs.
+
+name: Dependabot
+
+on:
+  - pull_request_target
+
+jobs:
+  approve:
+    name: Approve Dependabot PRs
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+
+    steps:
+      - uses: octokit/request-action@v2.4.0
+        if: contains(fromJSON('["opened", "reopened"]'), github.event.action)
+        env:
+          GITHUB_TOKEN: ${{ secrets.FOXGLOVEBOT_GITHUB_TOKEN }}
+        with:
+          route: POST /repos/{owner_and_repo}/pulls/{pull_number}/reviews
+          owner_and_repo: ${{ github.repository }}
+          pull_number: ${{ github.event.pull_request.number }}
+          event: "APPROVE"
+
+      - uses: octokit/request-action@v2.4.0
+        if: contains(fromJSON('["opened", "reopened"]'), github.event.action)
+        env:
+          GITHUB_TOKEN: ${{ secrets.FOXGLOVEBOT_GITHUB_TOKEN }}
+        with:
+          route: POST /repos/{owner_and_repo}/issues/{pull_number}/comments
+          owner_and_repo: ${{ github.repository }}
+          pull_number: ${{ github.event.pull_request.number }}
+          # two quotes are needed to avoid a syntax error when running the action
+          body: "'@dependabot squash and merge'"
