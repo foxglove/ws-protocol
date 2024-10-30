@@ -1,3 +1,5 @@
+// @ts-check
+
 const foxglove = require("@foxglove/eslint-plugin");
 const globals = require("globals");
 const tseslint = require("typescript-eslint");
