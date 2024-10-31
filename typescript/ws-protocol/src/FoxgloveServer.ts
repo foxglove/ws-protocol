@@ -190,9 +190,11 @@ export default class FoxgloveServer {
    * @returns The id of the new service
    */
   addService(service: Omit<Service, "id">): ServiceId {
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     if (service.request == undefined && service.requestSchema == undefined) {
       throw new Error("Either 'request' or 'requestSchema' has to be given.");
     }
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     if (service.response == undefined && service.responseSchema == undefined) {
       throw new Error("Either 'response' or 'responseSchema' has to be given.");
     }
@@ -587,6 +589,8 @@ export default class FoxgloveServer {
         break;
       }
 
+      case "subscribeConnectionGraph":
+      case "unsubscribeConnectionGraph":
       default:
         throw new Error(`Unrecognized client opcode: ${(message as { op: string }).op}`);
     }
