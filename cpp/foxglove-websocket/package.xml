@@ -9,7 +9,10 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
+  <depend>boost</depend>
   <depend>libwebsocketpp-dev</depend>
+  <depend>nlohmann-json-dev</depend>
+  <depend>openssl</depend>
   <depend>zlib</depend>
 
   <export>

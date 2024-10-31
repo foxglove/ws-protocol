@@ -10,16 +10,33 @@ endif()
 
 find_package(nlohmann_json REQUIRED)
 find_package(websocketpp REQUIRED)
+find_package(OpenSSL REQUIRED)
+find_package(ZLIB REQUIRED)
+find_package(Boost REQUIRED COMPONENTS system thread)
 
 add_library(foxglove_websocket src/base64.cpp src/parameter.cpp src/serialization.cpp src/server_factory.cpp)
 target_include_directories(foxglove_websocket
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     ${nlohmann_json_INCLUDE_DIRS}
     ${websocketpp_INCLUDE_DIRS}
+    ${Boost_INCLUDE_DIRS}
+    ${OPENSSL_INCLUDE_DIR}
+    ${ZLIB_INCLUDE_DIRS}
+
 )
-target_link_libraries(foxglove_websocket nlohmann_json::nlohmann_json websocketpp::websocketpp)
+target_link_libraries(foxglove_websocket PUBLIC
+  nlohmann_json::nlohmann_json
+  websocketpp::websocketpp
+  Boost::boost
+  Boost::system
+  Boost::thread
+  OpenSSL::SSL
+  OpenSSL::Crypto
+  ZLIB::ZLIB
+)
 set_target_properties(foxglove_websocket PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
 
 if (MSVC)
@@ -45,7 +62,7 @@ if(COMPILING_FOR_ROS2)
   ament_target_dependencies(foxglove_websocket nlohmann_json websocketpp)
 
   ament_export_targets(FoxgloveWebSocketTargets HAS_LIBRARY_TARGET)
-  ament_export_dependencies(nlohmann_json websocketpp)
+  ament_export_dependencies(nlohmann_json websocketpp OpenSSL Boost ZLIB)
   ament_export_include_directories(include)
   ament_export_libraries(foxglove_websocket)
   ament_package()
