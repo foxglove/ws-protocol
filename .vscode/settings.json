@@ -8,10 +8,7 @@
 
   "typescript.tsdk": "node_modules/typescript/lib",
   "prettier.prettierPath": "./node_modules/prettier/index.cjs",
-  "eslint.packageManager": "yarn",
-  "eslint.options": {
-    "reportUnusedDisableDirectives": "error"
-  },
+  "eslint.workingDirectories": ["typescript", "test-client-web-app"],
 
   "python.analysis.diagnosticSeverityOverrides": {
     // produces spurious errors when importing local packages from tests

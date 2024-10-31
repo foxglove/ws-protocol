@@ -7,8 +7,8 @@ import Debug from "debug";
 import fs from "fs/promises";
 import { WebSocketServer } from "ws";
 
-import { setupSigintHandler } from "./util/setupSigintHandler";
 import boxen from "../boxen";
+import { setupSigintHandler } from "./util/setupSigintHandler";
 
 const log = Debug("foxglove:mcap-play");
 Debug.enable("foxglove:*");
@@ -116,6 +116,7 @@ async function main(file: string, options: { loop: boolean; rate: number }): Pro
           break outer;
         }
 
+        // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
         switch (record.type) {
           case "Schema":
             if (!firstIteration) {

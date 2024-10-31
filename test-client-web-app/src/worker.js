@@ -41,7 +41,7 @@ self.onmessage = (event) => {
                 type: "message",
                 data: wsEvent.data,
               },
-              [wsEvent.data]
+              [wsEvent.data],
             );
           } else {
             send({

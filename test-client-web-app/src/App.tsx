@@ -27,22 +27,8 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import {
-  BarElement,
-  CategoryScale,
-  Chart as ChartJS,
-  Legend,
-  LinearScale,
-  Title,
-} from "chart.js";
-import {
-  memo,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  ReactElement,
-} from "react";
+import { BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Title } from "chart.js";
+import { memo, useCallback, useEffect, useRef, useState, ReactElement } from "react";
 import { Bar } from "react-chartjs-2";
 
 import "./App.css";
@@ -161,7 +147,7 @@ function App(): ReactElement {
         stats.currentSubId = undefined;
       }
     },
-    [client]
+    [client],
   );
 
   const subscribeAll = useCallback(
@@ -170,7 +156,7 @@ function App(): ReactElement {
         enableSubscription(id, action);
       });
     },
-    [channels, enableSubscription]
+    [channels, enableSubscription],
   );
 
   useEffect(() => {
@@ -191,11 +177,9 @@ function App(): ReactElement {
 
   const addLogEntry = useCallback(
     (entry: LogEntry) => {
-      setStatusLogs((logs: StampedLogEntry[]) =>
-        logs.concat([{ ...entry, time: new Date() }])
-      );
+      setStatusLogs((logs: StampedLogEntry[]) => logs.concat([{ ...entry, time: new Date() }]));
     },
-    [setStatusLogs]
+    [setStatusLogs],
   );
 
   const connect = useCallback(() => {
@@ -253,7 +237,7 @@ function App(): ReactElement {
             return 1;
           }
           return 0;
-        })
+        }),
       );
     });
     wsClient.on("unadvertise", (removedChannelIds: ChannelId[]) => {
@@ -265,9 +249,7 @@ function App(): ReactElement {
         }
       }
       setChannels((currChannels: Channel[]) =>
-        currChannels.filter(
-          (channel) => !removedChannelIds.includes(channel.id)
-        )
+        currChannels.filter((channel) => !removedChannelIds.includes(channel.id)),
       );
     });
     wsClient.on("message", (event: MessageData) => {
@@ -291,9 +273,7 @@ function App(): ReactElement {
     setClient(undefined);
   }, [client]);
 
-  const totalTicks = totalStats.ticks.filter(
-    (v: StampedStats | undefined) => !!v
-  );
+  const totalTicks = totalStats.ticks.filter((v: StampedStats | undefined) => !!v);
   const firstTotalTick = totalTicks[0];
   const lastTotalTick = totalTicks[totalTicks.length - 1];
   const avgBandWith =
@@ -307,9 +287,7 @@ function App(): ReactElement {
     datasets: [
       {
         label: "Bandwidth [byte/s]",
-        data: totalStats.ticks.map(
-          (bt) => (bt.byteDiff ?? 0) / (UPDATE_PERIOD_MS / 1000)
-        ),
+        data: totalStats.ticks.map((bt) => (bt.byteDiff ?? 0) / (UPDATE_PERIOD_MS / 1000)),
         backgroundColor: "rgba(53, 162, 235, 0.5)",
       },
     ],
@@ -389,14 +367,8 @@ function App(): ReactElement {
                 />
               </FormGroup>
             </Stack>
-            <Stack
-              direction={{ xs: "row", sm: "column" }}
-              gap={1}
-              justifyContent={"flex-end"}
-            >
-              <Typography variant="body2">
-                Total msgs: {totalStats.totalNumMsgs}
-              </Typography>
+            <Stack direction={{ xs: "row", sm: "column" }} gap={1} justifyContent={"flex-end"}>
+              <Typography variant="body2">Total msgs: {totalStats.totalNumMsgs}</Typography>
               <Typography variant="body2">
                 Total bytes: {totalStats.totalNumBytes.toExponential(1)}
               </Typography>
@@ -405,10 +377,7 @@ function App(): ReactElement {
               </Typography>
             </Stack>
             <div style={{ maxHeight: "150px" }}>
-              <Bar
-                options={{ ...chartOptions, animation: false }}
-                data={chartData}
-              />
+              <Bar options={{ ...chartOptions, animation: false }} data={chartData} />
             </div>
           </Stack>
           <TableContainer component={Paper}>
@@ -445,12 +414,9 @@ function App(): ReactElement {
                   const firstTick = ticks[0];
                   const lastTick = ticks[ticks.length - 1];
                   if (firstTick != undefined && lastTick != undefined) {
-                    const timeDiffInSec =
-                      (firstTick.time - lastTick.time) / 1000;
-                    avgFreq =
-                      (firstTick.numMsgs - lastTick.numMsgs) / timeDiffInSec;
-                    avgBw =
-                      (firstTick.numBytes - lastTick.numBytes) / timeDiffInSec;
+                    const timeDiffInSec = (firstTick.time - lastTick.time) / 1000;
+                    avgFreq = (firstTick.numMsgs - lastTick.numMsgs) / timeDiffInSec;
+                    avgBw = (firstTick.numBytes - lastTick.numBytes) / timeDiffInSec;
                   }
                   return (
                     <TableRow
@@ -465,10 +431,7 @@ function App(): ReactElement {
                             size="small"
                             checked={stats?.currentSubId != undefined}
                             onChange={(_, checked) => {
-                              enableSubscription(
-                                channel.id,
-                                checked ? "subscribe" : "unsubscribe"
-                              );
+                              enableSubscription(channel.id, checked ? "subscribe" : "unsubscribe");
                             }}
                           />
                         </Tooltip>
@@ -478,25 +441,17 @@ function App(): ReactElement {
                         scope="row"
                       >{`${channel.topic} (${channel.id})`}</TableCell>
                       <TableCell align="right">{channel.schemaName}</TableCell>
-                      <TableCell align="right">
-                        {stats?.totalNumMsgs ?? 0}
-                      </TableCell>
+                      <TableCell align="right">{stats?.totalNumMsgs ?? 0}</TableCell>
                       <TableCell align="right">
                         {stats?.totalNumBytes.toExponential(1) ?? 0}
                       </TableCell>
                       <TableCell align="right">
                         {stats?.totalNumBytes != undefined
-                          ? (
-                              stats.totalNumBytes / stats.totalNumMsgs
-                            ).toExponential(1)
+                          ? (stats.totalNumBytes / stats.totalNumMsgs).toExponential(1)
                           : 0}
                       </TableCell>
-                      <TableCell align="right">
-                        {avgFreq.toFixed(1)} Hz
-                      </TableCell>
-                      <TableCell align="right">
-                        {avgBw.toExponential(1)} Byte/s
-                      </TableCell>
+                      <TableCell align="right">{avgFreq.toFixed(1)} Hz</TableCell>
+                      <TableCell align="right">{avgBw.toExponential(1)} Byte/s</TableCell>
                     </TableRow>
                   );
                 })}
@@ -524,8 +479,8 @@ const LogViewEntry = memo((props: { entry: StampedLogEntry }) => {
     props.entry.type === "status"
       ? props.entry.value.message
       : props.entry.type === "serverInfo"
-      ? JSON.stringify(props.entry.value)
-      : props.entry.value;
+        ? JSON.stringify(props.entry.value)
+        : props.entry.value;
   return (
     <TableRow>
       <TableCell>{props.entry.time.toLocaleString()}</TableCell>
