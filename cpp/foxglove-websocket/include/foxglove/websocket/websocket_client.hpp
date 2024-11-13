@@ -23,6 +23,12 @@ inline void to_json(nlohmann::json& j, const ClientAdvertisement& p) {
                      {"topic", p.topic},
                      {"encoding", p.encoding},
                      {"schemaName", p.schemaName}};
+  if (p.schema) {
+    j["schema"] = *p.schema;
+  }
+  if (p.schemaEncoding) {
+    j["schemaEncoding"] = *p.schemaEncoding;
+  }
 }
 
 using TextMessageHandler = std::function<void(const std::string&)>;
