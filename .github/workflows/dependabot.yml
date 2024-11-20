@@ -5,6 +5,11 @@ name: Dependabot
 on:
   - pull_request_target
 
+# https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/controlling-permissions-for-github_token
+permissions:
+  issues: write
+  pull-requests: write
+
 jobs:
   approve:
     name: Approve Dependabot PRs
@@ -14,8 +19,6 @@ jobs:
     steps:
       - uses: octokit/request-action@v2.4.0
         if: contains(fromJSON('["opened", "reopened"]'), github.event.action)
-        env:
-          GITHUB_TOKEN: ${{ secrets.FOXGLOVEBOT_GITHUB_TOKEN }}
         with:
           route: POST /repos/{owner_and_repo}/pulls/{pull_number}/reviews
           owner_and_repo: ${{ github.repository }}
@@ -24,8 +27,6 @@ jobs:
 
       - uses: octokit/request-action@v2.4.0
         if: contains(fromJSON('["opened", "reopened"]'), github.event.action)
-        env:
-          GITHUB_TOKEN: ${{ secrets.FOXGLOVEBOT_GITHUB_TOKEN }}
         with:
           route: POST /repos/{owner_and_repo}/issues/{pull_number}/comments
           owner_and_repo: ${{ github.repository }}
