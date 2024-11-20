@@ -47,7 +47,7 @@
     "@types/lodash": "^4.14.202",
     "@types/node": "^22.9.1",
     "@types/promise-queue": "^2.2.3",
-    "@types/ws": "^8.5.10",
+    "@types/ws": "^8.5.13",
     "eslint": "9.13.0",
     "prettier": "3.3.3",
     "ts-node": "10.9.2",
