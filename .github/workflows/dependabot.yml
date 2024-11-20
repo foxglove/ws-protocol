@@ -3,7 +3,8 @@
 name: Dependabot
 
 on:
-  - pull_request_target
+  pull_request:
+    branches: ["*"]
 
 # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/controlling-permissions-for-github_token
 permissions:
@@ -24,6 +25,8 @@ jobs:
           owner_and_repo: ${{ github.repository }}
           pull_number: ${{ github.event.pull_request.number }}
           event: "APPROVE"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: octokit/request-action@v2.4.0
         if: contains(fromJSON('["opened", "reopened"]'), github.event.action)
@@ -33,3 +36,5 @@ jobs:
           pull_number: ${{ github.event.pull_request.number }}
           # two quotes are needed to avoid a syntax error when running the action
           body: "'@dependabot squash and merge'"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
