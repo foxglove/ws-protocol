@@ -7,7 +7,7 @@
     ]
   },
   "devDependencies": {
-    "@types/node": "22.8.4",
+    "@types/node": "22.9.1",
     "globals": "15.11.0"
   }
 }
