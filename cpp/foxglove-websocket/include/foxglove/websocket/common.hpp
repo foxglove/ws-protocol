@@ -79,7 +79,8 @@ struct ClientAdvertisement {
   std::string topic;
   std::string encoding;
   std::string schemaName;
-  std::vector<uint8_t> schema;
+  std::optional<std::string> schema;
+  std::optional<std::string> schemaEncoding;
 };
 
 struct ClientMessage {
