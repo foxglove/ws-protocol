@@ -24,10 +24,10 @@ inline void to_json(nlohmann::json& j, const ClientAdvertisement& p) {
                      {"encoding", p.encoding},
                      {"schemaName", p.schemaName}};
   if (p.schema) {
-    j["schema"] = *p.schema;
+    j["schema"] = p.schema.value();
   }
   if (p.schemaEncoding) {
-    j["schemaEncoding"] = *p.schemaEncoding;
+    j["schemaEncoding"] = p.schemaEncoding.value();
   }
 }
 

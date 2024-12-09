@@ -1340,14 +1340,12 @@ void Server<ServerConfiguration>::handleAdvertise(const nlohmann::json& payload,
     advertisement.encoding = chan.at("encoding").get<std::string>();
     advertisement.schemaName = chan.at("schemaName").get<std::string>();
 
-    advertisement.schema = chan.find("schema") == chan.end()
-                             ? std::nullopt
-                             : std::optional<std::string>(chan["schema"].get<std::string>());
-    advertisement.schemaEncoding =
-      chan.find("schemaEncoding") == chan.end()
-        ? std::nullopt
-        : std::optional<std::string>(chan["schemaEncoding"].get<std::string>());
-
+    if (const auto it = chan.find("schema"); it != chan.end()) {
+      advertisement.schema = it->get<std::string>();
+    }
+    if (const auto it = chan.find("schemaEncoding"); it != chan.end()) {
+      advertisement.schemaEncoding = it->get<std::string>();
+    }
     clientPublications.emplace(channelId, advertisement);
     {
       std::unique_lock<std::shared_mutex> clientsLock(_clientsMutex);
