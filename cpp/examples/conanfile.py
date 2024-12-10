@@ -4,7 +4,7 @@ from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout
 
 class FoxgloveWebSocketExamplesConan(ConanFile):
     name = "foxglove-websocket-example"
-    version = "1.1.0"
+    version = "1.4.0"
     settings = "os", "compiler", "build_type", "arch"
     exports_sources = "CMakeLists.txt", "src/*", "proto/*"
     generators = "CMakeDeps"
@@ -12,7 +12,7 @@ class FoxgloveWebSocketExamplesConan(ConanFile):
     def requirements(self):
         self.requires("flatbuffers/23.5.26")
         self.requires("foxglove-schemas-protobuf/0.1.0")
-        self.requires("foxglove-websocket/1.1.0")
+        self.requires("foxglove-websocket/1.4.0")
         self.requires("zlib/1.2.13")
         self.requires("boost/1.83.0", transitive_headers=True)
 
