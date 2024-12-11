@@ -598,12 +598,12 @@ All integer types explicitly specified (uint32, uint64, etc.) in this section ar
 - Provides a raw message payload, encoded as specified in the Advertise corresponding to the channel.
 - Subscription id must correspond to a Subscribe that was previously sent.
 
-| Bytes           | Type    | Description                     |
-| --------------- | ------- | ------------------------------- |
-| 1               | opcode  | 0x01                            |
-| 4               | uint32  | subscription id                 |
-| 8               | uint64  | receive timestamp (nanoseconds) |
-| remaining bytes | uint8[] | message payload                 |
+| Bytes           | Type    | Description                         |
+| --------------- | ------- | ----------------------------------- |
+| 1               | opcode  | 0x01                                |
+| 4               | uint32  | subscription id                     |
+| 8               | uint64  | log/receive timestamp (nanoseconds) |
+| remaining bytes | uint8[] | message payload                     |
 
 ### Time
 
