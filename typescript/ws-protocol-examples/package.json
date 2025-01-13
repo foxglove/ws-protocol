@@ -63,7 +63,7 @@
     "@foxglove/wasm-zstd": "^1.0.1",
     "@foxglove/ws-protocol": "0.7.4",
     "@mcap/core": "^2.1.5",
-    "boxen": "^7.1.1",
+    "boxen": "^8.0.1",
     "commander": "^11.1.0",
     "debug": "^4",
     "eventemitter3": "^5.0.1",
