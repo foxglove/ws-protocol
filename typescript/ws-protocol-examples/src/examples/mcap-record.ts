@@ -160,6 +160,7 @@ async function main(
                 json: "jsonschema",
                 protobuf: "protobuf",
                 flatbuffer: "flatbuffer",
+                omgidl: "omgidl",
                 ros1: "ros1msg",
                 ros2: "ros2msg",
               }[channel.encoding];
@@ -174,6 +175,7 @@ async function main(
             let schemaData: Uint8Array | undefined;
             switch (schemaEncoding) {
               case "jsonschema":
+              case "omgidl":
               case "ros1msg":
               case "ros2msg":
                 schemaData = textEncoder.encode(channel.schema);
