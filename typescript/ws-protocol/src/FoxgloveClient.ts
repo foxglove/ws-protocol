@@ -63,7 +63,8 @@ export default class FoxgloveClient {
   }
 
   /**
-   * A list of subprotocols, in order of preference
+   * A list subprotocols supported by this client. Typically, this will agree with the subprotocols
+   * advertised by the provided `IWebSocket` implementation.
    */
   protected supportedSubprotocols: string[] = [FoxgloveClient.SUPPORTED_SUBPROTOCOL];
 
