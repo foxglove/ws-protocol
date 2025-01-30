@@ -50,7 +50,7 @@ type EventTypes = {
 const textEncoder = new TextEncoder();
 
 /**
- * A client to make it easier to interact with the Foxglove WebSocket protocol:
+ * A client to interact with the Foxglove WebSocket protocol:
  * https://github.com/foxglove/ws-protocol/blob/main/docs/spec.md.
  *
  * You must provide the underlying websocket client (an implementation of `IWebSocket`) and that
