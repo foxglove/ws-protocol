@@ -49,9 +49,15 @@ type EventTypes = {
 
 const textEncoder = new TextEncoder();
 
+/**
+ * A client to make it easier to interact with the Foxglove WebSocket protocol:
+ * https://github.com/foxglove/ws-protocol/blob/main/docs/spec.md.
+ *
+ * You must provide the underlying websocket client (an implementation of `IWebSocket`) and that
+ * client must advertise a subprotocol which is compatible with the ws-protocol spec (e.g.
+ * "foxglove.websocket.v1").
+ */
 export default class FoxgloveClient {
-  static SUPPORTED_SUBPROTOCOL = "foxglove.websocket.v1";
-
   #emitter = new EventEmitter<EventTypes>();
   #ws: IWebSocket;
   #nextSubscriptionId = 0;
@@ -61,12 +67,6 @@ export default class FoxgloveClient {
     this.#ws = ws;
     this.#reconnect();
   }
-
-  /**
-   * A list subprotocols supported by this client. Typically, this will agree with the subprotocols
-   * advertised by the provided `IWebSocket` implementation.
-   */
-  protected supportedSubprotocols: string[] = [FoxgloveClient.SUPPORTED_SUBPROTOCOL];
 
   on<E extends EventEmitter.EventNames<EventTypes>>(
     name: E,
@@ -87,13 +87,6 @@ export default class FoxgloveClient {
       this.#emitter.emit("error", event.error ?? new Error("WebSocket error"));
     };
     this.#ws.onopen = (_event) => {
-      if (!this.supportedSubprotocols.includes(this.#ws.protocol)) {
-        const protocolDesc =
-          this.supportedSubprotocols.length === 1
-            ? `subprotocol '${this.supportedSubprotocols[0]}'`
-            : `a subprotocol from ['${this.supportedSubprotocols.join("', '")}']`;
-        throw new Error(`Expected ${protocolDesc}; got '${this.#ws.protocol}'`);
-      }
       this.#emitter.emit("open");
     };
     this.#ws.onmessage = (event: MessageEvent<ArrayBuffer | string>) => {
