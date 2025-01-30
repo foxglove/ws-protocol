@@ -87,8 +87,11 @@ export default class FoxgloveClient {
     };
     this.#ws.onopen = (_event) => {
       if (!this.supportedSubprotocols.includes(this.#ws.protocol)) {
-        const preferredProtocol = this.supportedSubprotocols[0] ?? "";
-        throw new Error(`Expected subprotocol ${preferredProtocol}, got '${this.#ws.protocol}'`);
+        const protocolDesc =
+          this.supportedSubprotocols.length === 1
+            ? `subprotocol '${this.supportedSubprotocols[0]}'`
+            : `a subprotocol from ['${this.supportedSubprotocols.join("', '")}']`;
+        throw new Error(`Expected ${protocolDesc}; got '${this.#ws.protocol}'`);
       }
       this.#emitter.emit("open");
     };
