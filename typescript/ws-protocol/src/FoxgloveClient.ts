@@ -49,6 +49,14 @@ type EventTypes = {
 
 const textEncoder = new TextEncoder();
 
+/**
+ * A client to interact with the Foxglove WebSocket protocol:
+ * https://github.com/foxglove/ws-protocol/blob/main/docs/spec.md.
+ *
+ * You must provide the underlying websocket client (an implementation of `IWebSocket`) and that
+ * client must advertise a subprotocol which is compatible with the ws-protocol spec (e.g.
+ * "foxglove.websocket.v1").
+ */
 export default class FoxgloveClient {
   static SUPPORTED_SUBPROTOCOL = "foxglove.websocket.v1";
 
@@ -81,13 +89,6 @@ export default class FoxgloveClient {
       this.#emitter.emit("error", event.error ?? new Error("WebSocket error"));
     };
     this.#ws.onopen = (_event) => {
-      if (this.#ws.protocol !== FoxgloveClient.SUPPORTED_SUBPROTOCOL) {
-        throw new Error(
-          `Expected subprotocol ${FoxgloveClient.SUPPORTED_SUBPROTOCOL}, got '${
-            this.#ws.protocol
-          }'`,
-        );
-      }
       this.#emitter.emit("open");
     };
     this.#ws.onmessage = (event: MessageEvent<ArrayBuffer | string>) => {
