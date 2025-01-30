@@ -62,6 +62,11 @@ export default class FoxgloveClient {
     this.#reconnect();
   }
 
+  /**
+   * A list of subprotocols, in order of preference
+   */
+  protected supportedSubprotocols: string[] = [FoxgloveClient.SUPPORTED_SUBPROTOCOL];
+
   on<E extends EventEmitter.EventNames<EventTypes>>(
     name: E,
     listener: EventEmitter.EventListener<EventTypes, E>,
@@ -81,12 +86,9 @@ export default class FoxgloveClient {
       this.#emitter.emit("error", event.error ?? new Error("WebSocket error"));
     };
     this.#ws.onopen = (_event) => {
-      if (this.#ws.protocol !== FoxgloveClient.SUPPORTED_SUBPROTOCOL) {
-        throw new Error(
-          `Expected subprotocol ${FoxgloveClient.SUPPORTED_SUBPROTOCOL}, got '${
-            this.#ws.protocol
-          }'`,
-        );
+      if (!this.supportedSubprotocols.includes(this.#ws.protocol)) {
+        const preferredProtocol = this.supportedSubprotocols[0] ?? "";
+        throw new Error(`Expected subprotocol ${preferredProtocol}, got '${this.#ws.protocol}'`);
       }
       this.#emitter.emit("open");
     };
