@@ -1,5 +1,9 @@
 #pragma once
 
+#define ASIO_STANDALONE
+#define WEBSOCKETPP_NO_BOOST
+#define WEBSOCKETPP_STRICT_NO_TLS 1
+
 #include <nlohmann/json.hpp>
 #include <websocketpp/client.hpp>
 #include <websocketpp/common/memory.hpp>
