@@ -1,6 +1,8 @@
 #pragma once
 
+#ifndef ASIO_STANDALONE
 #define ASIO_STANDALONE
+#endif
 #define WEBSOCKETPP_NO_BOOST
 #define WEBSOCKETPP_STRICT_NO_TLS 1
 
