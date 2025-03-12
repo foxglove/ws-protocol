@@ -41,7 +41,7 @@ export function parseServerMessage(buffer: ArrayBuffer | ArrayBufferView): Serve
       const encodingBytes = new DataView(view.buffer, view.byteOffset + offset, encodingLength);
       const encoding = textDecoder.decode(encodingBytes);
       offset += encodingLength;
-      const data = new DataView(view.buffer, view.byteOffset + offset, view.byteLength - offset);
+      const data = new Uint8Array(view.buffer, view.byteOffset + offset, view.byteLength - offset);
       return { op, serviceId, callId, encoding, data };
     }
     case BinaryOpcode.FETCH_ASSET_RESPONSE: {
@@ -89,7 +89,7 @@ export function parseClientMessage(buffer: ArrayBuffer | ArrayBufferView): Clien
     case ClientBinaryOpcode.MESSAGE_DATA: {
       const channelId = view.getUint32(offset, true);
       offset += 4;
-      const data = new DataView(view.buffer, view.byteOffset + offset, view.byteLength - offset);
+      const data = new Uint8Array(view.buffer, view.byteOffset + offset, view.byteLength - offset);
       return { op, channelId, data };
     }
     case ClientBinaryOpcode.SERVICE_CALL_REQUEST: {
@@ -102,7 +102,7 @@ export function parseClientMessage(buffer: ArrayBuffer | ArrayBufferView): Clien
       const encodingBytes = new DataView(view.buffer, view.byteOffset + offset, encodingLength);
       const encoding = textDecoder.decode(encodingBytes);
       offset += encodingLength;
-      const data = new DataView(view.buffer, view.byteOffset + offset, view.byteLength - offset);
+      const data = new Uint8Array(view.buffer, view.byteOffset + offset, view.byteLength - offset);
       return { op, serviceId, callId, encoding, data };
     }
   }

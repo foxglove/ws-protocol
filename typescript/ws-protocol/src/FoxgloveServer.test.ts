@@ -4,7 +4,6 @@ import { AddressInfo, Data, WebSocket, WebSocketServer } from "ws";
 import {
   BinaryOpcode,
   ClientBinaryOpcode,
-  ClientPublish,
   FetchAssetResponse,
   FetchAssetStatus,
   IWebSocket,
@@ -280,14 +279,9 @@ describe("FoxgloveServer", () => {
         "message",
         {
           channel: { id: 42, topic: "foo", encoding: "json", schemaName: "baz" },
-          data: new DataView(expectedPayload.buffer),
+          data: expectedPayload,
         },
       ]);
-      const msg = msgEvent[1] as ClientPublish;
-      expect(msg.data.byteLength).toEqual(expectedPayload.byteLength);
-      for (let i = 0; i < expectedPayload.byteLength; i++) {
-        expect(msg.data.getUint8(i)).toEqual(expectedPayload[i]);
-      }
 
       await expect(nextEvent()).resolves.toMatchObject(["unadvertise", { channelId: 42 }]);
     } catch (ex) {
@@ -463,7 +457,7 @@ describe("FoxgloveServer", () => {
         serviceId,
         callId: 123,
         encoding: "json",
-        data: new DataView(new Uint8Array([1, 2, 3]).buffer),
+        data: new Uint8Array([1, 2, 3]),
       };
 
       const serializedRequest = new Uint8Array([
@@ -482,7 +476,7 @@ describe("FoxgloveServer", () => {
 
       const response: ServiceCallPayload = {
         ...request,
-        data: new DataView(new Uint8Array([4, 5, 6]).buffer),
+        data: new Uint8Array([4, 5, 6]),
       };
 
       server.sendServiceCallResponse(response, connection as IWebSocket);
@@ -514,7 +508,7 @@ describe("FoxgloveServer", () => {
         op: BinaryOpcode.FETCH_ASSET_RESPONSE,
         requestId: 123,
         status: FetchAssetStatus.SUCCESS,
-        data: new DataView(new Uint8Array([4, 5, 6]).buffer),
+        data: new Uint8Array([4, 5, 6]),
       },
     ],
     [
@@ -562,9 +556,7 @@ describe("FoxgloveServer", () => {
 
         const errorMsg = response.status === FetchAssetStatus.ERROR ? response.error : "";
         const data =
-          response.status === FetchAssetStatus.SUCCESS
-            ? response.data
-            : new DataView(new ArrayBuffer(0));
+          response.status === FetchAssetStatus.SUCCESS ? response.data : new Uint8Array();
 
         await expect(nextBinaryMessage()).resolves.toEqual(
           new Uint8Array([
@@ -573,7 +565,7 @@ describe("FoxgloveServer", () => {
             response.status,
             ...uint32LE(errorMsg.length),
             ...new TextEncoder().encode(errorMsg),
-            ...Buffer.from(data.buffer),
+            ...Buffer.from(data.buffer, data.byteOffset, data.byteLength),
           ]),
         );
       } catch (ex) {

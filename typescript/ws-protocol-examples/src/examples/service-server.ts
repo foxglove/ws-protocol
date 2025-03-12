@@ -144,7 +144,7 @@ async function main(): Promise<void> {
     }
     const response: ServiceCallPayload = {
       ...request,
-      data: new DataView(responseData.buffer),
+      data: responseData,
     };
     server.sendServiceCallResponse(response, clientConnection);
   });
