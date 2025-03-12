@@ -91,10 +91,10 @@ export default class FoxgloveClient {
     this.#ws.onopen = (_event) => {
       this.#emitter.emit("open");
     };
-    this.#ws.onmessage = (event: MessageEvent<ArrayBuffer | string>) => {
+    this.#ws.onmessage = (event: MessageEvent<ArrayBuffer | ArrayBufferView | string>) => {
       let message: ServerMessage;
       try {
-        if (event.data instanceof ArrayBuffer) {
+        if (event.data instanceof ArrayBuffer || ArrayBuffer.isView(event.data)) {
           message = parseServerMessage(event.data);
         } else {
           message = JSON.parse(event.data) as ServerMessage;
