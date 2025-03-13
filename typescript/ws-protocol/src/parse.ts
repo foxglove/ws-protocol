@@ -12,7 +12,9 @@ export function parseServerMessage(buffer: ArrayBuffer | ArrayBufferView): Serve
   const view =
     buffer instanceof ArrayBuffer
       ? new DataView(buffer)
-      : new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+      : buffer instanceof DataView
+        ? buffer
+        : new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
 
   let offset = 0;
   const op = view.getUint8(offset);
@@ -79,7 +81,9 @@ export function parseClientMessage(buffer: ArrayBuffer | ArrayBufferView): Clien
   const view =
     buffer instanceof ArrayBuffer
       ? new DataView(buffer)
-      : new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+      : buffer instanceof DataView
+        ? buffer
+        : new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
 
   let offset = 0;
   const op = view.getUint8(offset);

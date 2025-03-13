@@ -388,7 +388,7 @@ export default class FoxgloveServer {
     connection.onmessage = (event: MessageEvent<ArrayBuffer | string>) => {
       let message: ClientMessage;
       try {
-        if (event.data instanceof ArrayBuffer) {
+        if (event.data instanceof ArrayBuffer || ArrayBuffer.isView(event.data)) {
           message = parseClientMessage(event.data);
         } else {
           message = JSON.parse(event.data) as ClientMessage;
