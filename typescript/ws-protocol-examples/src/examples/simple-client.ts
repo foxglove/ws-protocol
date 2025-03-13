@@ -14,7 +14,7 @@ async function main(url: string) {
   const client = new FoxgloveClient({
     ws: new WebSocket(address, [FoxgloveClient.SUPPORTED_SUBPROTOCOL]),
   });
-  const deserializers = new Map<SubscriptionId, (data: DataView) => unknown>();
+  const deserializers = new Map<SubscriptionId, (data: ArrayBufferView) => unknown>();
   client.on("error", (error) => {
     log("Error", error);
     throw error;

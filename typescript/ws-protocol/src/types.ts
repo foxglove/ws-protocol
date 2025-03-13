@@ -100,14 +100,14 @@ export type ClientUnadvertise = {
 export type ClientMessageData = {
   op: ClientBinaryOpcode.MESSAGE_DATA;
   channelId: ClientChannelId;
-  data: DataView;
+  data: ArrayBufferView;
 };
 
 export type ServiceCallPayload = {
   serviceId: ServiceId;
   callId: number;
   encoding: string;
-  data: DataView;
+  data: ArrayBufferView;
 };
 
 export type ServiceCallRequest = ServiceCallPayload & {
@@ -218,7 +218,7 @@ export type MessageData = {
   op: BinaryOpcode.MESSAGE_DATA;
   subscriptionId: SubscriptionId;
   timestamp: bigint;
-  data: DataView;
+  data: ArrayBufferView;
 };
 export type Time = {
   op: BinaryOpcode.TIME;
@@ -231,7 +231,7 @@ export type FetchAssetSuccessResponse = {
   op: BinaryOpcode.FETCH_ASSET_RESPONSE;
   requestId: number;
   status: FetchAssetStatus.SUCCESS;
-  data: DataView;
+  data: ArrayBufferView;
 };
 export type FetchAssetErrorResponse = {
   op: BinaryOpcode.FETCH_ASSET_RESPONSE;
@@ -248,7 +248,7 @@ export type ServiceCallFailure = {
 };
 export type ClientPublish = {
   channel: ClientChannel;
-  data: DataView;
+  data: ArrayBufferView;
 };
 export type ParameterValue =
   | undefined

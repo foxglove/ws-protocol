@@ -57,7 +57,7 @@ async function main(url: string) {
       serviceId: service.id,
       callId: 123,
       encoding: msgEncoding,
-      data: new DataView(requestData.buffer),
+      data: requestData,
     });
   });
 
