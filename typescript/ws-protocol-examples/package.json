@@ -1,6 +1,6 @@
 {
   "name": "@foxglove/ws-protocol-examples",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Foxglove WebSocket protocol examples",
   "keywords": [
     "foxglove",
@@ -61,7 +61,7 @@
     "@foxglove/schemas": "^1.6.4",
     "@foxglove/wasm-lz4": "^1.0.2",
     "@foxglove/wasm-zstd": "^1.0.1",
-    "@foxglove/ws-protocol": "0.7.4",
+    "@foxglove/ws-protocol": "0.8.0",
     "@mcap/core": "^2.1.5",
     "boxen": "^7.1.1",
     "commander": "^11.1.0",
