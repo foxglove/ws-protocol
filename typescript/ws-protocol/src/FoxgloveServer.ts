@@ -100,7 +100,7 @@ export default class FoxgloveServer {
   readonly capabilities: string[];
   readonly supportedEncodings?: string[];
   readonly metadata?: Record<string, string>;
-  readonly sessionId?: string;
+  sessionId?: string;
   #emitter = new EventEmitter<EventTypes>();
   #clients = new Map<IWebSocket, ClientInfo>();
   #nextChannelId: ChannelId = 0;
@@ -400,6 +400,21 @@ export default class FoxgloveServer {
         return;
       }
     };
+  }
+
+  resetSessionId(): void {
+    this.sessionId = new Date().toUTCString();
+
+    for (const connection of this.#clients.keys()) {
+      this.#send(connection, {
+        op: "serverInfo",
+        name: this.name,
+        capabilities: this.capabilities,
+        supportedEncodings: this.supportedEncodings,
+        metadata: this.metadata,
+        sessionId: this.sessionId,
+      });
+    }
   }
 
   #send(client: IWebSocket, message: ServerMessage): void {

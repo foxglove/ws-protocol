@@ -108,6 +108,10 @@ async function main(file: string, options: { loop: boolean; rate: number }): Pro
     let firstIteration = true;
     outer: do {
       log("starting playback");
+      if (!firstIteration) {
+        log("resetting session id");
+        server.resetSessionId();
+      }
       let startTime: number | undefined;
       let firstMessageTime: bigint | undefined;
 
