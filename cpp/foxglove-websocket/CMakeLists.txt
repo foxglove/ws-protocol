@@ -12,6 +12,9 @@ target_include_directories(foxglove_websocket
     PRIVATE SYSTEM
         ${nlohmann_json_INCLUDE_DIRS}
         ${websocketpp_INCLUDE_DIRS}
+        ssl
+        crypto
+        z
 )
 target_link_libraries(foxglove_websocket nlohmann_json::nlohmann_json websocketpp::websocketpp)
 set_target_properties(foxglove_websocket PROPERTIES
