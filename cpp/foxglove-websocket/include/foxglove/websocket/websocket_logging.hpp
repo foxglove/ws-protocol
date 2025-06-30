@@ -1,5 +1,11 @@
 #pragma once
 
+#ifndef ASIO_STANDALONE
+#define ASIO_STANDALONE
+#endif
+#define WEBSOCKETPP_NO_BOOST
+#define WEBSOCKETPP_STRICT_NO_TLS 1
+
 #include <websocketpp/common/asio.hpp>
 #include <websocketpp/logger/levels.hpp>
 

@@ -1,7 +1,13 @@
 #pragma once
 
+#ifndef ASIO_STANDALONE
+#define ASIO_STANDALONE
+#endif
+#define WEBSOCKETPP_NO_BOOST
+#define WEBSOCKETPP_STRICT_NO_TLS 1
+
 #include <nlohmann/json.hpp>
-#include <websocketpp/config/asio.hpp>
+#include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/server.hpp>
 
 #include <algorithm>
