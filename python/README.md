@@ -1,12 +1,10 @@
 # Foxglove WebSocket server
 
+> ⚠️ Important Notice: This package is no longer maintained and has been replaced by
+> [foxglove-sdk](https://pypi.org/project/foxglove-sdk/). We recommend migrating to the [Foxglove
+> SDK](https://docs.foxglove.dev/docs/sdk) for future development.
+
 This package provides a server implementation of the [Foxglove WebSocket protocol](https://github.com/foxglove/ws-protocol) with examples. The protocol enables [Foxglove](https://foxglove.dev/) to ingest arbitrary “live” streamed data.
-
-## Installation
-
-```
-$ pip install foxglove-websocket
-```
 
 ## Example servers
 
