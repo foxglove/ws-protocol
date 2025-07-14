@@ -78,6 +78,7 @@ jobs:
           packages_dir: python/dist
           repository_url: https://test.pypi.org/legacy/
           skip_existing: true
+          attestations: false # https://github.com/pypa/gh-action-pypi-publish/issues/283#issuecomment-2499296440
 
       - name: Publish to PyPI
         if: ${{ startsWith(github.ref, 'refs/tags/releases/python/v') }}
