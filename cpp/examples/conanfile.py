@@ -4,7 +4,7 @@ from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout
 
 class FoxgloveWebSocketExamplesConan(ConanFile):
     name = "foxglove-websocket-example"
-    version = "1.4.0"
+    version = "1.4.1"
     settings = "os", "compiler", "build_type", "arch"
     exports_sources = "CMakeLists.txt", "src/*", "proto/*"
     generators = "CMakeDeps"

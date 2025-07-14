@@ -1,5 +1,8 @@
 # C++ implementation of the Foxglove WebSocket protocol
 
+> ⚠️ Important Notice: This package is no longer maintained and has been replaced by the [Foxglove
+> SDK](https://docs.foxglove.dev/docs/sdk).
+
 ## Instructions
 
 - Run `make build`
@@ -10,6 +13,7 @@ For websocket throughput testing, you can use `make example_server_perf_test` an
 ## Thread safety
 
 The C++ foxglove websocket implementation uses websocketpp which is thread safe. However, you cannot send data through the websocket inside a connection handler callback of the same websocket connection. For example, if you want to implement _message latching_, you might want to flush buffered messages upon client connection (using `subscribeHandler`). But nothing would get sent out inside the callback thread. To fix this, you can simply spin up a new thread. You could do something like:
+
 ```c++
 auto server_ptr = foxglove::ServerFactory::createServer<websocketpp::connection_hdl>(server_name, log_handler, options);
 
