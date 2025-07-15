@@ -14,7 +14,7 @@ class FoxgloveWebSocketConan(ConanFile):
 
     settings = ("os", "compiler", "build_type", "arch")
     generators = "CMakeDeps"
-    exports_sources = "CMakeLists.txt", "LICENSE", "src/*", "include/*"
+    exports_sources = "CMakeLists.txt", "cmake/*.in", "LICENSE", "src/*", "include/*"
     options = {"asio": ["standalone", "boost"]}
     default_options = {"asio": "standalone"}
 

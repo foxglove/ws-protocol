@@ -1,0 +1,6 @@
+Name: foxglove-websocket
+Description: Foxglove WebSocket Protocol Implementation
+Version: @PROJECT_VERSION@
+Requires:
+Libs: -L@CMAKE_INSTALL_FULL_LIBDIR@ -lfoxglove_websocket
+Cflags: -I@CMAKE_INSTALL_FULL_INCLUDEDIR@

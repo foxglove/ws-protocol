@@ -1,0 +1,11 @@
+@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/foxglove-websocketTargets.cmake")
+
+# Define imported target for backward compatibility
+if(NOT TARGET foxglove::websocket)
+  add_library(foxglove::websocket ALIAS foxglove::foxglove_websocket)
+endif()
+
+check_required_components(foxglove-websocket)
+
